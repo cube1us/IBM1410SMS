@@ -1023,7 +1023,7 @@ pin errors on some logic blocks which were corrected.  Will use this to check pi
 on DHL and DEG (a task noted earlier)
 
 1/23/2020:  Used card type usage report to investigate gate types DEG and DHL.
-DEG Corrections to inputs or inputs and outputs to "S" on 14.30.06.1 4H,
+DEG Corrections to inputs and outputs to "S" on 14.30.06.1 4H,
 18.12.01.1 5A and 5D, 18.12.02.1 5A
 
 1/23/2020:  Checked error messages in Edit Card Gates, and they seem to work 
@@ -1032,7 +1032,10 @@ properly.
 1/23/2020:  Changed EditEdgeConnectorsForm to have Environment.Newline at the end
 of all messages.
 
-TODO:  Add pages, interconnect, logic blocks, DOT functions etc. to documentation.
+2/22/2020 Added pages, interconnect, logic blocks, DOT functions etc. to documentation.
+
+TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
+How might it have gotten there?
 
 TODO:  Performance:  Indexes for queries?
    When displaying sheet of logic blocks
@@ -1137,6 +1140,12 @@ TODO:  If while defining a connection pin, a key is entered, select the first/ne
    entry that contains that pin.
 
 TODO:  See if we can spot ORDER BY clauses and surround column names with `` .
+
+TODO:  When selecting a card location page to edit, selecting the gate should pre-populate
+       the Volume and page, and vice versa.
+
+TODO:  The Edit tiedown page should have a page numbe reference.  (It is in the database,
+       just not displayed / selectable.)
 
 ERRATA:
 
