@@ -1060,7 +1060,7 @@ PENDING:  BUG:  Edit Connection.  Editing a gate to gate connection that has an
    support two references, just like sheet signal edge connections.
    (Wish I had provided an example - not sure what this was about)
 
-TODO:  Add a check box for do not generate, add flag to database, check in
+TODO:  Logic Synth: Add a check box for do not generate, add flag to database, check in
    logic synth.
 
 TODO:  Logic Synth:  WARN if a sheet edge to a DOT function is an input to
@@ -1108,7 +1108,14 @@ machine "SMS".
 TODO:  MISSING KNOWN SHEETS:  12.30.04.1, 13.64.03.1, 13.72.06.1 
 14.18.04.1, 15.41.06.1 ++ (see spreadsheet)
 
+TODO:  Connectors pages (11.04.02.3, 11.04.03.3, 11.04.04.3, 11.04.05.3,
+       11.04.06.3, 11.04.06.4, 11.04.07.3, 11.04.08.3, 11.04.09.3, 14.04.01.3) are
+	   currently listed in BOTH the diagramPage table and the cardLocationPage table -
+	   and so do not show up in lists.  After adding new table cableEdgeConnPage, remove
+	   these bogus references.
+
 TODO:  Add connectors table and form.
+
 TODO:  It seems as though editDiagramLogicBlock is using the input level to populate both
        the input *and* output levels for a gate.
 TODO:  Warn if a given output pin is both - and + (during edit and as a separate check)
