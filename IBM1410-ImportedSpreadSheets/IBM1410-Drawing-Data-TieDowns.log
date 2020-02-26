@@ -1,0 +1,170 @@
+Input Line 1 Added page 15.41.12.1, Database ID=168719
+Input Line 1 Added Diagram page 15.41.12.1, Database ID=168720
+Input Line 1 Added Tie Down Database ID 168721 for Logic Source 15.41.12.1 Location 11C3B19 Pin P
+Input Line 2 Added Tie Down Database ID 168722 for Logic Source 15.41.12.1 Location 11C3H25 Pin D
+Input Line 3 Added page 14.70.14.1, Database ID=168723
+Input Line 3 Added Diagram page 14.70.14.1, Database ID=168724
+Input Line 3 Added Tie Down Database ID 168725 for Logic Source 14.70.14.1 Location 11D1A16 Pin D
+Input Line 4 Added Tie Down Database ID 168726 for Logic Source 14.70.14.1 Location 11D1J17 Pin G
+Input Line 5 Added Tie Down Database ID 168727 for Logic Source 14.70.14.1 Location 11D1J22 Pin C
+Input Line 6 Added page 13.70.03.1, Database ID=168728
+Input Line 6 Added Diagram page 13.70.03.1, Database ID=168729
+Input Line 6 Added Tie Down Database ID 168730 for Logic Source 13.70.03.1 Location 11D3C13 Pin H
+Input Line 7 Added page 13.70.02.1, Database ID=168731
+Input Line 7 Added Diagram page 13.70.02.1, Database ID=168732
+Input Line 7 Added Tie Down Database ID 168733 for Logic Source 13.70.02.1 Location 11D3C18 Pin C
+Input Line 8 Added page 13.70.04.1, Database ID=168734
+Input Line 8 Added Diagram page 13.70.04.1, Database ID=168735
+Input Line 8 Added Tie Down Database ID 168736 for Logic Source 13.70.04.1 Location 11D3C26 Pin P
+Input Line 9 Added Tie Down Database ID 168737 for Logic Source 13.70.03.1 Location 11D3D03 Pin E
+Input Line 10 Added Tie Down Database ID 168738 for Logic Source 13.70.02.1 Location 11D3D11 Pin C
+Input Line 11 Added page 13.60.04.1, Database ID=168739
+Input Line 11 Added Diagram page 13.60.04.1, Database ID=168740
+Input Line 11 Added Tie Down Database ID 168741 for Logic Source 13.60.04.1 Location 11D3D12 Pin G
+Input Line 12 Added Tie Down Database ID 168742 for Logic Source 13.70.04.1 Location 11D3E14 Pin C
+Input Line 13 Added page 13.65.01.1, Database ID=168743
+Input Line 13 Added Diagram page 13.65.01.1, Database ID=168744
+Input Line 13 Added Tie Down Database ID 168745 for Logic Source 13.65.01.1 Location 11D3E19 Pin D
+Input Line 14 Added page 13.65.07.1, Database ID=168746
+Input Line 14 Added Diagram page 13.65.07.1, Database ID=168747
+Input Line 14 Added Tie Down Database ID 168748 for Logic Source 13.65.07.1 Location 11D3E23 Pin K
+Input Line 15 Added Tie Down Database ID 168749 for Logic Source 13.60.04.1 Location 11D3F03 Pin G
+Input Line 16 Added page 13.60.03.1, Database ID=168750
+Input Line 16 Added Diagram page 13.60.03.1, Database ID=168751
+Input Line 16 Added Tie Down Database ID 168752 for Logic Source 13.60.03.1 Location 11D3G18 Pin D
+Input Line 17 Added page 12.62.04.1, Database ID=168753
+Input Line 17 Added Diagram page 12.62.04.1, Database ID=168754
+Input Line 17 Added Tie Down Database ID 168755 for Logic Source 12.62.04.1 Location 11D3H12 Pin D
+Input Line 18 Added page 14.15.21.1, Database ID=168756
+Input Line 18 Added Diagram page 14.15.21.1, Database ID=168757
+Input Line 18 Added Tie Down Database ID 168758 for Logic Source 14.15.21.1 Location 11B2C22 Pin C
+Input Line 19 Added page 13.72.04.1, Database ID=168759
+Input Line 19 Added Diagram page 13.72.04.1, Database ID=168760
+Input Line 19 Added Tie Down Database ID 168761 for Logic Source 13.72.04.1 Location 11D3E27 Pin E
+Input Line 20 Added page 13.72.01.1, Database ID=168762
+Input Line 20 Added Diagram page 13.72.01.1, Database ID=168763
+Input Line 20 Added Tie Down Database ID 168764 for Logic Source 13.72.01.1 Location 11D2D09 Pin C
+Input Line 21 Added Tie Down Database ID 168765 for Logic Source 13.72.01.1 Location 11D2E10 Pin C
+Input Line 22 Added page 13.72.03.1, Database ID=168766
+Input Line 22 Added Diagram page 13.72.03.1, Database ID=168767
+Input Line 22 Added Tie Down Database ID 168768 for Logic Source 13.72.03.1 Location 11D2E10 Pin R
+Input Line 23 Added Tie Down Database ID 168769 for Logic Source 12.62.04.1 Location 11D3G26 Pin E
+Input Line 24 Added Tie Down Database ID 168770 for Logic Source 13.72.04.1 Location 11D3H10 Pin C
+Input Line 25 Added Tie Down Database ID 168771 for Logic Source 13.72.03.1 Location 11D2E15 Pin D
+Input Line 26 Added page 13.63.03.1, Database ID=168772
+Input Line 26 Added Diagram page 13.63.03.1, Database ID=168773
+Input Line 26 Added Tie Down Database ID 168774 for Logic Source 13.63.03.1 Location 11D3H24 Pin G
+Input Line 27 Added page 12.12.60.1, Database ID=168775
+Input Line 27 Added Diagram page 12.12.60.1, Database ID=168776
+Input Line 27 Added Tie Down Database ID 168777 for Logic Source 12.12.60.1 Location 11D3J15 Pin D
+Input Line 28 Added page 13.64.05.1, Database ID=168778
+Input Line 28 Added Diagram page 13.64.05.1, Database ID=168779
+Input Line 28 Added Tie Down Database ID 168780 for Logic Source 13.64.05.1 Location 11D4A22 Pin D
+Input Line 29 Added page 13.73.01.1, Database ID=168781
+Input Line 29 Added Diagram page 13.73.01.1, Database ID=168782
+Input Line 29 Added Tie Down Database ID 168783 for Logic Source 13.73.01.1 Location 11D4A22 Pin G
+Input Line 30 Added Tie Down Database ID 168784 for Logic Source 13.73.01.1 Location 11D4B23 Pin D
+Input Line 31 Added page 13.73.03.1, Database ID=168785
+Input Line 31 Added Diagram page 13.73.03.1, Database ID=168786
+Input Line 31 Added Tie Down Database ID 168787 for Logic Source 13.73.03.1 Location 11D4A21 Pin L
+Input Line 32 Added page 13.74.01.1, Database ID=168788
+Input Line 32 Added Diagram page 13.74.01.1, Database ID=168789
+Input Line 32 Added Tie Down Database ID 168790 for Logic Source 13.74.01.1 Location 11D2B11 Pin D
+Input Line 33 Added Tie Down Database ID 168791 for Logic Source 13.74.01.1 Location 11D2D04 Pin D
+Input Line 34 Added Tie Down Database ID 168792 for Logic Source 13.74.01.1 Location 11D2D04 Pin E
+Input Line 35 Added Tie Down Database ID 168793 for Logic Source 13.74.01.1 Location 11D2E03 Pin B
+Input Line 36 Added Tie Down Database ID 168794 for Logic Source 13.74.01.1 Location 11D2E03 Pin D
+Input Line 37 Added page 13.65.02.1, Database ID=168795
+Input Line 37 Added Diagram page 13.65.02.1, Database ID=168796
+Input Line 37 Added Tie Down Database ID 168797 for Logic Source 13.65.02.1 Location 11D3C04 Pin D
+Input Line 38 Added Tie Down Database ID 168798 for Logic Source 13.63.03.1 Location 11D3H25 Pin K
+Input Line 39 Added page 12.12.67.1, Database ID=168799
+Input Line 39 Added Diagram page 12.12.67.1, Database ID=168800
+Input Line 39 Added Tie Down Database ID 168801 for Logic Source 12.12.67.1 Location 11D4C11 Pin K
+Input Line 40 Added page 24.02.03.1, Database ID=168802
+Input Line 40 Added Diagram page 24.02.03.1, Database ID=168803
+Added Card Slot for Row A, Column 18 Database ID=168804 to panel (Database ID 160389)
+Input Line 40 Added Tie Down Database ID 168805 for Logic Source 24.02.03.1 Location 11F6A18 Pin C
+Input Line 41 Added page 11.10.20.1, Database ID=168806
+Input Line 41 Added Diagram page 11.10.20.1, Database ID=168807
+Input Line 41 Added Tie Down Database ID 168808 for Logic Source 11.10.20.1 Location 11C2J26 Pin D
+Input Line 42 Added page 11.10.25.1, Database ID=168809
+Input Line 42 Added Diagram page 11.10.25.1, Database ID=168810
+Input Line 42 Added Tie Down Database ID 168811 for Logic Source 11.10.25.1 Location 11C2K14 Pin D
+Input Line 43 Added Tie Down Database ID 168812 for Logic Source 13.60.04.1 Location 11D3B08 Pin D
+Input Line 44 Added page 13.63.01.1, Database ID=168813
+Input Line 44 Added Diagram page 13.63.01.1, Database ID=168814
+Input Line 44 Added Tie Down Database ID 168815 for Logic Source 13.63.01.1 Location 11D3J26 Pin E
+Input Line 45 Added page 14.71.25.1, Database ID=168816
+Input Line 45 Added Diagram page 14.71.25.1, Database ID=168817
+Input Line 45 Added Tie Down Database ID 168818 for Logic Source 14.71.25.1 Location 11C1B18 Pin B
+Input Line 46 Added Tie Down Database ID 168819 for Logic Source 14.71.25.1 Location 11C1B18 Pin F
+Input Line 47 Added page 18.14.01.1, Database ID=168820
+Input Line 47 Added Diagram page 18.14.01.1, Database ID=168821
+Input Line 47 Added Tie Down Database ID 168822 for Logic Source 18.14.01.1 Location 11D2C06 Pin L
+Input Line 48 Added page 13.72.06.1, Database ID=168823
+Input Line 48 Added Diagram page 13.72.06.1, Database ID=168824
+Input Line 48 Added Tie Down Database ID 168825 for Logic Source 13.72.06.1 Location 11D2E09 Pin A
+Input Line 49 Added page 13.64.08.1, Database ID=168826
+Input Line 49 Added Diagram page 13.64.08.1, Database ID=168827
+Input Line 49 Added Tie Down Database ID 168828 for Logic Source 13.64.08.1 Location 11D3A28 Pin A
+Input Line 50 Added Tie Down Database ID 168829 for Logic Source 12.12.67.1 Location 11D3A28 Pin P
+Input Line 51 Added Tie Down Database ID 168830 for Logic Source 13.64.08.1 Location 11D3B28 Pin E
+Input Line 52 Added page 13.66.05.1, Database ID=168831
+Input Line 52 Added Diagram page 13.66.05.1, Database ID=168832
+Input Line 52 Added Tie Down Database ID 168833 for Logic Source 13.66.05.1 Location 11D3C28 Pin D
+Input Line 53 Added Tie Down Database ID 168834 for Logic Source 13.66.05.1 Location 11D3C28 Pin E
+Input Line 54 Added page 13.66.03.1, Database ID=168835
+Input Line 54 Added Diagram page 13.66.03.1, Database ID=168836
+Input Line 54 Added Tie Down Database ID 168837 for Logic Source 13.66.03.1 Location 11D3F28 Pin D
+Input Line 55 Added Tie Down Database ID 168838 for Logic Source 13.64.08.1 Location 11D3F28 Pin M
+Input Line 56 Added page 13.66.01.1, Database ID=168839
+Input Line 56 Added Diagram page 13.66.01.1, Database ID=168840
+Input Line 56 Added Tie Down Database ID 168841 for Logic Source 13.66.01.1 Location 11D3G28 Pin O
+Input Line 57 Added Tie Down Database ID 168842 for Logic Source 13.66.01.1 Location 11D3H28 Pin A
+Input Line 58 Added Tie Down Database ID 168843 for Logic Source 12.12.67.1 Location 11D3H28 Pin H
+Input Line 59 Added page 12.62.02.1, Database ID=168844
+Input Line 59 Added Diagram page 12.62.02.1, Database ID=168845
+Input Line 59 Added Tie Down Database ID 168846 for Logic Source 12.62.02.1 Location 11D3F05 Pin K
+Input Line 60 Added page 13.50.07.1, Database ID=168847
+Input Line 60 Added Diagram page 13.50.07.1, Database ID=168848
+Input Line 60 Added Tie Down Database ID 168849 for Logic Source 13.50.07.1 Location 11D3G20 Pin G
+Input Line 61 Added Tie Down Database ID 168850 for Logic Source 13.64.05.1 Location 11D4F14 Pin D
+Input Line 62 Added Tie Down Database ID 168851 for Logic Source 13.64.05.1 Location 11D4F14 Pin F
+Input Line 63 Added Tie Down Database ID 168852 for Logic Source 13.66.05.1 Location 11D4K24 Pin G
+Input Line 64 Added page 13.74.05.1, Database ID=168853
+Input Line 64 Added Diagram page 13.74.05.1, Database ID=168854
+Input Line 64 Added Tie Down Database ID 168855 for Logic Source 13.74.05.1 Location 11D2G16 Pin E
+Input Line 65 Added page 39.50.70.1, Database ID=168856
+Input Line 65 Added Diagram page 39.50.70.1, Database ID=168857
+Added Feature S2 Database ID=168858
+Input Line 65 Added Tie Down Database ID 168859 for Logic Source 39.50.70.1 Location 11B4K12 Pin P
+Input Line 66 Added page 19.10.09.1, Database ID=168860
+Input Line 66 Added Diagram page 19.10.09.1, Database ID=168861
+Input Line 66 Added Tie Down Database ID 168862 for Logic Source 19.10.09.1 Location 11B4G24 Pin C
+Input Line 67 Added page 19.10.04.1, Database ID=168863
+Input Line 67 Added Diagram page 19.10.04.1, Database ID=168864
+Input Line 67 Added Tie Down Database ID 168865 for Logic Source 19.10.04.1 Location 11B4K19 Pin B
+Input Line 68 Added page 14.71.34.1, Database ID=168866
+Input Line 68 Added Diagram page 14.71.34.1, Database ID=168867
+Input Line 68 Added Tie Down Database ID 168868 for Logic Source 14.71.34.1 Location 11C1K06 Pin L
+Input Line 69 Added page 13.12.18.1, Database ID=168869
+Input Line 69 Added Diagram page 13.12.18.1, Database ID=168870
+Input Line 69 Added Tie Down Database ID 168871 for Logic Source 13.12.18.1 Location 11D1H11 Pin E
+Input Line 70 Added page 13.13.07.1, Database ID=168872
+Input Line 70 Added Diagram page 13.13.07.1, Database ID=168873
+Input Line 70 Added Tie Down Database ID 168874 for Logic Source 13.13.07.1 Location 11D1J13 Pin L
+Input Line 71 Added page 14.18.16.1, Database ID=168875
+Input Line 71 Added Diagram page 14.18.16.1, Database ID=168876
+Input Line 71 Added Tie Down Database ID 168877 for Logic Source 14.18.16.1 Location 11B2K19 Pin E
+Input Line 72 Added Tie Down Database ID 168878 for Logic Source 14.18.16.1 Location 11B2K19 Pin L
+Input Line 73 Added page 14.18.15.1, Database ID=168879
+Input Line 73 Added Diagram page 14.18.15.1, Database ID=168880
+Input Line 73 Added Tie Down Database ID 168881 for Logic Source 14.18.15.1 Location 11B2K24 Pin G
+Input Line 74 Added Tie Down Database ID 168882 for Logic Source 13.72.06.1 Location 11D2H16 Pin A
+Input Line 75 Added page 15.38.04.1, Database ID=168883
+Input Line 75 Added Diagram page 15.38.04.1, Database ID=168884
+Input Line 75 Added Tie Down Database ID 168885 for Logic Source 15.38.04.1 Location 11D1J17 Pin P
+Input Line 76 Added page 12.60.15.1, Database ID=168886
+Input Line 76 Added Diagram page 12.60.15.1, Database ID=168887
+Input Line 76 Added Tie Down Database ID 168888 for Logic Source 12.60.15.1 Location 11D1C23 Pin H
