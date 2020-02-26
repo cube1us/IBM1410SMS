@@ -17,6 +17,8 @@ See the project documentation file IBM1410SMS/Documentation.docx for more inform
 
 =======
 The file ibm1410sms.sql.gz is a zipped dump of the current MySQL database.
+The file IBM1410SMSModel.mwb is a MySQL Workbench model of the database  (PDF is a print version)
+
 
 >>>>>>> Added COPYING, database dump and readme to git commit
 See COPYING for license information
