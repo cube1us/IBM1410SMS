@@ -46,6 +46,7 @@ namespace IBM1410SMS
         Table<Diagrampage> diagramPageTable;
         Table<Cardlocationbottomnote> cardLocationBottomNoteTable;
         Table<Cardlocationblock> cardLocationBlockTable;
+        Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
 
         List<Machine> machineList;
         List<Volumeset> volumeSetList;
@@ -78,6 +79,7 @@ namespace IBM1410SMS
             diagramPageTable = db.getDiagramPageTable();
             cardLocationBottomNoteTable = db.getCardLocationBottomNoteTable();
             cardLocationBlockTable = db.getCardLocationBlockTable();
+            cableEdgeConnectionPageTable = db.getCableEdgeConnectionPageTable();
 
             //  Populate the (static) Sheets combo box...
 
@@ -159,7 +161,8 @@ namespace IBM1410SMS
                 volume.idVolume + "' ORDER BY name");
 
             //  But not all of those are card location pages.  Some may
-            //  be diagram pages.  Remove those from the list...
+            //  be diagram pages or cable/edge pages.  Remove those from the list...
+
             //  (NOTE:  Pages which are NEITHER diagram pages nor currently
             //  spoken for as card location pages remain in the list - they
             //  may become diagram pages via this form).
@@ -171,8 +174,15 @@ namespace IBM1410SMS
                 if(diagramPageList.Count > 0) {
                     pagesToRemoveList.Add(p);
                 }
+                List<Cableedgeconnectionpage> cableEdgeConnectionPageList = 
+                    cableEdgeConnectionPageTable.getWhere(
+                        "WHERE cableedgeconnectionpage.page='" + p.idPage + "'");
+                if (diagramPageList.Count > 0) {
+                    pagesToRemoveList.Add(p);
+                }
             }
-            foreach(Page p in pagesToRemoveList) {
+
+            foreach (Page p in pagesToRemoveList) {
                 pageList.Remove(p);
             }
 

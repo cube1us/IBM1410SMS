@@ -55,6 +55,7 @@ namespace IBM1410SMS
         Table<Tiedown> tieDownTable;
         Table<Edgeconnector> edgeConnectorTable;
         Table<Dotfunction> dotFunctionTable;
+        Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
 
         List<Machine> machineList;
         List<Volumeset> volumeSetList;
@@ -96,6 +97,7 @@ namespace IBM1410SMS
             tieDownTable = db.getTieDownTable();
             edgeConnectorTable = db.getEdgeConnectorTable();
             dotFunctionTable = db.getDotFunctionTable();
+            cableEdgeConnectionPageTable = db.getCableEdgeConnectionPageTable();
 
             machineList = machineTable.getAll();
 
@@ -193,7 +195,9 @@ namespace IBM1410SMS
                 volume.idVolume + "' ORDER BY page.name");
 
             //  But not all of those are ALD diagram pages.  Some may
-            //  be card location pages.  Remove those from the list...
+            //  be card location pages or cable/edge connector pages.  
+            //  Remove those from the list...
+
             //  (NOTE:  Pages which are NEITHER diagram pages nor currently
             //  spoken for as card location pages remain in the list - they
             //  may become diagram pages via this form).
@@ -203,6 +207,12 @@ namespace IBM1410SMS
                 List<Cardlocationpage> cardLocationPageList =
                     cardLocationPageTable.getWhere(
                     "WHERE cardlocationpage.page='" + p.idPage + "'");
+                if (cardLocationPageList.Count > 0) {
+                    pagesToRemoveList.Add(p);
+                }
+                List<Cableedgeconnectionpage> cableEdgeConnectionPageList =
+                    cableEdgeConnectionPageTable.getWhere(
+                    "WHERE cableedgeconnectionpage.page='" + p.idPage + "'");
                 if (cardLocationPageList.Count > 0) {
                     pagesToRemoveList.Add(p);
                 }

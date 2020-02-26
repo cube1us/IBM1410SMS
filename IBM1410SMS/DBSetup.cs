@@ -58,6 +58,8 @@ namespace IBM1410SMS
         private Table<Dotfunction> dotFunctionTable;
         private Table<Connection> connectionTable;
         private Table<Parameters> parametersTable;
+        private Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
+        private Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
 
         //  This is the constructor.  It CANNOT do ANYTHING, because it
         //  is statically initialized.
@@ -119,6 +121,9 @@ namespace IBM1410SMS
             dotFunctionTable = new Table<Dotfunction>(connection);
             connectionTable = new Table<Connection>(connection);
             parametersTable = new Table<Parameters>(connection);
+            cableEdgeConnectionPageTable = new Table<Cableedgeconnectionpage>(connection);
+            cableEdgeConnectionBlockTable = new Table<Cableedgeconnectionblock>(connection);
+
 
 
             return (true);
@@ -287,6 +292,14 @@ namespace IBM1410SMS
 
         public Table<Parameters> getParametersTable() {
             return parametersTable;
+        }
+
+        public Table<Cableedgeconnectionpage> getCableEdgeConnectionPageTable() {
+            return cableEdgeConnectionPageTable;
+        }
+
+        public Table<Cableedgeconnectionblock> getCableEdgeConnectionBlockTable() {
+            return cableEdgeConnectionBlockTable;
         }
     }
 }
