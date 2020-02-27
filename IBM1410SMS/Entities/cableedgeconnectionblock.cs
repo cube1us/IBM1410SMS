@@ -18,7 +18,7 @@ namespace MySQLFramework
 		[MyColumn] public int cableEdgeConnectionPage { get; set; }
 		[MyColumn] public string diagramRow { get; set; }
 		[MyColumn] public int diagramColumn { get; set; }
-		[MyColumn] public int eco { get; set; }
+		[MyColumn] public int ecotag { get; set; }
 		[MyColumn] public string topNote { get; set; }
 		[MyColumn] public int cardSlot { get; set; }
 		[MyColumn] public string originNote { get; set; }

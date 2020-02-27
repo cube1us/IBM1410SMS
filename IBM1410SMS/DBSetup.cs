@@ -60,6 +60,7 @@ namespace IBM1410SMS
         private Table<Parameters> parametersTable;
         private Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
         private Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
+        private Table<Cableedgeconnectionecotag> cableEdgeConnectionECOTagTable;
 
         //  This is the constructor.  It CANNOT do ANYTHING, because it
         //  is statically initialized.
@@ -123,6 +124,7 @@ namespace IBM1410SMS
             parametersTable = new Table<Parameters>(connection);
             cableEdgeConnectionPageTable = new Table<Cableedgeconnectionpage>(connection);
             cableEdgeConnectionBlockTable = new Table<Cableedgeconnectionblock>(connection);
+            cableEdgeConnectionECOTagTable = new Table<Cableedgeconnectionecotag>(connection);
 
 
 
@@ -301,5 +303,11 @@ namespace IBM1410SMS
         public Table<Cableedgeconnectionblock> getCableEdgeConnectionBlockTable() {
             return cableEdgeConnectionBlockTable;
         }
+
+        public Table<Cableedgeconnectionecotag> getCableEdgeConnectionECOTagTable()
+        {
+            return cableEdgeConnectionECOTagTable;
+        }
+
     }
 }
