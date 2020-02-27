@@ -105,6 +105,12 @@
     <Compile Include="EditDiagramLogicBlockForm.Designer.cs">
       <DependentUpon>EditDiagramLogicBlockForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditCableEdgeConnectionPageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditCableEdgeConnectionPageForm.Designer.cs">
+      <DependentUpon>EditCableEdgeConnectionPageForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditDiagramPageForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -154,6 +160,7 @@
       <DependentUpon>EditVolumeSetsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Entities\cableedgeconnectionblock.cs" />
+    <Compile Include="Entities\cableedgeconnectionecotag.cs" />
     <Compile Include="Entities\cableedgeconnectionpage.cs" />
     <Compile Include="Entities\connection.cs" />
     <Compile Include="Entities\dotfunction.cs" />
@@ -366,6 +373,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditDiagramLogicBlockForm.resx">
       <DependentUpon>EditDiagramLogicBlockForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditCableEdgeConnectionPageForm.resx">
+      <DependentUpon>EditCableEdgeConnectionPageForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditDiagramPageForm.resx">
       <DependentUpon>EditDiagramPageForm.cs</DependentUpon>
