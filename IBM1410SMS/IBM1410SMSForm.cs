@@ -214,5 +214,13 @@ namespace IBM1410SMS
             ReportCardTypeUsageForm.ShowDialog();
 
         }
+
+        private void cableEdgeConnectionPagesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            EditCableEdgeConnectionPageForm EditCableEdgeConnectionPageForm = 
+                new EditCableEdgeConnectionPageForm();
+            EditCableEdgeConnectionPageForm.ShowDialog();
+
+        }
     }
 }

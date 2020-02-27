@@ -58,9 +58,10 @@
             this.generateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cardTypeReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.cableEdgeConnectionPagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -94,7 +95,8 @@
             this.cardLocationPagesToolStripMenuItem,
             this.cardLocationShartsToolStripMenuItem,
             this.tieDownsMenuItem,
-            this.aldDiagramPagesMenuItem});
+            this.aldDiagramPagesMenuItem,
+            this.cableEdgeConnectionPagesToolStripMenuItem});
             this.editMenuItem.Name = "editMenuItem";
             this.editMenuItem.Size = new System.Drawing.Size(39, 20);
             this.editMenuItem.Text = "Edit";
@@ -102,84 +104,84 @@
             // editMachinesMenuItem
             // 
             this.editMachinesMenuItem.Name = "editMachinesMenuItem";
-            this.editMachinesMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editMachinesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editMachinesMenuItem.Text = "Machines";
             this.editMachinesMenuItem.Click += new System.EventHandler(this.editMachinesMenuItem_Click);
             // 
             // editEcosMenuItem
             // 
             this.editEcosMenuItem.Name = "editEcosMenuItem";
-            this.editEcosMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editEcosMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editEcosMenuItem.Text = "ECOs";
             this.editEcosMenuItem.Click += new System.EventHandler(this.editEcosMenuItem_Click);
             // 
             // editFeaturesMenuItem
             // 
             this.editFeaturesMenuItem.Name = "editFeaturesMenuItem";
-            this.editFeaturesMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editFeaturesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editFeaturesMenuItem.Text = "Features";
             this.editFeaturesMenuItem.Click += new System.EventHandler(this.editFeaturesMenuItem_Click);
             // 
             // editFramesMenuItem
             // 
             this.editFramesMenuItem.Name = "editFramesMenuItem";
-            this.editFramesMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editFramesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editFramesMenuItem.Text = "Frames";
             this.editFramesMenuItem.Click += new System.EventHandler(this.editFramesMenuItem_Click);
             // 
             // editMachineGatesMenuItem
             // 
             this.editMachineGatesMenuItem.Name = "editMachineGatesMenuItem";
-            this.editMachineGatesMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editMachineGatesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editMachineGatesMenuItem.Text = "Machine Gates";
             this.editMachineGatesMenuItem.Click += new System.EventHandler(this.editMachineGatesMenuItem_Click);
             // 
             // editPanelsMenuItem
             // 
             this.editPanelsMenuItem.Name = "editPanelsMenuItem";
-            this.editPanelsMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editPanelsMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editPanelsMenuItem.Text = "Panels";
             this.editPanelsMenuItem.Click += new System.EventHandler(this.editPanelsMenuItem_Click);
             // 
             // editVolumeSetsMenuItem
             // 
             this.editVolumeSetsMenuItem.Name = "editVolumeSetsMenuItem";
-            this.editVolumeSetsMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editVolumeSetsMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editVolumeSetsMenuItem.Text = "Volume Sets";
             this.editVolumeSetsMenuItem.Click += new System.EventHandler(this.editVolumeSetsMenuItem_Click);
             // 
             // editVolumeMenuItem
             // 
             this.editVolumeMenuItem.Name = "editVolumeMenuItem";
-            this.editVolumeMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.editVolumeMenuItem.Size = new System.Drawing.Size(234, 22);
             this.editVolumeMenuItem.Text = "Volumes";
             this.editVolumeMenuItem.Click += new System.EventHandler(this.editVolumeMenuItem_Click);
             // 
             // cardLocationPagesToolStripMenuItem
             // 
             this.cardLocationPagesToolStripMenuItem.Name = "cardLocationPagesToolStripMenuItem";
-            this.cardLocationPagesToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.cardLocationPagesToolStripMenuItem.Size = new System.Drawing.Size(234, 22);
             this.cardLocationPagesToolStripMenuItem.Text = "Card Location Pages";
             this.cardLocationPagesToolStripMenuItem.Click += new System.EventHandler(this.cardLocationPagesToolStripMenuItem_Click);
             // 
             // cardLocationShartsToolStripMenuItem
             // 
             this.cardLocationShartsToolStripMenuItem.Name = "cardLocationShartsToolStripMenuItem";
-            this.cardLocationShartsToolStripMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.cardLocationShartsToolStripMenuItem.Size = new System.Drawing.Size(234, 22);
             this.cardLocationShartsToolStripMenuItem.Text = "Card Location Charts";
             this.cardLocationShartsToolStripMenuItem.Click += new System.EventHandler(this.cardLocationShartsToolStripMenuItem_Click);
             // 
             // tieDownsMenuItem
             // 
             this.tieDownsMenuItem.Name = "tieDownsMenuItem";
-            this.tieDownsMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.tieDownsMenuItem.Size = new System.Drawing.Size(234, 22);
             this.tieDownsMenuItem.Text = "Tie Downs";
             this.tieDownsMenuItem.Click += new System.EventHandler(this.tieDownsMenuItem_Click);
             // 
             // aldDiagramPagesMenuItem
             // 
             this.aldDiagramPagesMenuItem.Name = "aldDiagramPagesMenuItem";
-            this.aldDiagramPagesMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.aldDiagramPagesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.aldDiagramPagesMenuItem.Text = "ALD Diagram Pages";
             this.aldDiagramPagesMenuItem.Click += new System.EventHandler(this.aldDiagramPagesMenuItem_Click);
             // 
@@ -331,14 +333,6 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.DefaultExt = "csv";
-            this.openFileDialog1.FileName = "*.csv";
-            this.openFileDialog1.Filter = "CSV Files|*.csv";
-            this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
-            this.openFileDialog1.Title = "Specify File To Import";
-            // 
             // reportsToolStripMenuItem
             // 
             this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -350,9 +344,24 @@
             // cardTypeReportToolStripMenuItem
             // 
             this.cardTypeReportToolStripMenuItem.Name = "cardTypeReportToolStripMenuItem";
-            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
             this.cardTypeReportToolStripMenuItem.Text = "Card Type Report";
             this.cardTypeReportToolStripMenuItem.Click += new System.EventHandler(this.cardTypeReportToolStripMenuItem_Click);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.DefaultExt = "csv";
+            this.openFileDialog1.FileName = "*.csv";
+            this.openFileDialog1.Filter = "CSV Files|*.csv";
+            this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
+            this.openFileDialog1.Title = "Specify File To Import";
+            // 
+            // cableEdgeConnectionPagesToolStripMenuItem
+            // 
+            this.cableEdgeConnectionPagesToolStripMenuItem.Name = "cableEdgeConnectionPagesToolStripMenuItem";
+            this.cableEdgeConnectionPagesToolStripMenuItem.Size = new System.Drawing.Size(234, 22);
+            this.cableEdgeConnectionPagesToolStripMenuItem.Text = "Cable/Edge Connection Pages";
+            this.cableEdgeConnectionPagesToolStripMenuItem.Click += new System.EventHandler(this.cableEdgeConnectionPagesToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 
@@ -408,6 +417,7 @@
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem reportsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cardTypeReportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cableEdgeConnectionPagesToolStripMenuItem;
     }
 }
 
