@@ -198,9 +198,9 @@ namespace IBM1410SMS
             //  Some may be ALD diagram  pages or card location pages
             //  Remove those from the list...
 
-            //  (NOTE:  Pages which are NEITHER ALD, card lcation pages nor currently
-            //  spoken for as cable edge connection pages remain in the list - they
-            //  may become Cable/Edge Connection pages via this form).
+            //  (NOTE:  Pages which are NOT cable/edge pages nor currently
+            //  spoken for as diagram pages or card location pages remain in 
+            //  the list - they may become Cable/Edge Connection pages via this form).
 
             List<Page> pagesToRemoveList = new List<Page>();
             foreach (Page p in pageList) {
@@ -213,7 +213,7 @@ namespace IBM1410SMS
                 List<Diagrampage> diagramPageList =
                     diagramPageTable.getWhere(
                     "WHERE diagramPage.page='" + p.idPage + "'");
-                if (cardLocationPageList.Count > 0) {
+                if (diagramPageList.Count > 0) {
                     pagesToRemoveList.Add(p);
                 }
             }

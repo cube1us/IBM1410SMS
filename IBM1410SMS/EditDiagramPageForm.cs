@@ -198,9 +198,9 @@ namespace IBM1410SMS
             //  be card location pages or cable/edge connector pages.  
             //  Remove those from the list...
 
-            //  (NOTE:  Pages which are NEITHER diagram pages nor currently
-            //  spoken for as card location pages remain in the list - they
-            //  may become diagram pages via this form).
+            //  (NOTE:  Pages which are NOT diagram pages nor currently
+            //  spoken for as card location pages or cable/edge connector
+            //  pages remain in the list - they may become diagram pages via this form).
 
             List<Page> pagesToRemoveList = new List<Page>();
             foreach (Page p in pageList) {
