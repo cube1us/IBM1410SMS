@@ -49,11 +49,9 @@ namespace IBM1410SMS
         Table<Cableedgeconnectionecotag> cableEdgeConnectionEcoTagTable;
         Table<Eco> ecoTable;
         Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
-        Table<Sheetedgeinformation> sheetEdgeInformationTable;
         Table<Connection> connectionTable;
         Table<Cardlocationblock> cardLocationBlockTable;
         Table<Tiedown> tieDownTable;
-        Table<Edgeconnector> edgeConnectorTable;
         Table<Dotfunction> dotFunctionTable;
         Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
 
@@ -72,10 +70,6 @@ namespace IBM1410SMS
         List<Cableedgeconnectionecotag> deletedCableEdgeconnectionEcoTagList;
         BindingList<Cableedgeconnectionecotag> cableEdgeconnectionEcoTagBindingList;
 
-        List<Sheetedgeinformation> sheetEdgeInformationList;
-        List<Sheetedgeinformation> deletedSheetEdgeInformationList;
-        BindingList<Sheetedgeinformation> sheetEdgeInformationBindingList;
-
         bool pageModified = false;
         bool populatingDialog = false;
 
@@ -91,11 +85,9 @@ namespace IBM1410SMS
             cableEdgeConnectionEcoTagTable = db.getCableEdgeConnectionECOTagTable();
             ecoTable = db.getEcoTable();
             cableEdgeConnectionBlockTable = db.getCableEdgeConnectionBlockTable();
-            sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
             connectionTable = db.getConnectionTable();
             cardLocationBlockTable = db.getCardLocationBlockTable();
             tieDownTable = db.getTieDownTable();
-            edgeConnectorTable = db.getEdgeConnectorTable();
             dotFunctionTable = db.getDotFunctionTable();
             cableEdgeConnectionPageTable = db.getCableEdgeConnectionPageTable();
 
@@ -255,22 +247,17 @@ namespace IBM1410SMS
 
             ecosDataGridView.Columns.Clear();
             ecosDataGridView.DataSource = null;
-            //  REMOVE sheetEdgeDataGridView.Columns.Clear();
-            //  REMOVE  sheetEdgeDataGridView.DataSource = null;
 
             //  Forget anything that we may have been remembering to delete.
 
             deletedCableEdgeconnectionEcoTagList = new List<Cableedgeconnectionecotag>();
-            deletedSheetEdgeInformationList = new List<Sheetedgeinformation>();
 
             //  If the page is null, enter "add" mode, and return.
             //  Otherwise, we are in update/remove mode.
 
             if (page == null) {
                 removeButton.Visible = false;
-                // REMOVE  editEdgeConnectionsButton.Visible = false;
                 editCableEdgeBlocksButton.Visible = false;
-                sheetEdgeInformationList = new List<Sheetedgeinformation>();
                 cableEdgeConnectionEcoTagList = new List<Cableedgeconnectionecotag>();
                 addApplyButton.Text = "Add";
                 currentCableEdgeConnectionPage = null;
@@ -308,7 +295,6 @@ namespace IBM1410SMS
                 currentCableEdgeConnectionPage = cableEdgeConnectionPageList[0];
             }
 
-            // REMOVE  editEdgeConnectionsButton.Visible = true;
             editCableEdgeBlocksButton.Visible = true;
             populatingDialog = true; 
 
@@ -331,27 +317,13 @@ namespace IBM1410SMS
                     currentCableEdgeConnectionPage.idCableEdgeConnectionPage +
                     "' ORDER BY cableedgeconnectionecotag.name");
 
-                // REMOVE  sheetEdgeInformationList = new List<Sheetedgeinformation>();
-
-                // REMOVE  sheetEdgeInformationList = sheetEdgeInformationTable.getWhere(
-                // REMOVE    "WHERE diagramPage='" + currentCableEdgeConnectionPage.idDiagramPage +
-                // REMOVE    "' ORDER BY rightSide, leftSide, sheetedgeinformation.row");
-
                 cableEdgeconnectionEcoTagBindingList = new BindingList<Cableedgeconnectionecotag>(
                     cableEdgeConnectionEcoTagList);
                 cableEdgeconnectionEcoTagBindingList.AllowEdit = true;
                 cableEdgeconnectionEcoTagBindingList.AllowNew = true;
                 cableEdgeconnectionEcoTagBindingList.AllowRemove = true;
 
-                // REMOVE  sheetEdgeInformationBindingList =
-                // REMOVE    new BindingList<Sheetedgeinformation>(
-                // REMOVE        sheetEdgeInformationList);
-                // REMOVE  sheetEdgeInformationBindingList.AllowEdit = true;
-                // REMOVE  sheetEdgeInformationBindingList.AllowNew = true;
-                // REMOVE  sheetEdgeInformationBindingList.AllowRemove = true;
-
                 ecosDataGridView.DataSource = cableEdgeconnectionEcoTagBindingList;
-                //  REMOVE sheetEdgeDataGridView.DataSource = sheetEdgeInformationBindingList;
 
                 //  Hide columns the user does not need to see.
 
@@ -359,24 +331,10 @@ namespace IBM1410SMS
                 ecosDataGridView.Columns["cableEdgeConnectionPage"].Visible = false;
                 ecosDataGridView.Columns["modified"].Visible = false;
 
-                // REMOVE  sheetEdgeDataGridView.Columns["idSheetEdgeInformation"].Visible = false;
-                // REMOVE  sheetEdgeDataGridView.Columns["diagramPage"].Visible = false;
-                // REMOVE  sheetEdgeDataGridView.Columns["modified"].Visible = false;
-
                 //  Set up the simple columns' headers and widths
 
                 ecosDataGridView.Columns["name"].HeaderText = "Tag";
                 ecosDataGridView.Columns["name"].Width = 4 * 8;
-
-                // REMOVE  sheetEdgeDataGridView.Columns["row"].HeaderText = "Row";
-                // REMOVE  sheetEdgeDataGridView.Columns["row"].Width = 4 * 8;
-                // REMOVE  sheetEdgeDataGridView.Columns["signalName"].HeaderText =
-                // REMOVE    "Signal Name";
-                // REMOVE  sheetEdgeDataGridView.Columns["signalName"].Width = 30 * 8;
-                // REMOVE  sheetEdgeDataGridView.Columns["signalName"].DefaultCellStyle.Font =                  
-                // REMOVE    new Font("Courier New", 10);
-
-
 
                 //  The rest of the columns are special, as combo boxes
                 //  or dates.
@@ -407,40 +365,6 @@ namespace IBM1410SMS
                 ecosDataGridView.Columns.Remove("date");
                 ecosDataGridView.Columns.Insert(5, ecoDateColumn);
 
-                //  The Sheet Edge Information has special columns too...
-
-                // REMOVE  DataGridViewCheckBoxColumn leftSideColumn =
-                // REMOVE    new DataGridViewCheckBoxColumn();
-                // REMOVE  leftSideColumn.DataPropertyName = "leftSide";
-                // REMOVE  leftSideColumn.HeaderText = "Left (In)";
-                // REMOVE  leftSideColumn.TrueValue = 1;
-                // REMOVE  leftSideColumn.FalseValue = 0;
-                // REMOVE  leftSideColumn.Width = 5 * 8;
-                // REMOVE  leftSideColumn.HeaderCell.Style.Alignment =
-                // REMOVE    DataGridViewContentAlignment.MiddleCenter;
-                //  REMOVE  sheetEdgeDataGridView.Columns.Remove("leftSide");
-                //  REMOVE  sheetEdgeDataGridView.Columns.Insert(0, leftSideColumn);
-
-                // REMOVE DataGridViewCheckBoxColumn rightSideColumn =
-                // REMOVE    new DataGridViewCheckBoxColumn();
-                // REMOVE  rightSideColumn.DataPropertyName = "rightSide";
-                // REMOVE  rightSideColumn.HeaderText = "Right (Out)";
-                // REMOVE  rightSideColumn.TrueValue = 1;
-                // REMOVE  rightSideColumn.FalseValue = 0;
-                // REMOVE  rightSideColumn.Width = 5 * 8;
-                // REMOVE  rightSideColumn.HeaderCell.Style.Alignment =
-                // REMOVE    DataGridViewContentAlignment.MiddleCenter;
-                // REMOVE  sheetEdgeDataGridView.Columns.Remove("rightSide");
-                // REMOVE  sheetEdgeDataGridView.Columns.Insert(1, rightSideColumn);
-
-                // REMOVE  DataGridViewTextBoxColumn countColumn =
-                // REMOVE    new DataGridViewTextBoxColumn();
-                // REMOVE  countColumn.HeaderText = "Count";
-                // REMOVE  countColumn.Name = "count";
-                // REMOVE  countColumn.Width = 2 * 8;
-                // REMOVE  countColumn.ReadOnly = true;
-                // REMOVE  sheetEdgeDataGridView.Columns.Add(countColumn);
-
                 //  Fill in the ECO text box columns, and reset the modified tags.
 
                 rowIndex = 0;
@@ -458,44 +382,6 @@ namespace IBM1410SMS
                     ++rowIndex;
                 }
 
-                //  Fill in the sheet edge counts, and reset the sheet edge modified tags as well...
-
-
-                /* BLOCK REMOVED
-                 * 
-                rowIndex = 0;
-                foreach(Sheetedgeinformation edgeInfo in sheetEdgeInformationList) {
-                    List<Connection> connections = connectionTable.getWhere(
-                        "WHERE fromEdgeSheet='" + edgeInfo.idSheetEdgeInformation + "'" +
-                        " OR toEdgeSheet='" + edgeInfo.idSheetEdgeInformation + "'");
-                    ((DataGridViewTextBoxCell)
-                        (sheetEdgeDataGridView.Rows[rowIndex].Cells["count"])).Value =
-                        connections.Count.ToString();
-                    edgeInfo.modified = false;
-
-                    //  Also, issue a warning if the sheet edge appears as the destination 
-                    //  in more than one sheet.
-
-                    List<Sheetedgeinformation> leftSideList = sheetEdgeInformationTable.getWhere(
-                        "WHERE signalname='" + edgeInfo.signalName + "'" +
-                        " AND rightSide='1'");
-                    if(leftSideList.Count > 1) {
-                        String warning = "WARNING:  Signal " + edgeInfo.signalName +
-                            " appears on the right side of " + leftSideList.Count +
-                            " diagrams: ";
-                        foreach (Sheetedgeinformation leftSide in leftSideList) {
-                            warning += Helpers.getDiagramPageName(leftSide.diagramPage) + " ";
-                        }
-                        MessageBox.Show(warning, "Signal output from multiple sheets",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-
-
-                    ++rowIndex;                    
-                }
-
-                    BLOCK REMOVED
-                */
             }
 
             populatingDialog = false;
@@ -634,9 +520,6 @@ namespace IBM1410SMS
                 return;
             }
 
-            //  As with bottom notes, changing a block does not necessarily mean
-            //  we will be updating the containing card location.
-
             Cableedgeconnectionecotag changedEco =
                 (Cableedgeconnectionecotag)ecosDataGridView.Rows[e.RowIndex].DataBoundItem;
             changedEco.modified = true;
@@ -672,128 +555,12 @@ namespace IBM1410SMS
             }
         }
 
-        /*
-         * 
-         * BLOCK REMOVED  
-        private void sheetEdgeDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e) {
-            //  Changing the title row, or one that has just been deleted doesn't count.
-
-            if (e.RowIndex < 0 ||
-                e.RowIndex >= sheetEdgeDataGridView.Rows.Count) {
-                return;
-            }
-
-            //  As with bottom notes, changing a block does not necessarily mean
-            //  we will be updating the containing card location.
-
-            Sheetedgeinformation changedSheetEdge =
-                (Sheetedgeinformation)sheetEdgeDataGridView.Rows[e.RowIndex].DataBoundItem;
-            changedSheetEdge.modified = true;
-        }
-            BLOCK REMOVED
-        */
-
-
-        private void sheetEdgeDataGridView_UserDeletingRow(object sender, DataGridViewRowCancelEventArgs e) {
-
-            //  Need to check the connection  table for references before
-            //  a user can delete sheet edge information
-
-            Sheetedgeinformation changedSheetEdge = 
-                (Sheetedgeinformation)e.Row.DataBoundItem;
-
-            //  If this is a new one, then their cannot be any references.
-            if (changedSheetEdge.idSheetEdgeInformation == 0) {
-                return;
-            }
-
-            //  Search the connection table according to whether this is an
-            //  incoming or outgoing signal...
-
-            List<Connection> connectionList = connectionTable.getWhere(
-                "WHERE fromEdgeSheet='" +
-                    changedSheetEdge.idSheetEdgeInformation + "'" +
-                " OR fromEdgeOriginSheet='" +
-                    changedSheetEdge.idSheetEdgeInformation + "'" +
-                " OR toEdgeSheet='" +
-                    changedSheetEdge.idSheetEdgeInformation + "'" +
-                " OR toEdgeDestinationSheet='" +
-                    changedSheetEdge.idSheetEdgeInformation + "'");
-
-            if (connectionList.Count > 0) {
-                MessageBox.Show("ERROR: This Sheet Edge entry is referenced " +
-                    "by one or more entries in the connection table, " +
-                    "and cannot be removed.",
-                    "Sheet Edge Information entry referenced by other entries",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                e.Cancel = true;
-            }
-            else {
-                deletedSheetEdgeInformationList.Add(changedSheetEdge);
-            }
-
-        }
-
-        /* 
-         * 
-         * BLOCK REMOVED
-
-        private void sheetEdgeDataGridView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
-            string sv = e.FormattedValue.ToString();
-            string message = "";
-
-            //  Skip if we are on a header row or if the columns are not all in place.
-
-            if (populatingDialog ||
-                e.RowIndex < 0 || sheetEdgeDataGridView.Rows[e.RowIndex].IsNewRow) {
-                return;
-            }
-
-            //  Changed to allow any single character for a "row" name.
-
-            if (e.ColumnIndex == sheetEdgeDataGridView.Columns["row"].Index) {
-                if (string.IsNullOrEmpty(sv) || sv.Length > 1) { 
-                    // Array.IndexOf(Helpers.validDiagramRows,sv.ToUpper()) < 0) { 
-                    message = "Missing or Invalid Diagram Row";
-                    e.Cancel = true;
-                }
-            }
-
-            else if (e.ColumnIndex == sheetEdgeDataGridView.Columns["signalName"].Index) {
-                if (string.IsNullOrEmpty(sv) ||
-                    sv.Length > 45) {
-                    message = "Missing or invalid Signal Name (1-45 characters)";
-                    e.Cancel = true;
-                }
-            }
-
-            sheetEdgeDataGridView.Rows[e.RowIndex].ErrorText = message;
-        }
-
-            BLOCK REMOVED
-        */
-
-
 
         private void cancelButton_Click(object sender, EventArgs e) {
             //  If the user cancels, we obey!
             this.Close();
         }
 
-        /*
-         * REMOVE BLOCK
-         * 
-        private void editEdgeConnectionsButton_Click(object sender, EventArgs e) {
-
-            EditEdgeConnectorsForm editEdgeConnectorsForm = new EditEdgeConnectorsForm(
-                currentMachine, currentVolumeSet, currentVolume, currentCableEdgeConnectionPage);
-
-            editEdgeConnectorsForm.ShowDialog();
-
-        }
-
-           REMOVE
-        */
 
         private void editCableEdgeBlocksButton_Click(object sender, EventArgs e) {
 
@@ -803,8 +570,6 @@ namespace IBM1410SMS
                // currentMachine, currentVolumeSet, currentVolume, currentCableEdgeConnectionPage);
             // EditDiagramBlocksForm.ShowDialog();
 
-            //  Refresh the dialog to pick up the changed sheet edge signal counts.
-
             populateDialog(currentPage);
         }
 
@@ -813,7 +578,6 @@ namespace IBM1410SMS
         private void addApplyButton_Click(object sender, EventArgs e) {
 
             bool errors = false;
-            // REMOVED  int rowIndex = 0;
             string message;
 
 
@@ -855,36 +619,13 @@ namespace IBM1410SMS
                 }
             }
 
-            //  Validate that any Sheet Edge Information Entries have
-            //  leftSide or rightSide (but not both).
-
-            /*
-             * BLOCK REMOVED 
-             * 
-            rowIndex = 0;
-            foreach(Sheetedgeinformation edgeInfo in sheetEdgeInformationList) {
-                if(edgeInfo.leftSide + edgeInfo.rightSide != 1) {
-                    sheetEdgeDataGridView.Rows[rowIndex].ErrorText =
-                        "Must select ONE of left side OR right side";
-                    errors = true;
-                }
-                else if(edgeInfo.row == null || edgeInfo.row.Length != 1 || 
-                    edgeInfo.signalName == null || edgeInfo.signalName.Length == 0) {
-                    sheetEdgeDataGridView.Rows[rowIndex].ErrorText =
-                        "Row and Signal Name cannot be empty.";
-                    errors = true;
-                }
-                ++rowIndex;
-            }
-
-                BLOCK REMOVED
-            */
+            //  The following may end up being dead code - it was originally for sheet
+            //  edge information errors.
 
             if(errors) {
-                MessageBox.Show("Error:  There are one or more errors in " +
-                    "Sheet Edge Information that must be corrected before " +
-                    "proceeding.",
-                    "Sheet Edge Information Error(s)",
+                MessageBox.Show("Error:  There are one or more errors " +
+                    " that must be corrected before proceeding.",
+                    "Error(s)",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -1065,50 +806,6 @@ namespace IBM1410SMS
                 ++rowIndex;
             }
 
-            //  Then a similar process for Sheet Edge Information
-
-            foreach (Sheetedgeinformation edge in deletedSheetEdgeInformationList) {
-                sheetEdgeInformationTable.deleteByKey(edge.idSheetEdgeInformation);
-                message += deleteAction + " Sheet " + (edge.leftSide > 0 ? "Left" : "Right") +
-                    " edge information entry, row " + edge.row +
-                    ", Signal " + edge.signalName +
-                    " (Database ID " + edge.idSheetEdgeInformation + ")\n";
-            }
-
-            rowIndex = 0;
-
-            /*
-             * REMOVE BLOCK
-            foreach (Sheetedgeinformation edge in sheetEdgeInformationList) {
-                if (edge.idSheetEdgeInformation == 0 || edge.modified) {
-                    edge.diagramPage = currentCableEdgeConnectionPage.idDiagramPage;
-                    //  Translate all row names and signal names to upper case
-                    edge.signalName = edge.signalName.ToUpper();
-                    edge.row = edge.row.ToUpper();
-                    //  The other fields should already be filled in.
-                    if (edge.idSheetEdgeInformation == 0) {
-                        action = addAction;
-                        if (doUpdate) {
-                            edge.idSheetEdgeInformation = IdCounter.incrementCounter();
-                            sheetEdgeInformationTable.insert(edge);
-                        }
-                    }
-                    else {
-                        action = updateAction;
-                        if (doUpdate) {
-                            sheetEdgeInformationTable.update(edge);
-                        }
-                    }
-                    message += action + " Sheet " + (edge.leftSide > 0 ? "Left" : "Right") +
-                        " edge information entry, row " + edge.row +
-                        ", Signal " + edge.signalName +
-                        (doUpdate ? " Database ID " + edge.idSheetEdgeInformation + ")" : "") +
-                        "\n";
-                }
-            }
-                REMOVE
-            */
-
             //  Close out the transaction...
 
             if (doUpdate) {
@@ -1219,35 +916,17 @@ namespace IBM1410SMS
             string whereClause = "WHERE cableEdgeConnectionPage='" + 
                 currentCableEdgeConnectionPage.idCableEdgeConnectionPage + "'";
 
-            // List<Cardlocationblock> cardLocationBlockList =
-            //    cardLocationBlockTable.getWhere(whereClause);
             List<Cableedgeconnectionblock> cableEdgeConnectionBlockList = 
                 cableEdgeConnectionBlockTable.getWhere(whereClause);
-            // REMOVED  List<Tiedown> tieDownList = tieDownTable.getWhere(whereClause);
             List<Cableedgeconnectionecotag> ecoTagList = 
                 cableEdgeConnectionEcoTagTable.getWhere(whereClause);
-            // REMOVED  List<Edgeconnector> edgeList = edgeConnectorTable.getWhere(whereClause);
-            // REMOVED  List<Sheetedgeinformation> sheetEdgeList =
-            // REMOVED    sheetEdgeInformationTable.getWhere(whereClause);
-            // REMOVED  List<Dotfunction> dotFunctionList = dotFunctionTable.getWhere(whereClause);
 
-            if(// cardLocationBlockList.Count > 0 ||
-                cableEdgeConnectionBlockList.Count > 0 ||
-                // tieDownList.Count > 0 ||
-                ecoTagList.Count > 0   // ||
-                // edgeList.Count > 0 ||
-                // sheetEdgeList.Count > 0 || 
-                // dotFunctionList.Count > 0
-                ) {
+            if(cableEdgeConnectionBlockList.Count > 0 ||
+                ecoTagList.Count > 0 ) {
                 message = "The following reference counts were found: " + Environment.NewLine +
-                    // "Card Location Blocks: " + cardLocationBlockList.Count + Environment.NewLine +
                     "Cable/Edge Connection Blocks: " 
                         + cableEdgeConnectionBlockList.Count + Environment.NewLine +
-                    // "Tie Downs:            " + tieDownList.Count + Environment.NewLine +
                     "ECO Tags:                     " + ecoTagList.Count + Environment.NewLine +
-                    // "Edge Connections:     " + edgeList.Count + Environment.NewLine +
-                    // "Sheet Edge Signals:   " + sheetEdgeList.Count + Environment.NewLine +
-                    // "DOT Functions:        " + dotFunctionList.Count + Environment.NewLine +
                     Environment.NewLine +
                     "Cable/Edge Connection Page cannot be removed";
                 MessageBox.Show(message, "Cable/Edge Connection Page cannot be removed.",

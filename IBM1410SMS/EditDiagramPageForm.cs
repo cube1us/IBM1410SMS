@@ -213,7 +213,7 @@ namespace IBM1410SMS
                 List<Cableedgeconnectionpage> cableEdgeConnectionPageList =
                     cableEdgeConnectionPageTable.getWhere(
                     "WHERE cableedgeconnectionpage.page='" + p.idPage + "'");
-                if (cardLocationPageList.Count > 0) {
+                if (cableEdgeConnectionPageList.Count > 0) {
                     pagesToRemoveList.Add(p);
                 }
             }
