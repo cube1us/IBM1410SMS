@@ -17,6 +17,7 @@ namespace IBM1410SMS
 		[MyColumn(Key=true)] public int idCardLocationBlock { get; set; }
 		[MyColumn] public int cardLocation { get; set; }
 		[MyColumn] public int diagramPage { get; set; }
+		[MyColumn] public int cableEdgeConnectionPage { get; set; }
 		[MyColumn] public string diagramRow { get; set; }
 		[MyColumn] public int diagramColumn { get; set; }
 		[MyColumn] public int diagramECO { get; set; }

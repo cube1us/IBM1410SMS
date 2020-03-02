@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using MySQLFramework;
 
-namespace MySQLFramework
+namespace IBM1410SMS
 {
 	[MyTable]
 	public class Cableedgeconnectionecotag
