@@ -26,6 +26,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 using MySQLFramework;
 
@@ -63,6 +64,7 @@ namespace IBM1410SMS
         Table<Feature> featureTable;
         Table<Panel> panelTable;
         Table<Diagrampage> diagramPageTable;
+        Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable;
 
         List<Machine> machineList;
         List<Volumeset> volumeSetList;
@@ -111,6 +113,7 @@ namespace IBM1410SMS
             frameTable = db.getFrameTable();
             machineGateTable = db.getMachineGateTable();
             diagramPageTable = db.getDiagramPageTable();
+            cableEdgeConnectionPageTable = db.getCableEdgeConnectionPageTable();
 
             //  The card row and columns are dependent upon the selected panel.
             
@@ -719,6 +722,7 @@ namespace IBM1410SMS
             cardLocationBlockDataGridView.Columns["modified"].Visible = false;
             cardLocationBlockDataGridView.Columns["idCardLocationBlock"].Visible = false;
             cardLocationBlockDataGridView.Columns["cardLocation"].Visible = false;
+            cardLocationBlockDataGridView.Columns["cableEdgeConnectionPage"].Visible = false;
 
             //  Now set up each simple column with header text and width - and, for
             //  combo boxes and check boxes, even more.
@@ -819,9 +823,21 @@ namespace IBM1410SMS
                 // Diagrampage diagramPage = diagramPageTable.getByKey(clb.diagramPage);
                 // Page tempPage = pageTable.getByKey(diagramPage.page);
                 Eco eco = ecoTable.getByKey(clb.diagramECO);
-                ((DataGridViewTextBoxCell)
-                    (cardLocationBlockDataGridView.Rows[rowIndex].Cells["page"])).Value =
-                    getDiagramPageName(clb.diagramPage);
+                if (clb.diagramPage > 0) {
+                    ((DataGridViewTextBoxCell)
+                        (cardLocationBlockDataGridView.Rows[rowIndex].Cells["page"])).Value =
+                        getDiagramPageName(clb.diagramPage);
+                }
+                else if (clb.cableEdgeConnectionPage > 0) {
+                    ((DataGridViewTextBoxCell)
+                        (cardLocationBlockDataGridView.Rows[rowIndex].Cells["page"])).Value =
+                        getDiagramPageName(clb.cableEdgeConnectionPage);
+                }
+                else {
+                    //  If we don't have an ALD diagram or Cable/Edge connection diagram 
+                    //  for this entry, then just ignore it.
+                    continue;
+                }
                 ((DataGridViewTextBoxCell)
                     (cardLocationBlockDataGridView.Rows[rowIndex].Cells["eco"])).Value =
                     eco.eco;
@@ -849,16 +865,30 @@ namespace IBM1410SMS
 
         private string getDiagramPageName(int diagramPageKey) {
 
+            int pageKey = 0;
+
             if(diagramPageKey == 0) {
                 return "";
             }
 
             Diagrampage diagramPage = diagramPageTable.getByKey(diagramPageKey);
-            if(diagramPage.idDiagramPage == 0) {
+            if(diagramPage.idDiagramPage > 0) {
+                pageKey = diagramPage.page;
+            }
+            else {
+                Cableedgeconnectionpage cableEdgeConnectionPage =
+                    cableEdgeConnectionPageTable.getByKey(diagramPageKey);
+                if(cableEdgeConnectionPage.idCableEdgeConnectionPage > 0) {
+                    pageKey = cableEdgeConnectionPage.page;
+                }
+            }
+
+
+            if(pageKey == 0) {
                 return "";
             }
 
-            Page page = pageTable.getByKey(diagramPage.page);
+            Page page = pageTable.getByKey(pageKey);
             if(page.idPage == 0) {
                 return "";
             }
@@ -890,7 +920,7 @@ namespace IBM1410SMS
             DialogResult status =
                 MessageBox.Show("Confirm that you wish to DELETE card location diagram " +
                     "block for Row " + rowComboBox.SelectedItem.ToString() +
-                    ", Column " + rowComboBox.SelectedItem.ToString() +
+                    ", Column " + columnComboBox.SelectedItem.ToString() +
                     " (Database ID " + currentCardLocation.idCardLocation + ") " +
                     (deletedBottomNotesList.Count > 0 || 
                      deletedCardLocationBlockList.Count > 0 ?
@@ -940,6 +970,7 @@ namespace IBM1410SMS
         private void applyButton_Click(object sender, EventArgs e) {
 
             string message = "";
+            int aborting = 0;
 
             List<string> addedNotesList = new List<string>();
             List<Cardlocationbottomnote> deletedNotesList = 
@@ -947,8 +978,13 @@ namespace IBM1410SMS
             List<Eco> addedECOList = new List<Eco>();
             List<Page> addedPageList = new List<Page>();
             List<Diagrampage> addedDiagramPageList = new List<Diagrampage>();
+            List<Cableedgeconnectionpage> addedCableEdgeConnectionPageList =
+                new List<Cableedgeconnectionpage>();
             List<Page> machinePageList = new List<Page>();
             List<Diagrampage> machineDiagramPageList = new List<Diagrampage>();
+            List<Cableedgeconnectionpage> machineCableEdgeConnectionPageList =
+                new List<Cableedgeconnectionpage>();
+    
 
             Cardslot currentCardSlot;
 
@@ -1025,10 +1061,17 @@ namespace IBM1410SMS
             //  adds, deletes and changes...
 
             foreach(Cardlocationblock clb in deletedCardLocationBlockList) {
+                int pageKey;
+
+                if(clb.idCardLocationBlock > 0) { 
+                pageKey = clb.cableEdgeConnectionPage > 0 ? clb.cableEdgeConnectionPage :
+                    clb.diagramPage;
+
                 message += "Delete Card Location Block for Page " +
-                    getDiagramPageName(clb.diagramPage) +
+                    getDiagramPageName(pageKey) +
                     ", Row " + clb.diagramRow +
                     ", Column " + clb.diagramColumn + "\n";
+                }
             }
 
             //  Get a list of current pages and diagram pages for this
@@ -1040,6 +1083,8 @@ namespace IBM1410SMS
             foreach (Page mp in machinePageList) {
                 machineDiagramPageList.AddRange(diagramPageTable.getWhere(
                     "WHERE diagrampage.page='" + mp.idPage + "'"));
+                machineCableEdgeConnectionPageList.AddRange(cableEdgeConnectionPageTable.getWhere(
+                    "WHERE cableedgeconnectionpage.page='" + mp.idPage + "'"));
             }
 
             int rowIndex = 0;
@@ -1098,7 +1143,7 @@ namespace IBM1410SMS
                     }
                 }
 
-                //  Similar concept with DiagramPage / Page
+                //  Similar concept with DiagramPage / Cable/Edge Connection page / Page 
 
                 string pageName = "";
                 if (dgvRow.Cells["page"].Value != null) {
@@ -1150,7 +1195,7 @@ namespace IBM1410SMS
 
                     //  Failing that, add a new volume...
 
-                    if(tempPage.volume == 0) {
+                    if(tempPage.volume == 0 && aborting == 0) {
                         v = new Volume();
                         v.idVolume = IdCounter.incrementCounter();
                         //  Volume set same as selected volume...
@@ -1170,18 +1215,63 @@ namespace IBM1410SMS
                     tempPage.stamp = tempPage.title;
                     tempPage.name = pageName;
                     addedPageList.Add(tempPage);
-                    message += "Add Page AND diagram page " + pageName + "\n";
+                    message += "Add Page AND diagram or cable/edge connection page " + 
+                        pageName + "\n";
                 }
                 else {
-                    Diagrampage tempDiagramPage = machineDiagramPageList.Find(
-                        x => x.page == tempPage.idPage);
-                    if(tempDiagramPage == null || 
-                        tempDiagramPage.idDiagramPage == 0) {
-                        tempDiagramPage.page = tempPage.idPage;
-                        message += "Add Missing Diagram Page for page " +
-                            pageName + "\n";
-                        addedDiagramPageList.Add(tempDiagramPage);
+
+                    //  See if we need to add the appropriate kind of page (ALD
+                    //  diagram or Cable/Edge connection)
+
+                    Debug.WriteLine("Current Card Type: /" +
+                        currentCardLocation.type + "/");
+
+                    if (Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
+                        ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {
+                        Cableedgeconnectionpage tempCableEdgeConnectionPage =
+                            machineCableEdgeConnectionPageList.Find(
+                                x => x.page == tempPage.idPage);
+                        if(tempCableEdgeConnectionPage == null) {
+                            MessageBox.Show("Page " + tempPage.name +
+                                " is not a cable/edge connection page.  ABORT.",
+                                "Page type / card location card type mismatch.",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            aborting = 1;
+                        }
+                        else { 
+                            if(tempCableEdgeConnectionPage.idCableEdgeConnectionPage == 0) {
+                                message += "Add Missing Cable/Edge Connection Page for page " +
+                                    pageName + "\n";
+                                addedCableEdgeConnectionPageList.Add(tempCableEdgeConnectionPage);
+                            }
+                        }
                     }
+                    else {
+                        Diagrampage tempDiagramPage = machineDiagramPageList.Find(
+                            x => x.page == tempPage.idPage);
+                        if(tempDiagramPage == null) {
+                            MessageBox.Show("Page " + tempPage.name +
+                                " is not a diagram connection page.  ABORT.",
+                                "Page type / card location card type mismatch.",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            aborting = 1;
+                        }
+                        else { 
+                            if (tempDiagramPage.idDiagramPage == 0) {
+                                tempDiagramPage.page = tempPage.idPage;
+                                message += "Add Missing Diagram Page for page " +
+                                    pageName + "\n";
+                                addedDiagramPageList.Add(tempDiagramPage);
+                            }
+                        }
+                    }
+                }
+
+                if(aborting == 1) {
+                    message += "Remainder of updates NOT applied due to earlier error.\n";
+                    MessageBox.Show(message, "Remaining updates NOT applied.",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
 
                 //  Finally, see if this Card Location Block is new
@@ -1324,20 +1414,38 @@ namespace IBM1410SMS
             //  Add any new pages/diagram pages needed by the card location 
             //  blocks
 
-            //  Add any new pages (and diagram pages at the same time)
+            //  Add any new pages (and diagram pages or cable/edge connection pages
+            //  at the same time)
+
 
             foreach(Page page in addedPageList) {
                 page.idPage = IdCounter.incrementCounter();
                 pageTable.insert(page);
-                Diagrampage newDiagramPage = new Diagrampage();
+
                 message += "Added page " + page.name +
                     " Database ID=" + page.idPage +
                     " WITH a ZERO volume key.\n";
-                newDiagramPage.idDiagramPage = IdCounter.incrementCounter();
-                newDiagramPage.page = page.idPage;
-                diagramPageTable.insert(newDiagramPage);
-                message += "Added corresponding diagram page, " +
-                    "Database ID=" + newDiagramPage.idDiagramPage + "\n";
+
+                if (Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
+                    ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {
+                    Cableedgeconnectionpage newCableEdgeConnectionPage =
+                        new Cableedgeconnectionpage();
+                    newCableEdgeConnectionPage.idCableEdgeConnectionPage =
+                        IdCounter.incrementCounter();
+                    newCableEdgeConnectionPage.page = page.idPage;
+                    cableEdgeConnectionPageTable.insert(newCableEdgeConnectionPage);
+                    message += "Added corresponding cable/edge connection page, " +
+                        "Database ID=" + newCableEdgeConnectionPage.idCableEdgeConnectionPage +
+                        "\n";
+                }
+                else {
+                    Diagrampage newDiagramPage = new Diagrampage();
+                    newDiagramPage.idDiagramPage = IdCounter.incrementCounter();
+                    newDiagramPage.page = page.idPage;
+                    diagramPageTable.insert(newDiagramPage);
+                    message += "Added corresponding diagram page, " +
+                        "Database ID=" + newDiagramPage.idDiagramPage + "\n";
+                }
             }
 
             //  There may also have been some missing diagram pages,
@@ -1351,8 +1459,19 @@ namespace IBM1410SMS
                     page.name + " Database ID=" + diagramPage.idDiagramPage + "\n";
             }
 
-            //  Now re-create the machine page list, machine diagram page
-            //  list, and create a machine ECO list
+            foreach(Cableedgeconnectionpage cableEdgeConnectionPage in
+                addedCableEdgeConnectionPageList) {
+                Page page = pageTable.getByKey(cableEdgeConnectionPage.page);
+                cableEdgeConnectionPage.idCableEdgeConnectionPage =
+                    IdCounter.incrementCounter();
+                cableEdgeConnectionPageTable.insert(cableEdgeConnectionPage);
+                message += "Added (missing) Cable/Edge Connection page for page " +
+                    page.name + " Database ID=" + 
+                    cableEdgeConnectionPage.idCableEdgeConnectionPage + "\n";
+            }
+
+            //  Now re-create the machine page list, machine diagram  and cable/edge
+            //  conection page lists, and create a machine ECO list
 
             machineDiagramPageList = new List<Diagrampage>();
             machinePageList = pageTable.getWhere("" +
@@ -1360,25 +1479,38 @@ namespace IBM1410SMS
             foreach (Page mp in machinePageList) {
                 machineDiagramPageList.AddRange(diagramPageTable.getWhere(
                     "WHERE diagrampage.page='" + mp.idPage + "'"));
+                machineCableEdgeConnectionPageList.AddRange(cableEdgeConnectionPageTable.getWhere(
+                    "WHERE cableedgeconnectionpage.page='" + mp.idPage + "'"));
             }
 
             List<Eco> machineECOList = ecoTable.getWhere(
                 "WHERE machine='" + currentMachine.idMachine + "'");
 
+            Debug.WriteLine("Number of clb's to delete: " +
+                deletedCardLocationBlockList.Count);
 
             //  Delete any Card Location Blocks marked for bye-bye
 
             foreach (Cardlocationblock clb in deletedCardLocationBlockList) {
-                cardLocationBlockTable.deleteByKey(clb.idCardLocationBlock);
-                message += "Deleted Card Location Block, Page " +
-                    getDiagramPageName(clb.diagramPage) +
-                    ", Page Row " + clb.diagramRow +
-                    ", Page Column " + clb.diagramColumn +
-                    " (Database ID " + clb.idCardLocationBlock + ")\n";
+                int pageKey;
+
+                if(clb.idCardLocationBlock > 0) { 
+                    pageKey = clb.cableEdgeConnectionPage > 0 ? clb.cableEdgeConnectionPage :
+                        clb.diagramPage;
+                    cardLocationBlockTable.deleteByKey(clb.idCardLocationBlock);
+                    message += "Deleted Card Location Block, Page " +
+                        getDiagramPageName(pageKey) +
+                        ", Page Row " + clb.diagramRow +
+                        ", Page Column " + clb.diagramColumn +
+                        " (Database ID " + clb.idCardLocationBlock + ")\n";
+                    }
             }
 
             //  And then the adds and modifies.  We have already validated
             //  the data...
+
+            Debug.WriteLine("Total number of clbs: " +
+                cardLocationBlockList.Count);
 
             rowIndex = 0;
             foreach (Cardlocationblock clb in cardLocationBlockList) {
@@ -1448,22 +1580,53 @@ namespace IBM1410SMS
                     tempPage.idPage = 0;
                 }
 
-                Diagrampage tempDiagramPage = machineDiagramPageList.Find(
-                    x => x.page == tempPage.idPage);
+                //  TODO  Change to add in cable/edge connection pages
 
-                if(tempDiagramPage == null) {
-                    if(tempPage.idPage != 0) {
-                        MessageBox.Show("ERROR: Unable to find expected DIAGRAM " +
-                            "for page with name " +  pageName +
-                            " (Database ID " + tempPage.idPage, 
-                            "ERROR: Can't Find DIAGRAM Page",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        tempDiagramPage = new Diagrampage();
-                        tempDiagramPage.idDiagramPage = 0;
+                if(Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
+                    ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {
+
+                    Cableedgeconnectionpage tempCableEdgeConnectionPage =
+                        machineCableEdgeConnectionPageList.Find(
+                            x => x.page == tempPage.idPage);
+
+                    if(tempCableEdgeConnectionPage == null) {
+                        if(tempPage.idPage != 0) {
+                            MessageBox.Show("ERROR: Unable to find expected Cable/Edge " +
+                                "connection page for page with name " + pageName +
+                                " (Database ID " + tempPage.idPage,
+                                "ERROR: Can't Find Cable/Edge Connection Page",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            tempCableEdgeConnectionPage = new Cableedgeconnectionpage();
+                            tempCableEdgeConnectionPage.idCableEdgeConnectionPage = 0;
+
+                        }
                     }
-                }
 
-                clb.diagramPage = tempDiagramPage.idDiagramPage;
+                    clb.diagramPage = 0;
+                    clb.cableEdgeConnectionPage = 
+                        tempCableEdgeConnectionPage.idCableEdgeConnectionPage;
+
+                }
+                else {
+
+                    Diagrampage tempDiagramPage = machineDiagramPageList.Find(
+                        x => x.page == tempPage.idPage);
+
+                    if(tempDiagramPage == null) {
+                        if(tempPage.idPage != 0) {
+                            MessageBox.Show("ERROR: Unable to find expected DIAGRAM " +
+                                "for page with name " +  pageName +
+                                " (Database ID " + tempPage.idPage, 
+                                "ERROR: Can't Find DIAGRAM Page",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            tempDiagramPage = new Diagrampage();
+                            tempDiagramPage.idDiagramPage = 0;
+                        }
+                    }
+
+                    clb.diagramPage = tempDiagramPage.idDiagramPage;
+                    clb.cableEdgeConnectionPage = 0;
+                }
 
                 //  Same story for the ECOs.
 

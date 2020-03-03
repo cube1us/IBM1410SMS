@@ -57,6 +57,11 @@ namespace IBM1410SMS
             "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W",
             "X", "Y", "Z"};
 
+        //  List of card types that are Cable/Edge Connection card types
+
+        internal static string[] cableEdgeConnectionCardTypes = new string[]
+            {"CABL", "CONN"};
+
         private static readonly Helpers instance = new Helpers();
 
         //  This is the constructor.  It CANNOT do ANYTHING, because it
