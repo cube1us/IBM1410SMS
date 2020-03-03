@@ -722,7 +722,7 @@ namespace IBM1410SMS
             cardLocationBlockDataGridView.Columns["modified"].Visible = false;
             cardLocationBlockDataGridView.Columns["idCardLocationBlock"].Visible = false;
             cardLocationBlockDataGridView.Columns["cardLocation"].Visible = false;
-            cardLocationBlockDataGridView.Columns["cableEdgeConnectionPage"].Visible = false;
+            cardLocationBlockDataGridView.Columns.Remove("cableEdgeConnectionPage");
 
             //  Now set up each simple column with header text and width - and, for
             //  combo boxes and check boxes, even more.
