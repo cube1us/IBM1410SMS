@@ -53,8 +53,7 @@ namespace IBM1410SMS
         List<Cardlocationblock> cardLocationBlockList;
         List<Cardlocation> cardLocationList;
 
-        Size logicBlockButtonSize = new Size(54, 60);
-        // REMOVE Size dotFunctionButtonSize = new Size(14, 20);
+        Size cableEdgeConnectionBlockButtonSize = new Size(54, 60);
         Color transparentColor = Color.FromArgb(0, 255, 255, 255);
         Color lightColor = Color.FromArgb(0, 32, 32, 32);
 
@@ -66,12 +65,10 @@ namespace IBM1410SMS
 
             pageTable = db.getPageTable();
             cableEdgeConnectionBlockTable = db.getCableEdgeConnectionBlockTable();
-            // REMOVE dotFunctionTable = db.getDotFunctionTable();
             cableEdgeConnectionECOtagTable = db.getCableEdgeConnectionECOTagTable();
             cardLocationTable = db.getCardLocationTable();
             cardLocationBlockTable = db.getCardLocationBlockTable();
             cardGateTable = db.getCardGateTable();
-            // REMOVE connectionTable = db.getConnectionTable();
 
             //  Fill in constant data.
 
@@ -88,17 +85,13 @@ namespace IBM1410SMS
 
         private void populateDialog() {
 
-            //  Get lists of the logic blocks, dot functions
+            //  Get lists of the cable/edge connection blocks 
             //  and ECO tags on the diagram.
 
             cableEdgeConnectionBlockList = cableEdgeConnectionBlockTable.getWhere(
                 "WHERE cableEdgeConnectionPage='" + 
                 currentCableEdgeConnectionPage.idCableEdgeConnectionPage + "'" +
                 " ORDER BY diagramRow, diagramColumn");
-
-            // REMOVE  dotFunctionList = dotFunctionTable.getWhere(
-            // REMOVE    "WHERE cableEdgeConnectionPage='" + currentCableEdgeConnectionPage.idDiagramPage + "'" +
-            // REMOVE    " ORDER by diagramRowTop, diagramColumnToLeft");
 
             cableEdgeConnectionECOTagList = cableEdgeConnectionECOtagTable.getWhere(
                 "WHERE cableEdgeConnectionPage='" + 
@@ -137,14 +130,13 @@ namespace IBM1410SMS
                 tableLayoutPanel1.Width, 700);
             tableLayoutPanel1.AutoScroll = true;
 
-            //  Fill in the control table with buttons for logic blocks
-            //  and for dot functions.
+            //  Fill in the control table with buttons for cable/edge connection blocks
 
             //  Clear out any existing controls
 
             tableLayoutPanel1.Controls.Clear();
 
-            //  Populate the logic block and dot function buttons and labels
+            //  Populate the cable/edge connection block buttons and labels
 
             for (int row = 0; row < tableLayoutPanel1.RowCount; ++row) {
                 for (int col = 0; col < tableLayoutPanel1.ColumnCount; ++col) {
@@ -177,27 +169,23 @@ namespace IBM1410SMS
 
                     string rowName = Helpers.validDiagramRows[row - 1];
 
-                    //  Odd columns get a big (logic block) button
+                    //  Odd columns get a big (cable/edge connection block) button
 
                     if (col % 2 == 1) {
                         Button button = new Button();
                         button.Anchor = AnchorStyles.None;
-                        button.Size = logicBlockButtonSize;
+                        button.Size = cableEdgeConnectionBlockButtonSize;
                         button.Text = "";
                         button.Font = new Font(button.Font.Name, button.Font.SizeInPoints - 2,
                             button.Font.Style);
-                        button.Click += new EventHandler(logicBlockButtonClick);
-                        button.Paint += new PaintEventHandler(logicBlockButtonPaint);
+                        button.Click += new EventHandler(cableEdgeConnectionBlockButtonClick);
+                        button.Paint += new PaintEventHandler(cableEdgeConnectionBlockButtonPaint);
                         tableLayoutPanel1.Controls.Add(button, col, row);
 
                         int columnNumber = Helpers.maxDiagramColumn - (col / 2);
                         string ecoTagLetter = ".";
                         
-                        // REMOVE  int inputConnections = 0;
-                        // REMOVE  int outputConnections = 0;
-                        // REMOVE  string gateConnectionsString = "";
-
-                        //  See if we have a logic block for this button.
+                        //  See if we have a cable/edge connection block for this button.
                         //  If so, populate the button with the available information.
 
                         Cableedgeconnectionblock cableEdgeConnectionBlock = 
@@ -224,27 +212,11 @@ namespace IBM1410SMS
                                 }
                             }
 
-                            /*
-                             * REMOVE BLOCK
-                             * 
-                            if(cableEdgeConnectionBlock.cardGate != 0) {
-                                Cardgate cardGate = cardGateTable.getByKey(cableEdgeConnectionBlock.cardGate);
-                                inputConnections = connectionTable.getWhere(
-                                    "WHERE toDiagramBlock='" + cableEdgeConnectionBlock.idDiagramBlock + "'").Count;
-                                outputConnections = connectionTable.getWhere(
-                                    "WHERE fromDiagramBlock='" + cableEdgeConnectionBlock.idDiagramBlock + "'").Count;
-                                gateConnectionsString = Environment.NewLine +
-                                    "G" + cardGate.number + ":" + inputConnections.ToString() + "/" +
-                                    outputConnections.ToString();
-                            }
-                            */
-
                             button.Text = Helpers.getTwoCharMachineName(cardSlotInfo.machineName) +
                                 cardSlotInfo.gateName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
                                 Environment.NewLine + cardTypeName;
-                                // REMOVE + gateConnectionsString;
 
                             //  Data coming from the diagrmBlock table is in bold.
                             button.Font = new Font(button.Font, FontStyle.Bold);
@@ -300,45 +272,11 @@ namespace IBM1410SMS
                         continue;
                     }
 
-                    /*
-                     * REMOVE BLOCK
-
-                    //  Even, interior, columns get a really small (Dot Function) button
-
-                    if (col % 2 == 0) {
-
-                        int columnNumber = Helpers.maxDiagramColumn - (col / 2) + 1;
-
-                        Dotfunction dotFunction = dotFunctionList.Find(
-                            dot => dot.diagramRowTop != null &&
-                            dot.diagramRowTop == rowName &&
-                            dot.diagramColumnToLeft == columnNumber);
-
-                        Button button = new Button();
-                        button.Anchor = AnchorStyles.None;
-                        button.Size = dotFunctionButtonSize;
-                        if(dotFunction != null && dotFunction.idDotFunction != 0 &&
-                            dotFunction.logicFunction.Length > 0) {
-                            button.Text = dotFunction.logicFunction;
-                        }
-                        else {
-                            button.Text = "-";
-                        }
-                        button.FlatStyle = FlatStyle.Flat;
-                        button.FlatAppearance.BorderSize = 0;
-                        button.FlatAppearance.BorderColor = transparentColor;
-                        button.TabStop = false;
-                        button.Click += new EventHandler(dotFunctionButtonClick);
-                        tableLayoutPanel1.Controls.Add(button, col, row);
-                    }
-
-                    END REMOVED BLOCK */
                 }
             }
-
         }
 
-        private void logicBlockButtonClick(object sender, EventArgs e) {
+        private void cableEdgeConnectionBlockButtonClick(object sender, EventArgs e) {
 
             Button clickedButton = (Button)sender;
 
@@ -379,42 +317,7 @@ namespace IBM1410SMS
             populateDialog();
         }
 
-        /*
-         * REMOVE METHOD
-         * 
-         * 
-        private void dotFunctionButtonClick(object sender, EventArgs e) {
-            Button clickedButton = (Button)sender;
-
-            TableLayoutPanelCellPosition cell = tableLayoutPanel1.GetCellPosition(
-                clickedButton);
-
-            string rowName = Helpers.validDiagramRows[cell.Row - 1];
-            int columnNumber = Helpers.maxDiagramColumn - (cell.Column / 2) + 1;
-
-            Console.WriteLine("Button at cell " + tableLayoutPanel1.GetCellPosition(
-                clickedButton) + ", Drawing Row Name: " + rowName + 
-                ", Drawing Column " + columnNumber);
-
-            Dotfunction dotFunction = dotFunctionList.Find(
-                x => x.diagramRowTop != null && x.diagramRowTop == rowName && 
-                x.diagramColumnToLeft == columnNumber);
-
-            EditDotFunctionForm EditDotFunctionForm = new EditDotFunctionForm(
-                dotFunction, currentMachine, currentVolumeSet, currentVolume,
-                currentCableEdgeConnectionPage, rowName, columnNumber);
-
-            EditDotFunctionForm.ShowDialog();
-
-            //  We have to repopulate the dialog with the (perhaps) updated
-            //  dot function.
-
-            populateDialog();
-        }
-
-        END REMOVED METHOD */
-
-        private void logicBlockButtonPaint(object sender, PaintEventArgs e) {
+        private void cableEdgeConnectionBlockButtonPaint(object sender, PaintEventArgs e) {
             Button drawingButton = (Button)sender;
             ControlPaint.DrawBorder(e.Graphics, drawingButton.ClientRectangle,
                   SystemColors.ControlLightLight, 3, ButtonBorderStyle.Outset,
