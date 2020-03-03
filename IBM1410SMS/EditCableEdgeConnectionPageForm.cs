@@ -564,11 +564,12 @@ namespace IBM1410SMS
 
         private void editCableEdgeBlocksButton_Click(object sender, EventArgs e) {
 
-            // TODO after adding the blocks form
+            EditCableEdgeConnectionBlocksForm EditCableEdgeConnectionsBlocksForm =
+                new EditCableEdgeConnectionBlocksForm(currentMachine,
+                currentVolumeSet, currentVolume,
+                currentCableEdgeConnectionPage);
 
-            // EditDiagramBlocksForm EditDiagramBlocksForm = new EditDiagramBlocksForm(
-               // currentMachine, currentVolumeSet, currentVolume, currentCableEdgeConnectionPage);
-            // EditDiagramBlocksForm.ShowDialog();
+            EditCableEdgeConnectionsBlocksForm.ShowDialog();
 
             populateDialog(currentPage);
         }

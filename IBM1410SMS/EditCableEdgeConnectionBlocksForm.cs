@@ -35,54 +35,51 @@ namespace IBM1410SMS
         DBSetup db = DBSetup.Instance;
 
         Table<Page> pageTable;
-        Table<Diagramblock> diagramBlockTable;
-        Table<Dotfunction> dotFunctionTable;
-        Table<Diagramecotag> diagramECOtagTable;
+        Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
+        Table<Cableedgeconnectionecotag> cableEdgeConnectionECOtagTable;
         Table<Cardlocationblock> cardLocationBlockTable;
         Table<Cardlocation> cardLocationTable;
         Table<Cardgate> cardGateTable;
-        Table<Connection> connectionTable;
 
         Page currentPage;
-        Diagrampage currentDiagramPage;
+        Cableedgeconnectionpage currentCableEdgeConnectionPage;
         Machine currentMachine;
         Volumeset currentVolumeSet;
         Volume currentVolume;
         string machinePrefix;
 
-        List<Diagramblock> diagramBlockList;
-        List<Dotfunction> dotFunctionList;
-        List<Diagramecotag> diagramECOTagList;
+        List<Cableedgeconnectionblock> cableEdgeConnectionBlockList;
+        List<Cableedgeconnectionecotag> cableEdgeConnectionECOTagList;
         List<Cardlocationblock> cardLocationBlockList;
         List<Cardlocation> cardLocationList;
 
         Size logicBlockButtonSize = new Size(54, 60);
-        Size dotFunctionButtonSize = new Size(14, 20);
+        // REMOVE Size dotFunctionButtonSize = new Size(14, 20);
         Color transparentColor = Color.FromArgb(0, 255, 255, 255);
         Color lightColor = Color.FromArgb(0, 32, 32, 32);
 
         public EditCableEdgeConnectionBlocksForm(Machine machine,
             Volumeset volumeSet,
             Volume volume,
-            Diagrampage diagramPage) {
+            Cableedgeconnectionpage cableEdgeConnectionPage) {
             InitializeComponent();
 
             pageTable = db.getPageTable();
-            diagramBlockTable = db.getDiagramBlockTable();
-            dotFunctionTable = db.getDotFunctionTable();
-            diagramECOtagTable = db.getDiagramEcoTagTable();
+            cableEdgeConnectionBlockTable = db.getCableEdgeConnectionBlockTable();
+            // REMOVE dotFunctionTable = db.getDotFunctionTable();
+            cableEdgeConnectionECOtagTable = db.getCableEdgeConnectionECOTagTable();
             cardLocationTable = db.getCardLocationTable();
             cardLocationBlockTable = db.getCardLocationBlockTable();
             cardGateTable = db.getCardGateTable();
-            connectionTable = db.getConnectionTable();
+            // REMOVE connectionTable = db.getConnectionTable();
 
             //  Fill in constant data.
 
             currentMachine = machine;
             currentVolumeSet = volumeSet;
             currentVolume = volume;
-            currentPage = pageTable.getByKey(diagramPage.page);
-            currentDiagramPage = diagramPage;
+            currentPage = pageTable.getByKey(cableEdgeConnectionPage.page);
+            currentCableEdgeConnectionPage = cableEdgeConnectionPage;
             machinePrefix = currentMachine.name.Length >= 4 ?
                 currentMachine.name.Substring(0, 2) : "";
 
@@ -94,24 +91,27 @@ namespace IBM1410SMS
             //  Get lists of the logic blocks, dot functions
             //  and ECO tags on the diagram.
 
-            diagramBlockList = diagramBlockTable.getWhere(
-                "WHERE diagramPage='" + currentDiagramPage.idDiagramPage + "'" +
+            cableEdgeConnectionBlockList = cableEdgeConnectionBlockTable.getWhere(
+                "WHERE cableEdgeConnectionPage='" + 
+                currentCableEdgeConnectionPage.idCableEdgeConnectionPage + "'" +
                 " ORDER BY diagramRow, diagramColumn");
 
-            dotFunctionList = dotFunctionTable.getWhere(
-                "WHERE diagramPage='" + currentDiagramPage.idDiagramPage + "'" +
-                " ORDER by diagramRowTop, diagramColumnToLeft");
+            // REMOVE  dotFunctionList = dotFunctionTable.getWhere(
+            // REMOVE    "WHERE cableEdgeConnectionPage='" + currentCableEdgeConnectionPage.idDiagramPage + "'" +
+            // REMOVE    " ORDER by diagramRowTop, diagramColumnToLeft");
 
-            diagramECOTagList = diagramECOtagTable.getWhere(
-                "WHERE diagramPage='" + currentDiagramPage.idDiagramPage + "'" +
-                " ORDER by diagramecotag.name");
+            cableEdgeConnectionECOTagList = cableEdgeConnectionECOtagTable.getWhere(
+                "WHERE cableEdgeConnectionPage='" + 
+                currentCableEdgeConnectionPage.idCableEdgeConnectionPage + "'" +
+                " ORDER by cableEdgeConnectionECOtag.name");
 
             //  Get the card locations and card location blocks that are
             //  associated with this page, so we can use them to pre-populate
             //  data.
 
             cardLocationBlockList = cardLocationBlockTable.getWhere(
-                "WHERE diagramPage='" + currentDiagramPage.idDiagramPage + "'" +
+                "WHERE cableEdgeConnectionPage='" + 
+                currentCableEdgeConnectionPage.idCableEdgeConnectionPage + "'" +
                 " AND cardlocationblock.ignore='0'" +
                 " ORDER BY diagramRow, diagramColumn");
 
@@ -192,26 +192,31 @@ namespace IBM1410SMS
 
                         int columnNumber = Helpers.maxDiagramColumn - (col / 2);
                         string ecoTagLetter = ".";
-                        int inputConnections = 0;
-                        int outputConnections = 0;
-                        string gateConnectionsString = "";
+                        
+                        // REMOVE  int inputConnections = 0;
+                        // REMOVE  int outputConnections = 0;
+                        // REMOVE  string gateConnectionsString = "";
 
                         //  See if we have a logic block for this button.
                         //  If so, populate the button with the available information.
 
-                        Diagramblock diagramBlock = diagramBlockList.Find(
+                        Cableedgeconnectionblock cableEdgeConnectionBlock = 
+                            cableEdgeConnectionBlockList.Find(
                             b => b.diagramRow == rowName && b.diagramColumn == columnNumber);
 
-                        if (diagramBlock != null && diagramBlock.idDiagramBlock > 0) {
+                        if (cableEdgeConnectionBlock != null && 
+                            cableEdgeConnectionBlock.idCableEdgeConnectionBlock > 0) {
                             CardSlotInfo cardSlotInfo = Helpers.getCardSlotInfo(
-                                diagramBlock.cardSlot);
+                                cableEdgeConnectionBlock.cardSlot);
                             string cardTypeName = Helpers.getCardTypeType(
-                                diagramBlock.cardType);
-
-                            if (diagramBlock.eco != 0) {
-                                Diagramecotag ecoTag = diagramECOTagList.Find(
-                                    t => t.idDiagramECOTag == diagramBlock.eco);
-                                if (ecoTag != null && ecoTag.idDiagramECOTag != 0) {
+                            // Get by without this column...  cableEdgeConnectionBlock.cardType);
+                               cardLocationList.Find(
+                                   x => x.cardSlot == cableEdgeConnectionBlock.cardSlot).type);
+                            if (cableEdgeConnectionBlock.ecotag != 0) {
+                                Cableedgeconnectionecotag ecoTag = cableEdgeConnectionECOTagList.Find(
+                                    t => t.idcableEdgeConnectionECOtag == 
+                                    cableEdgeConnectionBlock.ecotag);
+                                if (ecoTag != null && ecoTag.idcableEdgeConnectionECOtag != 0) {
                                     ecoTagLetter = ecoTag.name;
                                 }
                                 else {
@@ -219,23 +224,27 @@ namespace IBM1410SMS
                                 }
                             }
 
-                            if(diagramBlock.cardGate != 0) {
-                                Cardgate cardGate = cardGateTable.getByKey(diagramBlock.cardGate);
+                            /*
+                             * REMOVE BLOCK
+                             * 
+                            if(cableEdgeConnectionBlock.cardGate != 0) {
+                                Cardgate cardGate = cardGateTable.getByKey(cableEdgeConnectionBlock.cardGate);
                                 inputConnections = connectionTable.getWhere(
-                                    "WHERE toDiagramBlock='" + diagramBlock.idDiagramBlock + "'").Count;
+                                    "WHERE toDiagramBlock='" + cableEdgeConnectionBlock.idDiagramBlock + "'").Count;
                                 outputConnections = connectionTable.getWhere(
-                                    "WHERE fromDiagramBlock='" + diagramBlock.idDiagramBlock + "'").Count;
+                                    "WHERE fromDiagramBlock='" + cableEdgeConnectionBlock.idDiagramBlock + "'").Count;
                                 gateConnectionsString = Environment.NewLine +
                                     "G" + cardGate.number + ":" + inputConnections.ToString() + "/" +
                                     outputConnections.ToString();
                             }
+                            */
 
                             button.Text = Helpers.getTwoCharMachineName(cardSlotInfo.machineName) +
                                 cardSlotInfo.gateName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
-                                Environment.NewLine + cardTypeName + 
-                                gateConnectionsString;
+                                Environment.NewLine + cardTypeName;
+                                // REMOVE + gateConnectionsString;
 
                             //  Data coming from the diagrmBlock table is in bold.
                             button.Font = new Font(button.Font, FontStyle.Bold);
@@ -266,9 +275,10 @@ namespace IBM1410SMS
                                 cardLocation.type);
 
                             if (clb.diagramECO != 0) {
-                                Diagramecotag ecoTag = diagramECOTagList.Find(
-                                    t => t.eco == clb.diagramECO);
-                                if (ecoTag != null && ecoTag.idDiagramECOTag != 0) {
+                                Cableedgeconnectionecotag ecoTag = 
+                                    cableEdgeConnectionECOTagList.Find(
+                                        t => t.eco == clb.diagramECO);
+                                if (ecoTag != null && ecoTag.idcableEdgeConnectionECOtag != 0) {
                                     ecoTagLetter = ecoTag.name;
                                 }
                                 else {
@@ -289,6 +299,9 @@ namespace IBM1410SMS
 
                         continue;
                     }
+
+                    /*
+                     * REMOVE BLOCK
 
                     //  Even, interior, columns get a really small (Dot Function) button
 
@@ -318,6 +331,8 @@ namespace IBM1410SMS
                         button.Click += new EventHandler(dotFunctionButtonClick);
                         tableLayoutPanel1.Controls.Add(button, col, row);
                     }
+
+                    END REMOVED BLOCK */
                 }
             }
 
@@ -337,12 +352,14 @@ namespace IBM1410SMS
                 clickedButton) + ", Drawing Row Name: " + rowName +
                 ", Drawing Column " + columnNumber);
 
-            Diagramblock diagramBlock = diagramBlockList.Find(
-                x => x.diagramRow != null && x.diagramRow == rowName &&
-                x.diagramColumn == columnNumber);
+            Cableedgeconnectionblock cableEdgeConnectionBlock = 
+                cableEdgeConnectionBlockList.Find(
+                    x => x.diagramRow != null && x.diagramRow == rowName &&
+                    x.diagramColumn == columnNumber);
 
             Cardlocation cardLocation = null;
-            if(diagramBlock == null || diagramBlock.idDiagramBlock == 0) {
+            if(cableEdgeConnectionBlock == null || 
+                cableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0) {
                 Cardlocationblock clb = cardLocationBlockList.Find(
                     b => b.diagramRow == rowName && b.diagramColumn == columnNumber);
 
@@ -351,15 +368,21 @@ namespace IBM1410SMS
                         clb.cardLocation);
                 }
             }
-            
-            EditDiagramLogicBlockForm EditDiagramLogicBlockForm = new EditDiagramLogicBlockForm(
-                diagramBlock, currentMachine, currentVolumeSet, currentVolume,
-                currentDiagramPage, rowName, columnNumber, cardLocation);
 
-            EditDiagramLogicBlockForm.ShowDialog();
+            //  TODO
+
+            //  EditDiagramLogicBlockForm EditDiagramLogicBlockForm = new EditDiagramLogicBlockForm(
+            //    cableEdgeConnectionBlock, currentMachine, currentVolumeSet, currentVolume,
+            //    currentCableEdgeConnectionPage, rowName, columnNumber, cardLocation);
+
+            // EditDiagramLogicBlockForm.ShowDialog();
             populateDialog();
         }
 
+        /*
+         * REMOVE METHOD
+         * 
+         * 
         private void dotFunctionButtonClick(object sender, EventArgs e) {
             Button clickedButton = (Button)sender;
 
@@ -379,7 +402,7 @@ namespace IBM1410SMS
 
             EditDotFunctionForm EditDotFunctionForm = new EditDotFunctionForm(
                 dotFunction, currentMachine, currentVolumeSet, currentVolume,
-                currentDiagramPage, rowName, columnNumber);
+                currentCableEdgeConnectionPage, rowName, columnNumber);
 
             EditDotFunctionForm.ShowDialog();
 
@@ -388,6 +411,8 @@ namespace IBM1410SMS
 
             populateDialog();
         }
+
+        END REMOVED METHOD */
 
         private void logicBlockButtonPaint(object sender, PaintEventArgs e) {
             Button drawingButton = (Button)sender;
