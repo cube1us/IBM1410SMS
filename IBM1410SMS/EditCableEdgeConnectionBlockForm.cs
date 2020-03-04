@@ -36,24 +36,19 @@ namespace IBM1410SMS
         DBSetup db = DBSetup.Instance;
 
         Table<Page> pageTable;
-        Table<Connection> connectionTable;
-        Table<Diagramblock> diagramBlockTable;
-        Table<Diagramecotag> diagramEcoTagTable;
-        Table<Feature> featureTable;
-        Table<Logiclevels> logicLevelTable;
+        Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
+        Table<Cableedgeconnectionecotag> cableEdgeConnectionEcoTagTable;
         Table<Machine> machineTable;
         Table<Cardtype> cardTypeTable;
         Table<Frame> frameTable;
         Table<Machinegate> machineGateTable;
         Table<Panel> panelTable;
         Table<Cardgate> cardGateTable;
-        Table<Gatepin> gatePinTable;
-        Table<Logicfunction> logicFunctionTable;
 
         Page currentPage;
-        Diagrampage currentDiagramPage;
+        Cableedgeconnectionpage currentCableEdgeConnectionPage;
         Machine currentMachine;
-        Machine diagramMachine;
+        Machine cableEdgeConnectionMachine;
         Volumeset currentVolumeSet;
         Volume currentVolume;
         Frame currentFrame = null;
@@ -61,17 +56,13 @@ namespace IBM1410SMS
         Panel currentPanel = null;
         Cardtype currentCardType = null;
 
-        Diagramblock currentDiagramBlock;
+        Cableedgeconnectionblock currentCableEdgeConnectionBlock;
         CardSlotInfo currentCardSlotInfo = null;
 
-        List<Feature> featureList;
-        List<Logiclevels> inputLogicLevelList;
-        List<Logiclevels> outputLogicLevelList;
-        List<Diagramecotag> ecoTagList;
+        List<Cableedgeconnectionecotag> ecoTagList;
         List<Machine> machineList;
         List<Cardtype> cardTypeList;
         List<Cardgate> cardGateList;
-        List<Logicfunction> logicFunctionList;
 
         string machinePrefix;
         bool populatingDialog = true;
@@ -79,11 +70,11 @@ namespace IBM1410SMS
         bool modifiedMachineGatePanelFrame = false;
 
         public EditCableEdgeConnectionBlockForm(
-            Diagramblock diagramBlock,
+            Cableedgeconnectionblock cableEdgeConnectionBlock,
             Machine machine,
             Volumeset volumeSet,
             Volume volume,
-            Diagrampage diagramPage,
+            Cableedgeconnectionpage cableEdgeConnectionPage,
             string diagramRow, 
             int diagramColumn,
             Cardlocation cardLocation) {
@@ -91,21 +82,16 @@ namespace IBM1410SMS
             InitializeComponent();
 
             pageTable = db.getPageTable();
-            connectionTable = db.getConnectionTable();
-            diagramBlockTable = db.getDiagramBlockTable();
-            diagramEcoTagTable = db.getDiagramEcoTagTable();
-            featureTable = db.getFeatureTable();
+            cableEdgeConnectionBlockTable = db.getCableEdgeConnectionBlockTable();
+            cableEdgeConnectionEcoTagTable = db.getCableEdgeConnectionECOTagTable();
             cardTypeTable = db.getCardTypeTable();
-            logicLevelTable = db.getLogicLevelsTable();
             machineTable = db.getMachineTable();
             panelTable = db.getPanelTable();
             machineGateTable = db.getMachineGateTable();
             frameTable = db.getFrameTable();
             cardGateTable = db.getCardGateTable();
-            gatePinTable = db.getGatePinTable();
-            logicFunctionTable = db.getLogicFunctionTable();
 
-            diagramMachine = machine;
+            cableEdgeConnectionMachine = machine;
 
             //  Set up invariant lists...
 
@@ -119,57 +105,32 @@ namespace IBM1410SMS
                 this.Close();
             }
 
-            inputLogicLevelList = logicLevelTable.getWhere("ORDER BY logicLevel");
-            //  Also need a blank logic level entry...
-            Logiclevels emptyLevel = new Logiclevels();
-            emptyLevel.idLogicLevels = 0;
-            emptyLevel.logicLevel = "";
-            inputLogicLevelList.Insert(0, emptyLevel);
-
-            //  Second combo box needs its own copy, or it will change entries
-            //  with the first one.
-
-            outputLogicLevelList = new List<Logiclevels>(inputLogicLevelList);
-
-            ecoTagList = diagramEcoTagTable.getWhere(
-                "WHERE diagramPage='" + diagramPage.idDiagramPage + "'" +
-                " ORDER BY diagramecotag.name");
+            ecoTagList = cableEdgeConnectionEcoTagTable.getWhere(
+                "WHERE cableEdgeConnectionPage='" + 
+                cableEdgeConnectionPage.idCableEdgeConnectionPage + "'" +
+                " ORDER BY cableEdgeConnectionECOTag.name");
             //  ECO Tag also needs an empty entry...
-            Diagramecotag emptyTag = new Diagramecotag();
-            emptyTag.idDiagramECOTag = 0;
+            Cableedgeconnectionecotag emptyTag = new Cableedgeconnectionecotag();
+            emptyTag.idcableEdgeConnectionECOtag = 0;
             emptyTag.name = " ";
             ecoTagList.Insert(0, emptyTag);
 
             cardTypeList = cardTypeTable.getWhere("ORDER BY cardtype.type");
-
-            featureList = featureTable.getWhere(
-                "WHERE machine='" + machine.idMachine + "'" +
-                " ORDER BY feature.code");
-            Feature emptyFeature = new Feature();
-            emptyFeature.idFeature = 0;
-            emptyFeature.code = "";
-            emptyFeature.feature = "";
-            featureList.Insert(0,emptyFeature);
-
-            logicFunctionList = logicFunctionTable.getWhere(
-                "ORDER BY logicfunction.name");
+            cardTypeList = cardTypeList.FindAll(
+                x => Array.IndexOf(Helpers.cableEdgeConnectionCardTypes, x) >= 0);
 
             //  Fill in static combo boxes' data sources.
 
-            inputModeComboBox.DataSource = inputLogicLevelList;
-            outputModeComboBox.DataSource = outputLogicLevelList;
             ecoTagComboBox.DataSource = ecoTagList;
-            cardTypeComboBox.DataSource = cardTypeList;
             machineComboBox.DataSource = machineList;
             cardTypeComboBox.DataSource = cardTypeList;
-            featureComboBox.DataSource = featureList;
 
             //  Fill in constant data.
 
             currentVolumeSet = volumeSet;
             currentVolume = volume;
-            currentPage = pageTable.getByKey(diagramPage.page);
-            currentDiagramPage = diagramPage;
+            currentPage = pageTable.getByKey(cableEdgeConnectionPage.page);
+            currentCableEdgeConnectionPage = cableEdgeConnectionPage;
             machinePrefix = machine.name.Length >= 4 ?
                 machine.name.Substring(0, 2) : "";
 
@@ -207,42 +168,26 @@ namespace IBM1410SMS
             //  one, and fill in as much as we can from the card location
             //  info passed (if any)
 
-            currentDiagramBlock = diagramBlock;
-            if(currentDiagramBlock == null || currentDiagramBlock.idDiagramBlock == 0) {
+            currentCableEdgeConnectionBlock = cableEdgeConnectionBlock;
+            if(currentCableEdgeConnectionBlock == null || 
+                currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0) {
                 deleteButton.Visible = false;
-                currentDiagramBlock = new Diagramblock();
-                currentDiagramBlock.idDiagramBlock = 0;
-                currentDiagramBlock.extendedTo = 0;
-                currentDiagramBlock.diagramPage = currentDiagramPage.idDiagramPage;
-                currentDiagramBlock.diagramRow = diagramRow;
-                currentDiagramBlock.diagramColumn = diagramColumn;
-                currentDiagramBlock.title = "";
-                currentDiagramBlock.symbol = "";
-                currentDiagramBlock.feature = 0;
-                currentDiagramBlock.inputMode = 0;
-                currentDiagramBlock.outputMode = 0;
-                currentDiagramBlock.cardSlot = 0;
-                currentDiagramBlock.eco = 0;
-                currentDiagramBlock.cardType = 0;
-                currentDiagramBlock.blockConfiguration = "";
-                currentDiagramBlock.notes = "";
-                currentDiagramBlock.flipped = 0;
+                currentCableEdgeConnectionBlock = new Cableedgeconnectionblock();
+                currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock = 0;
+                currentCableEdgeConnectionBlock.cableEdgeConnectionPage = 
+                currentCableEdgeConnectionPage.idCableEdgeConnectionPage;
+                currentCableEdgeConnectionBlock.diagramRow = diagramRow;
+                currentCableEdgeConnectionBlock.diagramColumn = diagramColumn;
+                currentCableEdgeConnectionBlock.topNote = "";
+                currentCableEdgeConnectionBlock.cardSlot = 0;
+                currentCableEdgeConnectionBlock.ecotag = 0;
+                currentCableEdgeConnectionBlock.originNote = "";
+                currentCableEdgeConnectionBlock.destNote = "";
+                currentCableEdgeConnectionBlock.explicitDestination = 0;
+                currentCableEdgeConnectionBlock.impliedDestination = 0;
 
                 if(cardLocation != null ) {
-                    currentDiagramBlock.cardSlot = cardLocation.cardSlot;
-                    currentDiagramBlock.cardType = cardLocation.type;
-                    currentDiagramBlock.feature = cardLocation.feature;
-
-                    //  Set the default input and output modes (logic levels) based
-                    //  on the first gate in the card...
-
-                    List<Cardgate> cardGateList = cardGateTable.getWhere(
-                        "WHERE cardType='" + currentDiagramBlock.cardType + "'" +
-                        " ORDER BY cardgate.number");
-                    if(cardGateList.Count > 0) {
-                        currentDiagramBlock.inputMode = cardGateList[0].inputLevel;
-                        currentDiagramBlock.outputMode = cardGateList[0].outputLevel;
-                    }
+                    currentCableEdgeConnectionBlock.cardSlot = cardLocation.cardSlot;
                 }
             }
             else {
@@ -251,7 +196,7 @@ namespace IBM1410SMS
 
             //  Get the card slot info, if available.  (Or blanks/zero if not)
 
-            currentCardSlotInfo = Helpers.getCardSlotInfo(currentDiagramBlock.cardSlot);
+            currentCardSlotInfo = Helpers.getCardSlotInfo(currentCableEdgeConnectionBlock.cardSlot);
             if(currentCardSlotInfo.column == 0) {
                 currentCardSlotInfo.column = 1;
             }
@@ -355,6 +300,11 @@ namespace IBM1410SMS
 
         }
 
+        /*
+         *  REMOVE METHOD
+         *  
+         * 
+         * 
         void populateCardGateComboBox(Cardtype cardType) {
 
             cardGateComboBox.Items.Clear();
@@ -400,35 +350,22 @@ namespace IBM1410SMS
             }
         }
 
+        END REMOVED METHOD  */
+
         void populateDialog() {
 
-            Feature currentFeature = null;
-            Diagramecotag currentEcoTag = null;
+            Cableedgeconnectionecotag currentEcoTag = null;
             Logiclevels templevel = null;
 
             int index;
 
             populatingDialog = true;
 
-            diagramBlockTitleTextBox.Text = currentDiagramBlock.title;
-            symbolTextBox.Text = currentDiagramBlock.symbol;
-            flippedCheckBox.Checked = (currentDiagramBlock.flipped == 1);
-            blockConfigurationTextBox.Text = currentDiagramBlock.blockConfiguration;
-            notesTextBox.Text =
-                currentDiagramBlock.notes != null ? currentDiagramBlock.notes : "";                
+            cableEdgeConnectionBlockTitleTextBox.Text = currentCableEdgeConnectionBlock.topNote;
 
-            if (currentDiagramBlock.feature != 0) {
-                currentFeature = featureList.Find(
-                    x => x.idFeature == currentDiagramBlock.feature);
-                featureComboBox.SelectedItem = currentFeature;
-            }
-            if(currentFeature == null) {
-                featureComboBox.SelectedItem = currentFeature = featureList[0];
-            }
-
-            if(currentDiagramBlock.eco != 0) {
+            if(currentCableEdgeConnectionBlock.ecotag != 0) {
                 currentEcoTag = ecoTagList.Find(
-                    x => x.idDiagramECOTag == currentDiagramBlock.eco);
+                    x => x.idcableEdgeConnectionECOtag == currentCableEdgeConnectionBlock.ecotag);
                 ecoTagComboBox.SelectedItem = currentEcoTag;
             }
 
@@ -439,26 +376,6 @@ namespace IBM1410SMS
                     ecoTagList[ecoTagList.Count > 1 ? 1 : 0];
             }
 
-            templevel = null;
-            if(currentDiagramBlock.inputMode != 0) {
-                templevel = inputLogicLevelList.Find(
-                    x => x.idLogicLevels == currentDiagramBlock.inputMode);
-                inputModeComboBox.SelectedItem = templevel;
-            }            
-            if(templevel == null) {
-                inputModeComboBox.SelectedItem = inputLogicLevelList[0];
-            }
-
-            templevel = null;
-            if (currentDiagramBlock.outputMode != 0) {
-                templevel = outputLogicLevelList.Find(
-                    x => x.idLogicLevels == currentDiagramBlock.outputMode);
-                outputModeComboBox.SelectedItem = templevel;
-            }
-            if (templevel == null) {
-                outputModeComboBox.SelectedItem = inputLogicLevelList[0];
-            }
-
             index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
             if(index < 0) {
                 index = 0;
@@ -467,8 +384,10 @@ namespace IBM1410SMS
 
             cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
 
-            if(currentDiagramBlock.cardType != 0) {
-                currentCardType = cardTypeTable.getByKey(currentDiagramBlock.cardType);
+            //  TODO - get type from card slot
+
+            if(currentCableEdgeConnectionBlock.cardType != 0) {
+                currentCardType = cardTypeTable.getByKey(currentCableEdgeConnectionBlock.cardType);
                 cardTypeComboBox.SelectedItem = cardTypeList.Find(
                     x => x.type == currentCardType.type);
             }
@@ -476,45 +395,13 @@ namespace IBM1410SMS
                 cardTypeComboBox.SelectedItem = currentCardType = cardTypeList[0];
             }
 
-            populateCardGateComboBox(currentCardType);
-            if(currentDiagramBlock.cardGate != 0) {
-                cardGateComboBox.SelectedIndex = 
-                    cardGateList.FindIndex(x => x.idcardGate == currentDiagramBlock.cardGate);
-            }
-            else if(cardGateList.Count > 0) {
-                cardGateComboBox.SelectedIndex = 0;
-            }
-
-            if(currentDiagramBlock.extendedTo != 0) {
-                extendedCheckBox.Checked = true;
-                Diagramblock extendedBlock = diagramBlockTable.getByKey(
-                    currentDiagramBlock.extendedTo);
-                if(extendedBlock != null || extendedBlock.idDiagramBlock != 0) {
-                    if(currentDiagramBlock.diagramRow.CompareTo(extendedBlock.diagramRow) > 0) {
-                        extendedAboveRadioButton.Checked = true;
-                    }
-                    else {
-                        extendedBelowRadioButton.Checked = true;
-                    }
-                }
-                else {
-                    //  If the key doesn't match, erase the extended flag...
-                    extendedCheckBox.Checked = false;
-                }
-            }
-            else {
-                extendedCheckBox.Checked = false;
-            }
-            if(!extendedCheckBox.Checked) {
-                extendedAboveRadioButton.Checked = false;
-                extendedBelowRadioButton.Checked = false;
-            }
-
             populatingDialog = false;
 
         }        
 
         private void drawLogicbox() {
+
+            //  TODO: Add relvant drawing sutff.
 
             //  Create aliases to save keystrokes.   ;)
 
@@ -533,8 +420,6 @@ namespace IBM1410SMS
                 return;
             }
 
-            string inLevel = ((Logiclevels)inputModeComboBox.SelectedItem).logicLevel;
-            string outLevel = ((Logiclevels)outputModeComboBox.SelectedItem).logicLevel;
             string machineSuffix = ((Machine)machineComboBox.SelectedItem).name;
             string cardType = ((Cardtype)cardTypeComboBox.SelectedItem).type;
 
@@ -543,46 +428,23 @@ namespace IBM1410SMS
             int column;
             int.TryParse(cardColumnTextBox.Text, out column);            
 
-            List<Connection> connectionList = connectionTable.getWhere(
-                "WHERE fromDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'");
-
-            string polarity = connectionList.Count > 0 ? connectionList[0].fromPhasePolarity 
-                : "";
-
-
             for (int i=0; i < 1; ++i) {
                 s += Environment.NewLine;
             }
 
-            //if(block.title != null && block.title.Length > 0) {
-            //    s += new string(' ', tabLen + width-1 - block.title.Length / 2) +
-            //        block.title;
-            //}
-
-            s += new string(' ', tabLen + width-1 - diagramBlockTitleTextBox.Text.Length / 2) +
-                diagramBlockTitleTextBox.Text.ToUpper() + Environment.NewLine;
+            s += new string(' ', tabLen + width-1 - cableEdgeConnectionBlockTitleTextBox.Text.Length / 2) +
+                cableEdgeConnectionBlockTitleTextBox.Text.ToUpper() + Environment.NewLine;
 
             s += tab + new string(underscore, width + 2) + Environment.NewLine;
 
-            //s += tab + bar + new string(' ', width-2 - (block.symbol.Length + 1) / 2) +
-            //    block.symbol + new string(' ', width-2 - (block.symbol.Length) / 2) 
-            //    + bar + Environment.NewLine;
-
+            /*
+             * Sample
             s += tab + bar + new string(' ', width-2 - (symbolTextBox.Text.Length + 1) / 2) +
                 symbolTextBox.Text.ToUpper() + 
                 new string(' ', width-2 - symbolTextBox.Text.Length/2) +
                 bar + 
                 Environment.NewLine;
-
-            s += tab + bar + ((Feature)featureComboBox.SelectedItem).code + 
-                new string(' ', width - ((Feature)featureComboBox.SelectedItem).code.Length) +
-                bar + (polarity == "+" ? "--" : "") + Environment.NewLine;
-
-            s += tab + bar +
-                (inLevel.Length > 1 ? inLevel.Substring(0,2) : 
-                    (inLevel.Length > 0 ? inLevel.Substring(0, 1) : " ") + " ") +
-                " " + (outLevel.Length > 0 ? outLevel.Substring(0, 1) : " ") +
-                bar + Environment.NewLine;
+            */
 
             s += tab + bar + machineSuffix + currentMachineGate.name +
                 ((Diagramecotag) ecoTagComboBox.SelectedItem).name + 
@@ -590,8 +452,7 @@ namespace IBM1410SMS
 
             s += tab + bar + currentPanel.panel.ToString().Substring(0, 1) +
                 cardRowComboBox.SelectedItem + column.ToString("D2") +
-                bar + 
-                (polarity == "-" ? "--" : "") +
+                bar +
                 Environment.NewLine;
 
             s += tab + bar + cardType +
@@ -599,22 +460,13 @@ namespace IBM1410SMS
                 bar + Environment.NewLine;
 
             s += tab;
-            if (blockConfigurationTextBox.Text.Length > 0) {
-                s += new string(upperscore,2) + blockConfigurationTextBox.Text +
-                    new string(upperscore, 4 - blockConfigurationTextBox.Text.Length);
-            }
-            else {
-                s += new string(upperscore, width + 2);
-            }
+            s += new string(upperscore, width + 2);
             s += Environment.NewLine;
-
-            //s += tab + "  " + block.diagramColumn.ToString("D1") +
-            //    block.diagramRow + Environment.NewLine;
 
             s += tab + "  " +
                 diagramColumnTextBox.Text + diagramRowTextBox.Text + Environment.NewLine;
 
-            logicBlockDrawingTextBox.Text = s;
+            cableEdgeConnectionBlockDrawingTextBox.Text = s;
         }
 
 
@@ -665,23 +517,7 @@ namespace IBM1410SMS
             }
         }
 
-        private void featureComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            drawLogicbox();
-        }
-
-        private void diagramBlockTitleTextBox_TextChanged(object sender, EventArgs e) {
-            drawLogicbox();
-        }
-
-        private void symbolTextBox_TextChanged(object sender, EventArgs e) {
-            drawLogicbox();
-        }
-
-        private void inputModeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            drawLogicbox();
-        }
-
-        private void outputModeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+        private void cableEdgeConnectionBlockTitleTextBox_TextChanged(object sender, EventArgs e) {
             drawLogicbox();
         }
 
@@ -703,6 +539,8 @@ namespace IBM1410SMS
             drawLogicbox();
         }
 
+        //  TODO - fix
+
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             populateCardGateComboBox((Cardtype)cardTypeComboBox.SelectedItem);
             if (!populatingDialog && cardGateList.Count > 0) {
@@ -711,9 +549,6 @@ namespace IBM1410SMS
             drawLogicbox();
         }
 
-        private void blockConfigurationTextBox_TextChanged(object sender, EventArgs e) {
-            drawLogicbox();
-        }
 
         private void applyButton_Click(object sender, EventArgs e) {
 
@@ -733,30 +568,6 @@ namespace IBM1410SMS
                 return;
             }
 
-            if (symbolTextBox.Text == null || symbolTextBox.Text.Length == 0) {
-                MessageBox.Show("Logic Block Symbol is required.",
-                    "Symbol Required",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                symbolTextBox.Focus();
-                return;
-            }
-
-            //  If the extended check box is checked, check that it makes sense..
-
-            if(extendedCheckBox.Checked == true) {
-                if ((extendedAboveRadioButton.Checked &&
-                    diagramRowTextBox.Text == Helpers.validDiagramRows[0]) ||
-                    (extendedBelowRadioButton.Checked &&
-                    diagramRowTextBox.Text ==
-                        Helpers.validDiagramRows[Helpers.validDiagramRows.Length - 1])) {
-                    MessageBox.Show("Logic block in top row cannot be extended up /\n" +
-                        "bottom row cannot be extended down",
-                        "Invalid Logic Block Extension",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-            }
-
             //  Update the card slot info from the dialog
 
             currentCardSlotInfo.machineName = ((Machine)machineComboBox.SelectedItem).name;
@@ -768,22 +579,10 @@ namespace IBM1410SMS
 
             //  Also update some fields of the current diagram block from the dialog now.
 
-            currentDiagramBlock.title = diagramBlockTitleTextBox.Text.ToUpper();
-            currentDiagramBlock.symbol = symbolTextBox.Text.ToUpper();
-            currentDiagramBlock.feature = ((Feature)featureComboBox.SelectedItem).idFeature;
-            currentDiagramBlock.inputMode = ((Logiclevels)inputModeComboBox.SelectedItem).idLogicLevels;
-            currentDiagramBlock.outputMode = ((Logiclevels)outputModeComboBox.SelectedItem).idLogicLevels;
-            currentDiagramBlock.eco = ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag;
-            currentDiagramBlock.cardType = ((Cardtype)cardTypeComboBox.SelectedItem).idCardType;
-            if (cardGateList.Count > 0) {
-                currentDiagramBlock.cardGate = cardGateList[cardGateComboBox.SelectedIndex].idcardGate;
-            }
-            else {
-                currentDiagramBlock.cardGate = 0;
-            }
-            currentDiagramBlock.blockConfiguration = blockConfigurationTextBox.Text;
-            currentDiagramBlock.notes = notesTextBox.Text;
-            currentDiagramBlock.flipped = flippedCheckBox.Checked ? 1 : 0;
+            //  TODO: Lots to fix here.
+
+            currentCableEdgeConnectionBlock.topNote = cableEdgeConnectionBlockTitleTextBox.Text.ToUpper();
+            currentCableEdgeConnectionBlock.ecotag = ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag;
 
             //  Tell the user what the update will actually do...
 
@@ -813,7 +612,7 @@ namespace IBM1410SMS
             string updateAction = updating ? "Updated" : "Updating";
 
             int extensionKey = 0;
-            int diagramBlockKey = currentDiagramBlock.idDiagramBlock;
+            int diagramBlockKey = currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock;
 
             if (updating) {
                 db.BeginTransaction();
@@ -827,80 +626,28 @@ namespace IBM1410SMS
 
             }
 
-            message = (currentDiagramBlock.idDiagramBlock != 0 ? updateAction : action) +
+            message = (currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock != 0 
+                    ? updateAction : action) +
                 " Logic block " +
-                (currentDiagramBlock.idDiagramBlock != 0 ?
-                "(Database ID " + currentDiagramBlock.idDiagramBlock + ")" : "") + "\n\n";
+                (currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock != 0 ?
+                "(Database ID " + currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock + 
+                ")" : "") + "\n\n";
 
             //  Add the card slot, if necessary.
 
-            currentDiagramBlock.cardSlot = 
+            currentCableEdgeConnectionBlock.cardSlot = 
                 Helpers.getOrAddCardSlotKey(updating, currentCardSlotInfo, out tempMessage);            
 
-            //  Handle an extended logic block...
-
-            if (extendedCheckBox.Checked) {
-                string extensionRow = Helpers.validDiagramRows[
-                        extendedAboveRadioButton.Checked ?
-                            Array.IndexOf(Helpers.validDiagramRows, diagramRowTextBox.Text) - 1 :
-                            Array.IndexOf(Helpers.validDiagramRows, diagramRowTextBox.Text) + 1];
-                List<Diagramblock> extensionList = diagramBlockTable.getWhere(
-                    "WHERE diagramPage='" + currentDiagramPage.idDiagramPage + "'" +
-                    " AND diagramColumn='" + currentDiagramBlock.diagramColumn + "'" +
-                    " AND diagramRow='" + extensionRow + "'");
-                if(extensionList.Count < 1) {
-                    //  Need to add the extension logic block as a clone of this one...
-                    if (updating) {
-                        Diagramblock extensionBlock = new Diagramblock();
-                        extensionBlock.idDiagramBlock = IdCounter.incrementCounter();
-                        extensionKey = extensionBlock.idDiagramBlock;
-                        extensionBlock.extendedTo = diagramBlockKey;
-                        extensionBlock.diagramPage = currentDiagramBlock.diagramPage;
-                        extensionBlock.diagramRow = extensionRow;
-                        extensionBlock.diagramColumn = currentDiagramBlock.diagramColumn;
-                        extensionBlock.title = currentDiagramBlock.title;
-                        extensionBlock.symbol =
-                            extendedAboveRadioButton.Checked ? currentDiagramBlock.symbol : "E";
-                        extensionBlock.feature = currentDiagramBlock.feature;
-                        extensionBlock.inputMode = currentDiagramBlock.inputMode;
-                        extensionBlock.outputMode = currentDiagramBlock.outputMode;
-                        extensionBlock.cardSlot = currentDiagramBlock.cardSlot;
-                        extensionBlock.eco = currentDiagramBlock.eco;
-                        extensionBlock.cardType = currentDiagramBlock.cardType;
-                        extensionBlock.blockConfiguration = currentDiagramBlock.blockConfiguration;
-                        extensionBlock.notes = "";
-                        extensionBlock.flipped = currentDiagramBlock.flipped;
-                        diagramBlockTable.insert(extensionBlock);
-                    }
-                    message += action + 
-                        " Extension Diagram Logic Block at row " + extensionRow + "\n";
-                }
-                else {
-                    extensionKey = extensionList[0].idDiagramBlock;
-                    if(extensionList[0].extendedTo == 0) {
-                        message += (updating ? "Set" : "Setting") +
-                            " extendedTo field in Diagram Logic Block at row " +
-                            extensionRow + " (Database ID " + extensionList[0].idDiagramBlock + ")\n";
-                        if (updating) {
-                            extensionList[0].extendedTo = diagramBlockKey;
-                            diagramBlockTable.update(extensionList[0]);
-                        }
-                    }
-                }
-            }
-
-            //  Set the extension key (or 0) into the diagram block
-
-            currentDiagramBlock.extendedTo = extensionKey;
 
             if(updating) {
-                if(currentDiagramBlock.idDiagramBlock == 0) {
-                    currentDiagramBlock.idDiagramBlock = diagramBlockKey;
-                    diagramBlockTable.insert(currentDiagramBlock);
-                    message += "New Logic Block Database ID=" + currentDiagramBlock.idDiagramBlock;
+                if(currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0) {
+                    currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock = diagramBlockKey;
+                    cableEdgeConnectionBlockTable.insert(currentCableEdgeConnectionBlock);
+                    message += "New Logic Block Database ID=" + 
+                        currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock;
                 }
                 else {
-                    diagramBlockTable.update(currentDiagramBlock);
+                    cableEdgeConnectionBlockTable.update(currentCableEdgeConnectionBlock);
                 }
                 db.CommitTransaction();
                 modifiedMachineGatePanelFrame = false;
@@ -913,23 +660,10 @@ namespace IBM1410SMS
 
             string message = "";
 
-            List<Connection> connectionList = connectionTable.getWhere(
-                "WHERE fromDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'" +
-                " OR toDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'");
-            if(connectionList.Count > 0) {
-                message += "There are currently " +
-                    connectionList.Count + " connections still referring to it.\n";
-            }
-
-            List<Diagramblock> extensionList = diagramBlockTable.getWhere(
-                "WHERE extendedTo='" + currentDiagramBlock.idDiagramBlock + "'");
-            if(extensionList.Count > 0) {
-                message += "There is currently an extension reference to it.\n";
-            }
 
             if(message.Length > 0) {
                 message = "Cannot delete Diagram Logic Block with Database ID=" +
-                    currentDiagramBlock.idDiagramBlock + ":\n\n" + message;
+                    currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock + ":\n\n" + message;
                 MessageBox.Show(message, "Cannot Delete Diagram Logic Block",
                     MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return;
@@ -937,12 +671,13 @@ namespace IBM1410SMS
             else {
                 DialogResult result = MessageBox.Show(
                     "Confirm Deletion of Diagram Logic Block with Database ID=" +
-                    currentDiagramBlock.idDiagramBlock, "Confirm Deletion",
+                    currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock, "Confirm Deletion",
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
                 if (result == DialogResult.OK) {
-                    diagramBlockTable.deleteByKey(currentDiagramBlock.idDiagramBlock);
+                    cableEdgeConnectionBlockTable.deleteByKey(
+                        currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock);
                     MessageBox.Show("Diagram Logic Block with Database ID=" +
-                        currentDiagramBlock.idDiagramBlock + " Deleted.",
+                        currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock + " Deleted.",
                         "Diagram Logic Block Deleted",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                     this.Close();
@@ -953,30 +688,6 @@ namespace IBM1410SMS
         private void cancelButton_Click(object sender, EventArgs e) {
             //  Buh bye...
             this.Close();        
-        }
-
-        private void editConnectionsButton_Click(object sender, EventArgs e) {
-
-            //  If something changed, apply the update.
-
-            if (isModified()) {
-                applyButton_Click(sender, e);
-                //  If the apply failed, do NOT bring up the connections dialog.
-                if(!applySuccessful) {
-                    return;
-                }
-            }
-
-            //  Bring up the connections dialog.
-
-            EditConnectionsForm EditConnectionsForm = new EditConnectionsForm(
-                currentDiagramBlock, diagramMachine, currentVolumeSet, currentVolume,
-                currentPage, currentDiagramPage, currentCardType);
-            EditConnectionsForm.ShowDialog();
-
-            //  Redraw the logic box, as outputs may have changed.
-
-            drawLogicbox();
         }
 
 
@@ -991,26 +702,19 @@ namespace IBM1410SMS
 
             int.TryParse(cardColumnTextBox.Text, out column);
 
+            //  TODO:  Add new fields
+
             return (modifiedMachineGatePanelFrame ||
-                currentDiagramBlock.idDiagramBlock == 0 ||
+                currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0 ||
                 currentCardSlotInfo.machineName != ((Machine)machineComboBox.SelectedItem).name ||
                 currentCardSlotInfo.frameName != ((Frame)frameComboBox.SelectedItem).name ||
                 currentCardSlotInfo.gateName != ((Machinegate)gateComboBox.SelectedItem).name ||
                 currentCardSlotInfo.panelName != ((Panel)panelComboBox.SelectedItem).panel ||
                 currentCardSlotInfo.row != (string)cardRowComboBox.SelectedItem ||
                 currentCardSlotInfo.column != column ||
-                (currentDiagramBlock.extendedTo != 0 && !extendedCheckBox.Checked) ||
-                (currentDiagramBlock.extendedTo == 0 && extendedCheckBox.Checked) ||
-                currentDiagramBlock.title != diagramBlockTitleTextBox.Text ||
-                currentDiagramBlock.symbol != symbolTextBox.Text ||
-                currentDiagramBlock.feature != ((Feature)featureComboBox.SelectedItem).idFeature ||
-                currentDiagramBlock.inputMode != ((Logiclevels)inputModeComboBox.SelectedItem).idLogicLevels ||
-                currentDiagramBlock.outputMode != ((Logiclevels)outputModeComboBox.SelectedItem).idLogicLevels ||
-                currentDiagramBlock.eco != ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
-                currentDiagramBlock.cardType != ((Cardtype)cardTypeComboBox.SelectedItem).idCardType ||
-                currentDiagramBlock.cardGate != cardGateList[cardGateComboBox.SelectedIndex].idcardGate ||
-                currentDiagramBlock.blockConfiguration != blockConfigurationTextBox.Text ||
-                currentDiagramBlock.notes != notesTextBox.Text
+                currentCableEdgeConnectionBlock.topNote != cableEdgeConnectionBlockTitleTextBox.Text ||
+                currentCableEdgeConnectionBlock.ecotag != ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
+                currentCableEdgeConnectionBlock.cardType != ((Cardtype)cardTypeComboBox.SelectedItem).idCardType
                 );
         }
     }
