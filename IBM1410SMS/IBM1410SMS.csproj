@@ -105,6 +105,12 @@
     <Compile Include="EditDiagramBlocksForm.Designer.cs">
       <DependentUpon>EditDiagramBlocksForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditCableEdgeConnectionBlockForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditCableEdgeConnectionBlockForm.Designer.cs">
+      <DependentUpon>EditCableEdgeConnectionBlockForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditDiagramLogicBlockForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -379,6 +385,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditDiagramBlocksForm.resx">
       <DependentUpon>EditDiagramBlocksForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditCableEdgeConnectionBlockForm.resx">
+      <DependentUpon>EditCableEdgeConnectionBlockForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditDiagramLogicBlockForm.resx">
       <DependentUpon>EditDiagramLogicBlockForm.cs</DependentUpon>
