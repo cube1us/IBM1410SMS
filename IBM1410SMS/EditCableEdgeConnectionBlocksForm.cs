@@ -312,6 +312,14 @@ namespace IBM1410SMS
             //    currentCableEdgeConnectionPage, rowName, columnNumber, cardLocation);
 
             // EditDiagramLogicBlockForm.ShowDialog();
+
+            EditCableEdgeConnectionBlockForm EditCableEdgeConnectionBlockForm =
+                new EditCableEdgeConnectionBlockForm(cableEdgeConnectionBlock, currentMachine,
+                currentVolumeSet, currentVolume, currentCableEdgeConnectionPage,
+                rowName, columnNumber, cardLocation);
+
+            EditCableEdgeConnectionBlockForm.ShowDialog();
+
             populateDialog();
         }
 

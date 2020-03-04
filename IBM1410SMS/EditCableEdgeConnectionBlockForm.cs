@@ -55,6 +55,7 @@ namespace IBM1410SMS
         Machinegate currentMachineGate = null;
         Panel currentPanel = null;
         Cardtype currentCardType = null;
+        Cardlocation currentCardLocation = null;
 
         Cableedgeconnectionblock currentCableEdgeConnectionBlock;
         CardSlotInfo currentCardSlotInfo = null;
@@ -62,7 +63,6 @@ namespace IBM1410SMS
         List<Cableedgeconnectionecotag> ecoTagList;
         List<Machine> machineList;
         List<Cardtype> cardTypeList;
-        List<Cardgate> cardGateList;
 
         string machinePrefix;
         bool populatingDialog = true;
@@ -117,7 +117,7 @@ namespace IBM1410SMS
 
             cardTypeList = cardTypeTable.getWhere("ORDER BY cardtype.type");
             cardTypeList = cardTypeList.FindAll(
-                x => Array.IndexOf(Helpers.cableEdgeConnectionCardTypes, x) >= 0);
+                x => Array.IndexOf(Helpers.cableEdgeConnectionCardTypes, x.type) >= 0);
 
             //  Fill in static combo boxes' data sources.
 
@@ -131,6 +131,7 @@ namespace IBM1410SMS
             currentVolume = volume;
             currentPage = pageTable.getByKey(cableEdgeConnectionPage.page);
             currentCableEdgeConnectionPage = cableEdgeConnectionPage;
+            currentCardLocation = cardLocation;
             machinePrefix = machine.name.Length >= 4 ?
                 machine.name.Substring(0, 2) : "";
 
@@ -300,62 +301,9 @@ namespace IBM1410SMS
 
         }
 
-        /*
-         *  REMOVE METHOD
-         *  
-         * 
-         * 
-        void populateCardGateComboBox(Cardtype cardType) {
-
-            cardGateComboBox.Items.Clear();
-            cardGateList = cardGateTable.getWhere(
-                "WHERE cardType='" + cardType.idCardType + "'" +
-                " ORDER BY cardgate.number");
-
-            //  Insert a "null" card gate - we don't really want to set
-            //  a gate by default - user action required.
-
-            Cardgate dummyGate = new Cardgate();
-            dummyGate.idcardGate = 0;
-            dummyGate.logicFunction = 0;
-            cardGateList.Insert(0,dummyGate);
-
-            foreach(Cardgate cardGate in cardGateList) {
-                string comboBoxItem = "";
-                bool firstPin = true;
-                List<Gatepin> gatePinList = gatePinTable.getWhere(
-                    "WHERE cardGate='" + cardGate.idcardGate + "'" +
-                    " ORDER BY pin");
-                if (cardGate.idcardGate > 0) {
-                    comboBoxItem = cardGate.number.ToString() + ": ";
-                }
-                else {
-                    comboBoxItem = "(NONE)";  //  Dummy gate.
-                }
-                foreach(Gatepin pin in gatePinList) {
-                    if(firstPin) {
-                        firstPin = false;
-                    }
-                    else {
-                        comboBoxItem += ",";
-                    }
-                    comboBoxItem += pin.pin;
-                }
-                Logicfunction logicFunction =
-                    logicFunctionList.Find(x => x.idLogicFunction == cardGate.logicFunction);
-                if (logicFunction != null) {
-                    comboBoxItem += " (" + logicFunction.name + ")";
-                }
-                cardGateComboBox.Items.Add(comboBoxItem);
-            }
-        }
-
-        END REMOVED METHOD  */
-
         void populateDialog() {
 
             Cableedgeconnectionecotag currentEcoTag = null;
-            Logiclevels templevel = null;
 
             int index;
 
@@ -384,12 +332,17 @@ namespace IBM1410SMS
 
             cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
 
-            //  TODO - get type from card slot
+            //  TODO - get type from cable/edge connectoin block, or if none there, from the
+            //  card location, if possible.  Otherwise, default to the first
+            //  one int he list.
 
-            if(currentCableEdgeConnectionBlock.cardType != 0) {
-                currentCardType = cardTypeTable.getByKey(currentCableEdgeConnectionBlock.cardType);
+            if(currentCableEdgeConnectionBlock.connectionType > 0) {
                 cardTypeComboBox.SelectedItem = cardTypeList.Find(
-                    x => x.type == currentCardType.type);
+                    x => x.idCardType == currentCableEdgeConnectionBlock.connectionType).name;
+            }
+            else if(currentCardLocation.type != 0) {
+                cardTypeComboBox.SelectedItem = cardTypeList.Find(
+                    x => x.idCardType == currentCardLocation.type).name;
             }
             else {
                 cardTypeComboBox.SelectedItem = currentCardType = cardTypeList[0];
@@ -447,7 +400,7 @@ namespace IBM1410SMS
             */
 
             s += tab + bar + machineSuffix + currentMachineGate.name +
-                ((Diagramecotag) ecoTagComboBox.SelectedItem).name + 
+                ((Cableedgeconnectionecotag) ecoTagComboBox.SelectedItem).name + 
                 bar + Environment.NewLine;
 
             s += tab + bar + currentPanel.panel.ToString().Substring(0, 1) +
@@ -539,13 +492,7 @@ namespace IBM1410SMS
             drawLogicbox();
         }
 
-        //  TODO - fix
-
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            populateCardGateComboBox((Cardtype)cardTypeComboBox.SelectedItem);
-            if (!populatingDialog && cardGateList.Count > 0) {
-                cardGateComboBox.SelectedIndex = 0;
-            }
             drawLogicbox();
         }
 
@@ -611,7 +558,6 @@ namespace IBM1410SMS
             string action = updating ? "Added" : "Adding";
             string updateAction = updating ? "Updated" : "Updating";
 
-            int extensionKey = 0;
             int diagramBlockKey = currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock;
 
             if (updating) {
@@ -713,8 +659,10 @@ namespace IBM1410SMS
                 currentCardSlotInfo.row != (string)cardRowComboBox.SelectedItem ||
                 currentCardSlotInfo.column != column ||
                 currentCableEdgeConnectionBlock.topNote != cableEdgeConnectionBlockTitleTextBox.Text ||
-                currentCableEdgeConnectionBlock.ecotag != ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
-                currentCableEdgeConnectionBlock.cardType != ((Cardtype)cardTypeComboBox.SelectedItem).idCardType
+                currentCableEdgeConnectionBlock.ecotag != 
+                    ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
+                currentCableEdgeConnectionBlock.connectionType != 
+                    ((Cardtype)cardTypeComboBox.SelectedItem).idCardType
                 );
         }
     }
