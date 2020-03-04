@@ -196,10 +196,8 @@ namespace IBM1410SMS
                             cableEdgeConnectionBlock.idCableEdgeConnectionBlock > 0) {
                             CardSlotInfo cardSlotInfo = Helpers.getCardSlotInfo(
                                 cableEdgeConnectionBlock.cardSlot);
-                            string cardTypeName = Helpers.getCardTypeType(
-                            // Get by without this column...  cableEdgeConnectionBlock.cardType);
-                               cardLocationList.Find(
-                                   x => x.cardSlot == cableEdgeConnectionBlock.cardSlot).type);
+                            string cardTypeName = 
+                                Helpers.getCardTypeType(cableEdgeConnectionBlock.connectionType);
                             if (cableEdgeConnectionBlock.ecotag != 0) {
                                 Cableedgeconnectionecotag ecoTag = cableEdgeConnectionECOTagList.Find(
                                     t => t.idcableEdgeConnectionECOtag == 
