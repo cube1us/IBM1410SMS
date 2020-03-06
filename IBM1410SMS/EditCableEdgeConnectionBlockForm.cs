@@ -48,20 +48,27 @@ namespace IBM1410SMS
         Page currentPage;
         Cableedgeconnectionpage currentCableEdgeConnectionPage;
         Machine currentMachine;
+        Machine currentDestinationMachine;
         Machine cableEdgeConnectionMachine;
         Volumeset currentVolumeSet;
         Volume currentVolume;
         Frame currentFrame = null;
+        Frame currentDestinationFrame = null;
         Machinegate currentMachineGate = null;
+        Machinegate currentDestinationMachineGate = null;
         Panel currentPanel = null;
+        Panel currentDestinationPanel = null;
         Cardtype currentCardType = null;
         Cardlocation currentCardLocation = null;
+        Cardlocation currentDestinationCardLocation = null;
 
         Cableedgeconnectionblock currentCableEdgeConnectionBlock;
         CardSlotInfo currentCardSlotInfo = null;
+        CardSlotInfo currentDestinationCardSlotInfo = null;
 
         List<Cableedgeconnectionecotag> ecoTagList;
         List<Machine> machineList;
+        List<Machine> destinationMachineList;
         List<Cardtype> cardTypeList;
 
         string machinePrefix;
@@ -123,6 +130,8 @@ namespace IBM1410SMS
 
             ecoTagComboBox.DataSource = ecoTagList;
             machineComboBox.DataSource = machineList;
+            destinationMachineList = new List<Machine>(machineList);
+            destinationMachineComboBox.DataSource = destinationMachineList;
             cardTypeComboBox.DataSource = cardTypeList;
 
             //  Fill in constant data.
@@ -228,6 +237,8 @@ namespace IBM1410SMS
         //  Method to populate combo boxes that depend on the selections
         //  in other combo boxes.
 
+        //  First, the frames (origin and destination)
+
         void populateFrameComboBox() {
 
             List<Frame> frameList = frameTable.getWhere(
@@ -252,8 +263,35 @@ namespace IBM1410SMS
             populateMachineGateComboBox();
         }
 
+        //  Destination Frame
 
-        //  Populate the (Machine) gate combo box...
+        void populateDestinationFrameComboBox()
+        {
+
+            List<Frame> frameList = frameTable.getWhere(
+                "WHERE machine='" + currentDestinationMachine.idMachine + "'" +
+                " ORDER BY frame.name");
+
+            //  If there are no frames, then we cannot proceed...
+            if (frameList.Count == 0) {
+                return;
+            }
+            destinationFrameComboBox.DataSource = frameList;
+            //  Select the matching entry, if possible...
+            if (currentDestinationCardSlotInfo.frameName.Length > 0) {
+                destinationFrameComboBox.SelectedItem = frameList.Find(
+                    x => x.name == currentDestinationCardSlotInfo.frameName);
+            }
+            else {
+                destinationFrameComboBox.SelectedItem = frameList[0];
+            }
+            currentDestinationFrame = (Frame)destinationFrameComboBox.SelectedItem;
+            //  Then on to the gate and the rest of the dialog...
+            populateDestinationMachineGateComboBox();
+        }
+
+
+        //  Populate the (Machine) gate combo boxes (origin and destination)
 
         void populateMachineGateComboBox() {
 
@@ -278,7 +316,34 @@ namespace IBM1410SMS
             populatePanelComboBox();
         }
 
-        
+        //  Destination Gate
+
+        void populateDestinationMachineGateComboBox()
+        {
+
+            List<Machinegate> machineGateList = machineGateTable.getWhere(
+                "WHERE frame='" + currentDestinationFrame.idFrame + "'" +
+                " ORDER BY machinegate.name");
+            //  If there are no gates, we cannot proceed...
+            if (machineGateList.Count == 0) {
+                return;
+            }
+            destinationGateComboBox.DataSource = machineGateList;
+            //  Select the matching entry, if possible...
+            if (currentDestinationCardSlotInfo.gateName.Length > 0) {
+                destinationGateComboBox.SelectedItem = machineGateList.Find(
+                    x => x.name == currentDestinationCardSlotInfo.gateName);
+            }
+            else {
+                destinationGateComboBox.SelectedItem = machineGateList[0];
+            }
+            currentDestinationMachineGate = (Machinegate)destinationGateComboBox.SelectedItem;
+            //  Then on to the Panel and the rest...
+            populateDestinationPanelComboBox();
+        }
+
+        //  Next, the origin and destination panels
+
         void populatePanelComboBox() {
 
             List<Panel> panelList = panelTable.getWhere(
@@ -298,6 +363,31 @@ namespace IBM1410SMS
                 panelComboBox.SelectedItem = panelList[0];
             }
             currentPanel = (Panel)panelComboBox.SelectedItem;
+
+        }
+
+        //  Destination panel
+
+        void populateDestinationPanelComboBox()
+        {
+
+            List<Panel> panelList = panelTable.getWhere(
+                "WHERE gate='" + currentDestinationMachineGate.idGate + "'" +
+                " ORDER BY panel");
+            //  If there are no panels, we cannot proceed...
+            if (panelList.Count == 0) {
+                return;
+            }
+            destinationPanelComboBox.DataSource = panelList;
+            //  Select the matching entry, if possible.
+            if (currentDestinationCardSlotInfo.panelName.Length > 0) {
+                destinationPanelComboBox.SelectedItem = panelList.Find(
+                    x => x.panel == currentDestinationCardSlotInfo.panelName);
+            }
+            else {
+                destinationPanelComboBox.SelectedItem = panelList[0];
+            }
+            currentDestinationPanel = (Panel)destinationPanelComboBox.SelectedItem;
 
         }
 
@@ -435,6 +525,18 @@ namespace IBM1410SMS
                 }
                 populateFrameComboBox();
             }
+        }
+
+        private void destinationMachineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            if (!populatingDialog) {
+                currentDestinationMachine = (Machine)destinationMachineComboBox.SelectedItem;
+                if (currentDestinationCardSlotInfo.machineName != currentDestinationMachine.name) {
+                    currentDestinationCardSlotInfo.machineName = currentDestinationMachine.name;
+                    modifiedMachineGatePanelFrame = true;
+                }
+                populateDestinationFrameComboBox();
+            }
+
         }
 
         private void frameComboBox_SelectedIndexChanged(object sender, EventArgs e) {
@@ -665,5 +767,6 @@ namespace IBM1410SMS
                     ((Cardtype)cardTypeComboBox.SelectedItem).idCardType
                 );
         }
+
     }
 }
