@@ -24,7 +24,7 @@ namespace IBM1410SMS
 		[MyColumn] public string originNote { get; set; }
 		[MyColumn] public int connectionType { get; set; }
 		[MyColumn] public string destNote { get; set; }
+		[MyColumn] public int Destination { get; set; }
 		[MyColumn] public int explicitDestination { get; set; }
-		[MyColumn] public int impliedDestination { get; set; }
 	}
 }

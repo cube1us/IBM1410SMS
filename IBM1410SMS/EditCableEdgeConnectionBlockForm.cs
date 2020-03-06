@@ -185,7 +185,7 @@ namespace IBM1410SMS
                 currentCableEdgeConnectionBlock.originNote = "";
                 currentCableEdgeConnectionBlock.destNote = "";
                 currentCableEdgeConnectionBlock.explicitDestination = 0;
-                currentCableEdgeConnectionBlock.impliedDestination = 0;
+                currentCableEdgeConnectionBlock.Destination = 0;
 
                 if(cardLocation != null ) {
                     currentCableEdgeConnectionBlock.cardSlot = cardLocation.cardSlot;
