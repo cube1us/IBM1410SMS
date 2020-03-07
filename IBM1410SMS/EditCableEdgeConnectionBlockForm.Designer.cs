@@ -55,13 +55,6 @@
             this.label18 = new System.Windows.Forms.Label();
             this.cardTypeComboBox = new System.Windows.Forms.ComboBox();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
-            this.applyButton = new System.Windows.Forms.Button();
-            this.deleteButton = new System.Windows.Forms.Button();
-            this.cancelButton = new System.Windows.Forms.Button();
-            this.cableEdgeConnectionBlockDrawingTextBox = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.destinationSeparatorLabel = new System.Windows.Forms.Label();
-            this.destinationLabel = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.destinationMachineComboBox = new System.Windows.Forms.ComboBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -74,6 +67,14 @@
             this.label19 = new System.Windows.Forms.Label();
             this.destinationColumnTextBox = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
+            this.applyButton = new System.Windows.Forms.Button();
+            this.deleteButton = new System.Windows.Forms.Button();
+            this.cancelButton = new System.Windows.Forms.Button();
+            this.cableEdgeConnectionBlockDrawingTextBox = new System.Windows.Forms.TextBox();
+            this.label20 = new System.Windows.Forms.Label();
+            this.destinationSeparatorLabel = new System.Windows.Forms.Label();
+            this.destinationLabel = new System.Windows.Forms.Label();
+            this.explicitDestinationCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // diagramRowTextBox
@@ -377,6 +378,136 @@
         "e connection block");
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(14, 326);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(51, 13);
+            this.label7.TabIndex = 115;
+            this.label7.Text = "Machine:";
+            this.toolTip1.SetToolTip(this.label7, "The machine associated with the destination for this connection (e.g. 1411, 1415," +
+        " etc.)");
+            // 
+            // destinationMachineComboBox
+            // 
+            this.destinationMachineComboBox.DisplayMember = "name";
+            this.destinationMachineComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.destinationMachineComboBox.FormattingEnabled = true;
+            this.destinationMachineComboBox.Location = new System.Drawing.Point(71, 323);
+            this.destinationMachineComboBox.Name = "destinationMachineComboBox";
+            this.destinationMachineComboBox.Size = new System.Drawing.Size(86, 21);
+            this.destinationMachineComboBox.TabIndex = 116;
+            this.toolTip1.SetToolTip(this.destinationMachineComboBox, "The machine associated with the destination for this Cable/Edge Connection block " +
+        "(e.g. 1411, 1415, etc.)");
+            this.destinationMachineComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationMachineComboBox_SelectedIndexChanged);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(177, 326);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(39, 13);
+            this.label8.TabIndex = 117;
+            this.label8.Text = "Frame:";
+            this.toolTip1.SetToolTip(this.label8, "The Frame associated with the destination for this connector or cable");
+            // 
+            // destinationFrameComboBox
+            // 
+            this.destinationFrameComboBox.DisplayMember = "name";
+            this.destinationFrameComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.destinationFrameComboBox.FormattingEnabled = true;
+            this.destinationFrameComboBox.Location = new System.Drawing.Point(222, 323);
+            this.destinationFrameComboBox.Name = "destinationFrameComboBox";
+            this.destinationFrameComboBox.Size = new System.Drawing.Size(54, 21);
+            this.destinationFrameComboBox.TabIndex = 118;
+            this.toolTip1.SetToolTip(this.destinationFrameComboBox, "The Frame for the destination associated with this cable/edge connection block");
+            this.destinationFrameComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationFrameComboBox_SelectedIndexChanged);
+            // 
+            // destinationGateComboBox
+            // 
+            this.destinationGateComboBox.DisplayMember = "name";
+            this.destinationGateComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.destinationGateComboBox.FormattingEnabled = true;
+            this.destinationGateComboBox.Location = new System.Drawing.Point(340, 323);
+            this.destinationGateComboBox.Name = "destinationGateComboBox";
+            this.destinationGateComboBox.Size = new System.Drawing.Size(54, 21);
+            this.destinationGateComboBox.TabIndex = 120;
+            this.toolTip1.SetToolTip(this.destinationGateComboBox, "The Gate of the destination for this cable/edge connection block");
+            this.destinationGateComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationGateComboBox_SelectedIndexChanged);
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(301, 326);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(33, 13);
+            this.label9.TabIndex = 119;
+            this.label9.Text = "Gate:";
+            this.toolTip1.SetToolTip(this.label9, "The Gate of the destination for this cable/edge connection");
+            // 
+            // destinationPanelComboBox
+            // 
+            this.destinationPanelComboBox.DisplayMember = "panel";
+            this.destinationPanelComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.destinationPanelComboBox.FormattingEnabled = true;
+            this.destinationPanelComboBox.Location = new System.Drawing.Point(59, 363);
+            this.destinationPanelComboBox.Name = "destinationPanelComboBox";
+            this.destinationPanelComboBox.Size = new System.Drawing.Size(44, 21);
+            this.destinationPanelComboBox.TabIndex = 122;
+            this.toolTip1.SetToolTip(this.destinationPanelComboBox, "The panel of the destination for this cable/edge connection block");
+            this.destinationPanelComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationPanelComboBox_SelectedIndexChanged);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(16, 366);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(37, 13);
+            this.label10.TabIndex = 121;
+            this.label10.Text = "Panel:";
+            this.toolTip1.SetToolTip(this.label10, "The panel of the destination for this logic block");
+            // 
+            // destinationRowComboBox
+            // 
+            this.destinationRowComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.destinationRowComboBox.FormattingEnabled = true;
+            this.destinationRowComboBox.Location = new System.Drawing.Point(204, 362);
+            this.destinationRowComboBox.Name = "destinationRowComboBox";
+            this.destinationRowComboBox.Size = new System.Drawing.Size(44, 21);
+            this.destinationRowComboBox.TabIndex = 124;
+            this.toolTip1.SetToolTip(this.destinationRowComboBox, "The row of the card slot of the destination for this cable/edge connection block");
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(141, 365);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(57, 13);
+            this.label19.TabIndex = 123;
+            this.label19.Text = "Card Row:";
+            this.toolTip1.SetToolTip(this.label19, "The row of the card slot of the destination of this cable/edge connection");
+            // 
+            // destinationColumnTextBox
+            // 
+            this.destinationColumnTextBox.Location = new System.Drawing.Point(352, 363);
+            this.destinationColumnTextBox.MaxLength = 2;
+            this.destinationColumnTextBox.Name = "destinationColumnTextBox";
+            this.destinationColumnTextBox.Size = new System.Drawing.Size(42, 20);
+            this.destinationColumnTextBox.TabIndex = 126;
+            this.toolTip1.SetToolTip(this.destinationColumnTextBox, "The column of the card slot of the destination for this cable/edge connection blo" +
+        "ck");
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(274, 365);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(70, 13);
+            this.label21.TabIndex = 125;
+            this.label21.Text = "Card Column:";
+            this.toolTip1.SetToolTip(this.label21, "The column of the card slot for the destination of this cable/edge connection");
+            // 
             // applyButton
             // 
             this.applyButton.Location = new System.Drawing.Point(15, 435);
@@ -444,138 +575,22 @@
             this.destinationLabel.TabIndex = 114;
             this.destinationLabel.Text = "Destination";
             // 
-            // label7
+            // explicitDestinationCheckBox
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(14, 326);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(51, 13);
-            this.label7.TabIndex = 115;
-            this.label7.Text = "Machine:";
-            this.toolTip1.SetToolTip(this.label7, "The machine associated with the destination for this connection (e.g. 1411, 1415," +
-        " etc.)");
-            // 
-            // destinationMachineComboBox
-            // 
-            this.destinationMachineComboBox.DisplayMember = "name";
-            this.destinationMachineComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.destinationMachineComboBox.FormattingEnabled = true;
-            this.destinationMachineComboBox.Location = new System.Drawing.Point(71, 323);
-            this.destinationMachineComboBox.Name = "destinationMachineComboBox";
-            this.destinationMachineComboBox.Size = new System.Drawing.Size(86, 21);
-            this.destinationMachineComboBox.TabIndex = 116;
-            this.toolTip1.SetToolTip(this.destinationMachineComboBox, "The machine associated with the destination for this Cable/Edge Connection block " +
-        "(e.g. 1411, 1415, etc.)");
-            this.destinationMachineComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationMachineComboBox_SelectedIndexChanged);
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(177, 326);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(39, 13);
-            this.label8.TabIndex = 117;
-            this.label8.Text = "Frame:";
-            this.toolTip1.SetToolTip(this.label8, "The Frame associated with the destination for this connector or cable");
-            // 
-            // destinationFrameComboBox
-            // 
-            this.destinationFrameComboBox.DisplayMember = "name";
-            this.destinationFrameComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.destinationFrameComboBox.FormattingEnabled = true;
-            this.destinationFrameComboBox.Location = new System.Drawing.Point(222, 323);
-            this.destinationFrameComboBox.Name = "destinationFrameComboBox";
-            this.destinationFrameComboBox.Size = new System.Drawing.Size(54, 21);
-            this.destinationFrameComboBox.TabIndex = 118;
-            this.toolTip1.SetToolTip(this.destinationFrameComboBox, "The Frame for the destination associated with this cable/edge connection block");
-            // 
-            // destinationGateComboBox
-            // 
-            this.destinationGateComboBox.DisplayMember = "name";
-            this.destinationGateComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.destinationGateComboBox.FormattingEnabled = true;
-            this.destinationGateComboBox.Location = new System.Drawing.Point(340, 323);
-            this.destinationGateComboBox.Name = "destinationGateComboBox";
-            this.destinationGateComboBox.Size = new System.Drawing.Size(54, 21);
-            this.destinationGateComboBox.TabIndex = 120;
-            this.toolTip1.SetToolTip(this.destinationGateComboBox, "The Gate of the destination for this cable/edge connection block");
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(301, 326);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(33, 13);
-            this.label9.TabIndex = 119;
-            this.label9.Text = "Gate:";
-            this.toolTip1.SetToolTip(this.label9, "The Gate of the destination for this cable/edge connection");
-            // 
-            // destinationPanelComboBox
-            // 
-            this.destinationPanelComboBox.DisplayMember = "panel";
-            this.destinationPanelComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.destinationPanelComboBox.FormattingEnabled = true;
-            this.destinationPanelComboBox.Location = new System.Drawing.Point(59, 363);
-            this.destinationPanelComboBox.Name = "destinationPanelComboBox";
-            this.destinationPanelComboBox.Size = new System.Drawing.Size(44, 21);
-            this.destinationPanelComboBox.TabIndex = 122;
-            this.toolTip1.SetToolTip(this.destinationPanelComboBox, "The panel of the destination for this cable/edge connection block");
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(16, 366);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(37, 13);
-            this.label10.TabIndex = 121;
-            this.label10.Text = "Panel:";
-            this.toolTip1.SetToolTip(this.label10, "The panel of the destination for this logic block");
-            // 
-            // destinationRowComboBox
-            // 
-            this.destinationRowComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.destinationRowComboBox.FormattingEnabled = true;
-            this.destinationRowComboBox.Location = new System.Drawing.Point(204, 362);
-            this.destinationRowComboBox.Name = "destinationRowComboBox";
-            this.destinationRowComboBox.Size = new System.Drawing.Size(44, 21);
-            this.destinationRowComboBox.TabIndex = 124;
-            this.toolTip1.SetToolTip(this.destinationRowComboBox, "The row of the card slot of the destination for this cable/edge connection block");
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(141, 365);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(57, 13);
-            this.label19.TabIndex = 123;
-            this.label19.Text = "Card Row:";
-            this.toolTip1.SetToolTip(this.label19, "The row of the card slot of the destination of this cable/edge connection");
-            // 
-            // destinationColumnTextBox
-            // 
-            this.destinationColumnTextBox.Location = new System.Drawing.Point(352, 363);
-            this.destinationColumnTextBox.MaxLength = 2;
-            this.destinationColumnTextBox.Name = "destinationColumnTextBox";
-            this.destinationColumnTextBox.Size = new System.Drawing.Size(42, 20);
-            this.destinationColumnTextBox.TabIndex = 126;
-            this.toolTip1.SetToolTip(this.destinationColumnTextBox, "The column of the card slot of the destination for this cable/edge connection blo" +
-        "ck");
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(274, 365);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(70, 13);
-            this.label21.TabIndex = 125;
-            this.label21.Text = "Card Column:";
-            this.toolTip1.SetToolTip(this.label21, "The column of the card slot for the destination of this cable/edge connection");
+            this.explicitDestinationCheckBox.AutoSize = true;
+            this.explicitDestinationCheckBox.Location = new System.Drawing.Point(17, 402);
+            this.explicitDestinationCheckBox.Name = "explicitDestinationCheckBox";
+            this.explicitDestinationCheckBox.Size = new System.Drawing.Size(115, 17);
+            this.explicitDestinationCheckBox.TabIndex = 135;
+            this.explicitDestinationCheckBox.Text = "Explicit Destination";
+            this.explicitDestinationCheckBox.UseVisualStyleBackColor = true;
             // 
             // EditCableEdgeConnectionBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 470);
+            this.Controls.Add(this.explicitDestinationCheckBox);
             this.Controls.Add(this.destinationColumnTextBox);
             this.Controls.Add(this.label21);
             this.Controls.Add(this.destinationRowComboBox);
@@ -680,5 +695,6 @@
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.TextBox destinationColumnTextBox;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.CheckBox explicitDestinationCheckBox;
     }
 }
