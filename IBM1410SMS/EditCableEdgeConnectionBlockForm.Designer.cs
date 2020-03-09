@@ -477,6 +477,7 @@
             this.destinationRowComboBox.Size = new System.Drawing.Size(44, 21);
             this.destinationRowComboBox.TabIndex = 124;
             this.toolTip1.SetToolTip(this.destinationRowComboBox, "The row of the card slot of the destination for this cable/edge connection block");
+            this.destinationRowComboBox.SelectedIndexChanged += new System.EventHandler(this.destinationRowComboBox_SelectedIndexChanged);
             // 
             // label19
             // 
@@ -497,6 +498,7 @@
             this.destinationColumnTextBox.TabIndex = 126;
             this.toolTip1.SetToolTip(this.destinationColumnTextBox, "The column of the card slot of the destination for this cable/edge connection blo" +
         "ck");
+            this.destinationColumnTextBox.TextChanged += new System.EventHandler(this.destinationColumnTextBox_TextChanged);
             // 
             // label21
             // 

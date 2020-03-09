@@ -16,6 +16,11 @@
  *  If not, see <https://www.gnu.org/licenses/>.
 */
 
+//  TODO:  Handle check box changes
+//  TODO:  Handle initial population where edge connection block already exists
+//  TODO:  Handle initial population where connection is a candidate for implied connections
+//  TODO:  Handle box drawing
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -214,16 +219,46 @@ namespace IBM1410SMS
                 currentCardSlotInfo.row = "A";
             }
 
+            //  If we have a destination for the connection, fill in its row
+            //  and column.  Otherwise, if it is not an explicit destination,
+            //  calculate the implied destination.  Otherwise, just set a
+            //  default destination row and column.
+
+            
+            currentDestinationCardSlotInfo = Helpers.getCardSlotInfo(
+                currentCableEdgeConnectionBlock.Destination);
+
+            if(currentCableEdgeConnectionBlock.explicitDestination == 0) {
+                //  TODO:  calculate implied destination.
+            }
+
+            if (currentDestinationCardSlotInfo.column == 0) {
+                currentDestinationCardSlotInfo.column = 1;
+            }
+            if (currentDestinationCardSlotInfo.row == "") {
+                currentDestinationCardSlotInfo.row = "A";
+            }
+
+
             //  If we have existing slot machine info, use it.  Otherwise use the diagram
             //  machine.
 
-            if(currentCardSlotInfo.machineName.Length > 0) {
+            if (currentCardSlotInfo.machineName.Length > 0) {
                 currentMachine = machineList.Find(
                     x => x.name == currentCardSlotInfo.machineName);
                 machineComboBox.SelectedItem = currentMachine;
             }
             else {
                 currentMachine = machine;
+            }
+
+            if(currentDestinationCardSlotInfo.machineName.Length > 0) {
+                currentDestinationMachine = destinationMachineList.Find(
+                    x => x.name == currentDestinationCardSlotInfo.machineName);
+                destinationMachineComboBox.SelectedItem = currentDestinationMachine;
+            }
+            else {
+                currentDestinationMachine = machine;
             }
 
             //  Populate the rest of the dialog, in hierarchical order.
@@ -636,9 +671,13 @@ namespace IBM1410SMS
         }
 
 
-        //  TODO:  Do these two for the destination as well.
+        //  Handle row and column dialog changes (source and destination)
 
         private void cardRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            drawLogicbox();
+        }
+
+        private void destinationRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             drawLogicbox();
         }
 
@@ -652,10 +691,23 @@ namespace IBM1410SMS
             drawLogicbox();
         }
 
+        private void destinationColumnTextBox_TextChanged(object sender, EventArgs e) {
+            int v;
+            if (destinationColumnTextBox.Text.Length > 0 &&
+                !int.TryParse(destinationColumnTextBox.Text, out v)) {
+                MessageBox.Show("Destination Column must be numeric!", "Invalid Destination Column");
+                destinationColumnTextBox.Text = currentDestinationCardSlotInfo.column.ToString("D2");
+            }
+            drawLogicbox();
+        }
+
+        //  Handle card type changes
+
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             drawLogicbox();
         }
 
+        //  The user hits the Apply button...
 
         private void applyButton_Click(object sender, EventArgs e) {
 
