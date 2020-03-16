@@ -661,7 +661,11 @@ namespace IBM1410SMS
             machineName = frameName = gateName = panelName = row = "";
             column = 0;
         }
-        
+
+        //  TODO:  Currently the cardslot info constructor assumes the gate will
+        //  be the same as the frame.  That needs changing, perhaps using two
+        //  different constructors with an extra "bogus" parameter to differentiate.
+
         public CardSlotInfo(string shortName) {
 
             Match match = Regex.Match(shortName, @"^(....)(.)(.)(.)(\d\d)(.)$");
