@@ -17,7 +17,6 @@
 */
 
 //  TODO:  Handle check box changes
-//  TODO:  Handle initial population where edge connection block already exists
 //  TODO:  Handle initial population where connection is a candidate for implied connections
 //  TODO:  Handle box drawing
 
@@ -76,10 +75,26 @@ namespace IBM1410SMS
         List<Machine> destinationMachineList;
         List<Cardtype> cardTypeList;
 
+        List<CardSlotInfo> impliedDestinationSources = new List<CardSlotInfo>();
+        List<CardSlotInfo> impliedDestinationDestinations = new List<CardSlotInfo>();
+
+        char[] impliedDestinationDelimeters = { ',' };
+
         string machinePrefix;
         bool populatingDialog = true;
         bool applySuccessful = false;
         bool modifiedMachineGatePanelFrame = false;
+
+        //  TODO: The following is a placeholder for testing, until we create a database for it.
+
+        string[,] impliedDestinationRules = new string[6, 2] {
+            {"TE99,T,T,1,*,16" , "TE99,T,T,2,*,01"},
+            {"TE99,T,T,1,*,15" , "TE99,T,T,2,*,02"},
+            {"TE99,T,T,1,*,14" , "TE99,T,T,2,*,03"},
+            {"TE99,T,T,2,*,16" , "TE99,U,U,1,*,01"},
+            {"TE99,T,T,2,*,15" , "TE99,U,U,1,*,02"},
+            {"TE99,T,T,2,*,14" , "TE99,U,U,1,*,03"}
+        };
 
         public EditCableEdgeConnectionBlockForm(
             Cableedgeconnectionblock cableEdgeConnectionBlock,
@@ -130,6 +145,27 @@ namespace IBM1410SMS
             cardTypeList = cardTypeTable.getWhere("ORDER BY cardtype.type");
             cardTypeList = cardTypeList.FindAll(
                 x => Array.IndexOf(Helpers.cableEdgeConnectionCardTypes, x.type) >= 0);
+
+            //  TODO: The following is a placeholder until we create a database for it.
+            
+            //  TODO:  Currently the cardslot info constructor assumes the gate will
+            //  be the same as the frame.  That needs changing.
+
+            for(int i = 0; i < impliedDestinationRules.GetLength(0); ++i ) {
+                string[] tempLocation = impliedDestinationRules[i, 0].Split(
+                    impliedDestinationDelimeters);
+                
+                // MMMMFPRcc
+                CardSlotInfo sourceInfo = new CardSlotInfo(tempLocation[0] +
+                    tempLocation[1] + tempLocation[3] + tempLocation[4] + tempLocation[5] + "X");
+                impliedDestinationSources.Add(sourceInfo);
+
+                tempLocation = impliedDestinationRules[i, 1].Split(
+                    impliedDestinationDelimeters);
+                CardSlotInfo destInfo = new CardSlotInfo(tempLocation[0] +
+                    tempLocation[1] + tempLocation[3] + tempLocation[4] + tempLocation[5] + "X");
+                impliedDestinationDestinations.Add(destInfo);
+            }
 
             //  Fill in static combo boxes' data sources.
 
@@ -223,13 +259,48 @@ namespace IBM1410SMS
             //  and column.  Otherwise, if it is not an explicit destination,
             //  calculate the implied destination.  Otherwise, just set a
             //  default destination row and column.
-
             
             currentDestinationCardSlotInfo = Helpers.getCardSlotInfo(
                 currentCableEdgeConnectionBlock.Destination);
 
             if(currentCableEdgeConnectionBlock.explicitDestination == 0) {
-                //  TODO:  calculate implied destination.
+
+                //  Look for a matching implied destination source
+
+                foreach (CardSlotInfo impliedSource in impliedDestinationSources) {
+                    if(currentCardSlotInfo.machineName.Equals(impliedSource.machineName) &&
+                       currentCardSlotInfo.frameName.Equals(impliedSource.frameName) &&
+                       currentCardSlotInfo.gateName.Equals(impliedSource.gateName) &&
+                       currentCardSlotInfo.panelName.Equals(impliedSource.panelName) &&
+                       currentCardSlotInfo.column == impliedSource.column &&
+                       (impliedSource.row.Equals("*") ||
+                        currentCardSlotInfo.row.Equals(
+                            impliedSource.row)) ) {
+
+                        //  Found a match
+
+                        int i = impliedDestinationSources.IndexOf(impliedSource);
+                        CardSlotInfo impliedDestination = impliedDestinationDestinations[i];
+
+                        //  Not 100% sure this is necessary, but, just in case,
+                        //  copy the data, lest a reference leave the list entry
+                        //  vulnerable to change.
+
+                        currentDestinationCardSlotInfo.machineName =
+                            impliedDestination.machineName;
+                        currentDestinationCardSlotInfo.frameName =
+                            impliedDestination.frameName;
+                        currentDestinationCardSlotInfo.gateName =
+                            impliedDestination.gateName;
+                        currentDestinationCardSlotInfo.panelName =
+                            impliedDestination.panelName;
+                        currentDestinationCardSlotInfo.row =
+                            currentCardSlotInfo.row;
+                        currentDestinationCardSlotInfo.column =
+                            impliedDestination.column;
+                        break;
+                    }
+                }
             }
 
             if (currentDestinationCardSlotInfo.column == 0) {
@@ -238,7 +309,6 @@ namespace IBM1410SMS
             if (currentDestinationCardSlotInfo.row == "") {
                 currentDestinationCardSlotInfo.row = "A";
             }
-
 
             //  If we have existing slot machine info, use it.  Otherwise use the diagram
             //  machine.
