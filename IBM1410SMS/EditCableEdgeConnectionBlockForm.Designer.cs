@@ -586,6 +586,7 @@
             this.explicitDestinationCheckBox.TabIndex = 135;
             this.explicitDestinationCheckBox.Text = "Explicit Destination";
             this.explicitDestinationCheckBox.UseVisualStyleBackColor = true;
+            this.explicitDestinationCheckBox.CheckedChanged += new System.EventHandler(this.explicitDestinationCheckBox_CheckedChanged);
             // 
             // EditCableEdgeConnectionBlockForm
             // 
