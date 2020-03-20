@@ -700,5 +700,13 @@ namespace IBM1410SMS
                 panelName + row + column.ToString("D2");
         }
 
+        //  Sometimes the card slot gets abbreviated to 
+        //  MMFPRCC
+
+        public string ToSmallString() {
+            return (machineName.Length >= 4 ? machineName.Substring(2,2) : "??") + 
+                frameName + panelName + row + column.ToString("D2");
+        }
+
     }
 }
