@@ -16,9 +16,6 @@
  *  If not, see <https://www.gnu.org/licenses/>.
 */
 
-//  TODO:  Handle check box changes
-//  TODO:  Handle box drawing
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -212,7 +209,7 @@ namespace IBM1410SMS
                 destinationRowComboBox.Items.Add(row);
             }
 
-            //  If the diagram block object passed to us is null, create
+            //  If the cable/edge connection block object passed to us is null, create
             //  one, and fill in as much as we can from the card location
             //  info passed (if any)
 
@@ -316,13 +313,24 @@ namespace IBM1410SMS
 
             destinationMachineComboBox.SelectedItem = currentDestinationMachine;
 
-            //  Populate the rest of the dialog, in hierarchical order.
-
             populateFrameComboBox();
             populateDestinationFrameComboBox();
+
+            //  If we have an explicit destination flag and value, fill in the
+            //  cable/edge connection block top note unless it already has a value.
+
+            if (currentCableEdgeConnectionBlock.topNote.Length == 0 &&
+                currentCableEdgeConnectionBlock.explicitDestination > 0) {
+                cableEdgeConnectionBlock.topNote = "TO " +
+                    currentDestinationCardSlotInfo.ToSmallString().ToUpper();
+            }
+
+            //  Populate the rest of the dialog, in hierarchical order.
+
             populateDialog();
+
             // Unnecessary - populateDialog() does this.populatingDialog = false;
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         //  Method to populate combo boxes that depend on the selections
@@ -550,9 +558,7 @@ namespace IBM1410SMS
 
         }
 
-        private void drawLogicbox() {
-
-            //  TODO: Add relvant drawing sutff.
+        private void drawCableEdgeConnectionBox() {
 
             //  Create aliases to save keystrokes.   ;)
 
@@ -572,9 +578,13 @@ namespace IBM1410SMS
             }
 
             string machineSuffix = ((Machine)machineComboBox.SelectedItem).name;
+            string destinationMachineSuffix = 
+                ((Machine)destinationMachineComboBox.SelectedItem).name;
             string cardType = ((Cardtype)cardTypeComboBox.SelectedItem).type;
 
             machineSuffix = machineSuffix.Length >= 4 ? machineSuffix.Substring(2, 2) : "??";
+            destinationMachineSuffix = destinationMachineSuffix.Length >= 4 ? 
+                destinationMachineSuffix.Substring(2, 2) : "??";
 
             int column;
             int.TryParse(cardColumnTextBox.Text, out column);
@@ -597,6 +607,16 @@ namespace IBM1410SMS
                 Environment.NewLine;
             */
 
+            s += tab + bar + machineSuffix + currentMachineGate.name + currentPanel.panel +
+                bar + Environment.NewLine;
+
+            s += tab + bar + cardType +
+                (cardType.Length < 4 ? new string(' ', 4 - cardType.Length) : "") +
+                bar + Environment.NewLine;
+
+            s += tab + bar + destinationMachineSuffix + currentDestinationMachineGate.name +
+                 currentDestinationPanel.panel + bar + Environment.NewLine;
+
             s += tab + bar + machineSuffix + currentMachineGate.name +
                 ((Cableedgeconnectionecotag)ecoTagComboBox.SelectedItem).name +
                 bar + Environment.NewLine;
@@ -606,9 +626,7 @@ namespace IBM1410SMS
                 bar +
                 Environment.NewLine;
 
-            s += tab + bar + cardType +
-                (cardType.Length < 4 ? new string(' ', 4 - cardType.Length) : "") +
-                bar + Environment.NewLine;
+            s += tab + bar + "----" + bar + Environment.NewLine;
 
             s += tab;
             s += new string(upperscore, width + 2);
@@ -701,7 +719,7 @@ namespace IBM1410SMS
                     modifiedMachineGatePanelFrame = true;
                 }
                 updateDestinationBoxes();
-                drawLogicbox();
+                drawCableEdgeConnectionBox();
             }
         }
 
@@ -712,17 +730,17 @@ namespace IBM1410SMS
                     currentDestinationCardSlotInfo.panelName = currentDestinationPanel.panel;
                     modifiedMachineGatePanelFrame = true;
                 }
-                drawLogicbox();
+                drawCableEdgeConnectionBox();
             }
         }
 
 
         private void cableEdgeConnectionBlockTitleTextBox_TextChanged(object sender, EventArgs e) {
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         private void ecoTagComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
 
@@ -731,11 +749,11 @@ namespace IBM1410SMS
         private void cardRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             currentCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
             updateDestinationBoxes();
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         private void destinationRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         private void cardColumnTextBox_TextChanged(object sender, EventArgs e) {
@@ -745,7 +763,7 @@ namespace IBM1410SMS
                 MessageBox.Show("Card Column must be numeric!", "Invalid Card Column");
                 cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
             }
-            // drawLogicbox();  Moved to method below.
+            // drawCableEdgeConnectionBox();  Moved to method below.
         }
 
         //  Only update info based on the column once the user leaves the control
@@ -755,7 +773,7 @@ namespace IBM1410SMS
             int.TryParse(cardColumnTextBox.Text, out v);
             currentCardSlotInfo.column = v;
             updateDestinationBoxes();
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
 
@@ -766,13 +784,13 @@ namespace IBM1410SMS
                 MessageBox.Show("Destination Column must be numeric!", "Invalid Destination Column");
                 destinationColumnTextBox.Text = currentDestinationCardSlotInfo.column.ToString("D2");
             }
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         //  Handle card type changes
 
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            drawLogicbox();
+            drawCableEdgeConnectionBox();
         }
 
         //  The user hits the Apply button...
@@ -1002,7 +1020,7 @@ namespace IBM1410SMS
                     disableDestinationBoxes();
                     populateDialog();
                     populatingDialog = false;
-                    drawLogicbox();
+                    drawCableEdgeConnectionBox();
                 }
             }
             else {
@@ -1035,10 +1053,18 @@ namespace IBM1410SMS
             copyMatchingImpliedDestination(
                 currentDestinationCardSlotInfo, impliedDestination);
 
-            //  TODO:  Have to update selected index directly, because otherwise
-            //  it resets what is in currentDestinationCardSlotInfo.
+            //  Tell the selected index changed methods to back off so they don't
+            //  mess with currentDestinationCardSlotInfo data.
 
-            populateDestinationFrameComboBox();  // This also updates gate,panel,row and col.
+            populatingDialog = true;
+
+            //  And then update the destination part of the dialog.
+
+            destinationMachineComboBox.SelectedItem =
+                destinationMachineList.Find(
+                    x => x.name == currentDestinationCardSlotInfo.machineName);
+            populateDestinationFrameComboBox();
+            populatingDialog = false;
             populateDialog();
 
         }
