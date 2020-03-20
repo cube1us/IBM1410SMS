@@ -377,6 +377,7 @@
             this.toolTip1.SetToolTip(this.cardColumnTextBox, "The column of the card slot that contains the card associated with this cable/edg" +
         "e connection block");
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
+            this.cardColumnTextBox.Leave += new System.EventHandler(this.cardColumnTextBox_Leave);
             // 
             // label7
             // 

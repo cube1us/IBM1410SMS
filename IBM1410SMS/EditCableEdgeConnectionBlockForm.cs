@@ -277,6 +277,8 @@ namespace IBM1410SMS
 
                     copyMatchingImpliedDestination(
                         currentDestinationCardSlotInfo, impliedDestination);
+                    explicitDestinationCheckBox.Checked = false;
+                    disableDestinationBoxes();
                 }
             }
 
@@ -319,7 +321,7 @@ namespace IBM1410SMS
             populateFrameComboBox();
             populateDestinationFrameComboBox();
             populateDialog();
-            populatingDialog = false;
+            // Unnecessary - populateDialog() does this.populatingDialog = false;
             drawLogicbox();
         }
 
@@ -531,6 +533,7 @@ namespace IBM1410SMS
 
             if (currentCableEdgeConnectionBlock.explicitDestination > 0) {
                 explicitDestinationCheckBox.Checked = true;
+                enableDestinationBoxes();
             }
 
             //  Fill in the destination row and column
@@ -697,6 +700,7 @@ namespace IBM1410SMS
                     currentCardSlotInfo.panelName = currentPanel.panel;
                     modifiedMachineGatePanelFrame = true;
                 }
+                updateDestinationBoxes();
                 drawLogicbox();
             }
         }
@@ -725,6 +729,8 @@ namespace IBM1410SMS
         //  Handle row and column dialog changes (source and destination)
 
         private void cardRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            currentCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
+            updateDestinationBoxes();
             drawLogicbox();
         }
 
@@ -739,8 +745,19 @@ namespace IBM1410SMS
                 MessageBox.Show("Card Column must be numeric!", "Invalid Card Column");
                 cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
             }
+            // drawLogicbox();  Moved to method below.
+        }
+
+        //  Only update info based on the column once the user leaves the control
+
+        private void cardColumnTextBox_Leave(object sender, EventArgs e) {
+            int v;
+            int.TryParse(cardColumnTextBox.Text, out v);
+            currentCardSlotInfo.column = v;
+            updateDestinationBoxes();
             drawLogicbox();
         }
+
 
         private void destinationColumnTextBox_TextChanged(object sender, EventArgs e) {
             int v;
@@ -967,6 +984,7 @@ namespace IBM1410SMS
                         "Implicit Destination Invalid", MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
                     explicitDestinationCheckBox.Checked = true;
+                    enableDestinationBoxes();
                 }
                 else {
                     //  This changes everything.  ;)
@@ -980,7 +998,8 @@ namespace IBM1410SMS
 
                     populatingDialog = true;
                     destinationMachineComboBox.SelectedItem = currentDestinationMachine;
-                    populateDestinationFrameComboBox();
+                    populateDestinationFrameComboBox();     // This also does Gate,Panel,Row,Column
+                    disableDestinationBoxes();
                     populateDialog();
                     populatingDialog = false;
                     drawLogicbox();
@@ -988,7 +1007,60 @@ namespace IBM1410SMS
             }
             else {
                 currentCableEdgeConnectionBlock.explicitDestination = 1;
+                enableDestinationBoxes();
             }
+        }
+
+        //  Method to update destination information (and possibly even make it explicit)
+        //  if the source card slot is changed and the destination was implicit.
+
+        void updateDestinationBoxes() {
+            if(explicitDestinationCheckBox.Checked == true) {
+                return;
+            }
+
+            //  OK, we had an implied destination.  Does the current slot have a matching
+            //  implied destination?
+
+            CardSlotInfo impliedDestination =
+                findMatchingImpliedDestination(currentCardSlotInfo);
+            if(impliedDestination == null) {
+                //  No match.  Go to explicit mode.
+                explicitDestinationCheckBox.Checked = true;
+                return;
+            }
+
+            //  Found a match.  Update data structures and dialog.
+
+            copyMatchingImpliedDestination(
+                currentDestinationCardSlotInfo, impliedDestination);
+
+            //  TODO:  Have to update selected index directly, because otherwise
+            //  it resets what is in currentDestinationCardSlotInfo.
+
+            populateDestinationFrameComboBox();  // This also updates gate,panel,row and col.
+            populateDialog();
+
+        }
+
+        //  Methods to disable/enable the destination boxes for implied/explicit destinations
+
+        void disableDestinationBoxes() {
+            destinationMachineComboBox.Enabled = false;
+            destinationGateComboBox.Enabled = false;
+            destinationFrameComboBox.Enabled = false;
+            destinationPanelComboBox.Enabled = false;
+            destinationRowComboBox.Enabled = false;
+            destinationColumnTextBox.Enabled = false;
+        }
+
+        void enableDestinationBoxes() {
+            destinationMachineComboBox.Enabled = true;
+            destinationGateComboBox.Enabled = true;
+            destinationFrameComboBox.Enabled = true;
+            destinationPanelComboBox.Enabled = true;
+            destinationRowComboBox.Enabled = true;
+            destinationColumnTextBox.Enabled = true;
         }
 
 
@@ -1069,6 +1141,5 @@ namespace IBM1410SMS
             csInfo.column = impliedDestination.column;
 
         }
-
     }
 }
