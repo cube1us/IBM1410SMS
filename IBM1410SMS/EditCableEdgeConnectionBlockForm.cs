@@ -44,6 +44,7 @@ namespace IBM1410SMS
         Table<Machinegate> machineGateTable;
         Table<Panel> panelTable;
         Table<Cardgate> cardGateTable;
+        Table<Cableimplieddestinations> cableImpliedDestinationsTable;
 
         Page currentPage;
         Cableedgeconnectionpage currentCableEdgeConnectionPage;
@@ -72,6 +73,8 @@ namespace IBM1410SMS
 
         List<CardSlotInfo> impliedDestinationSources = new List<CardSlotInfo>();
         List<CardSlotInfo> impliedDestinationDestinations = new List<CardSlotInfo>();
+        List<Cableimplieddestinations> impliedDestinationsRules = 
+            new List<Cableimplieddestinations>();
 
         char[] impliedDestinationDelimeters = { ',' };
 
@@ -79,17 +82,6 @@ namespace IBM1410SMS
         bool populatingDialog = true;
         bool applySuccessful = false;
         bool modifiedMachineGatePanelFrame = false;
-
-        //  TODO: The following is a placeholder for testing, until we create a database for it.
-
-        string[,] impliedDestinationRules = new string[6, 2] {
-            {"TE99,T,T,1,*,16" , "TE99,T,T,2,*,01"},
-            {"TE99,T,T,1,*,15" , "TE99,T,T,2,*,02"},
-            {"TE99,T,T,1,*,14" , "TE99,T,T,2,*,03"},
-            {"TE99,T,T,2,*,16" , "TE99,U,U,1,*,01"},
-            {"TE99,T,T,2,*,15" , "TE99,U,U,1,*,02"},
-            {"TE99,T,T,2,*,14" , "TE99,U,U,1,*,03"}
-        };
 
         public EditCableEdgeConnectionBlockForm(
             Cableedgeconnectionblock cableEdgeConnectionBlock,
@@ -112,6 +104,7 @@ namespace IBM1410SMS
             machineGateTable = db.getMachineGateTable();
             frameTable = db.getFrameTable();
             cardGateTable = db.getCardGateTable();
+            cableImpliedDestinationsTable = db.getCableImpliedDestinationsTable();
 
             cableEdgeConnectionMachine = machine;
 
@@ -144,8 +137,10 @@ namespace IBM1410SMS
             //  TODO:  Currently the cardslot info constructor assumes the gate will
             //  be the same as the frame.  That needs changing.
 
-            for (int i = 0; i < impliedDestinationRules.GetLength(0); ++i) {
-                string[] tempLocation = impliedDestinationRules[i, 0].Split(
+            impliedDestinationsRules = cableImpliedDestinationsTable.getAll();
+
+            foreach(Cableimplieddestinations cableImpliedDestinationRule in impliedDestinationsRules) { 
+                string[] tempLocation = cableImpliedDestinationRule.cableSource.Split(
                     impliedDestinationDelimeters);
 
                 // MMMMFPRcc
@@ -153,7 +148,7 @@ namespace IBM1410SMS
                     tempLocation[1] + tempLocation[3] + tempLocation[4] + tempLocation[5] + "X");
                 impliedDestinationSources.Add(sourceInfo);
 
-                tempLocation = impliedDestinationRules[i, 1].Split(
+                tempLocation = cableImpliedDestinationRule.cableImpliedDestination.Split(
                     impliedDestinationDelimeters);
                 CardSlotInfo destInfo = new CardSlotInfo(tempLocation[0] +
                     tempLocation[1] + tempLocation[3] + tempLocation[4] + tempLocation[5] + "X");
