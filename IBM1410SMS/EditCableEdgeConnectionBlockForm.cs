@@ -77,11 +77,14 @@ namespace IBM1410SMS
             new List<Cableimplieddestinations>();
 
         char[] impliedDestinationDelimeters = { ',' };
+        string[] cableConnectorCardTypes = { "CONN", "CABL" };
+        string[] cePanelNames = { "CE", "0" };
 
         string machinePrefix;
         bool populatingDialog = true;
         bool applySuccessful = false;
         bool modifiedMachineGatePanelFrame = false;
+        bool newCableEdgeConnection = false;        // Tried using deleteButton.Visible, failed?
 
         public EditCableEdgeConnectionBlockForm(
             Cableedgeconnectionblock cableEdgeConnectionBlock,
@@ -211,6 +214,7 @@ namespace IBM1410SMS
             currentCableEdgeConnectionBlock = cableEdgeConnectionBlock;
             if (currentCableEdgeConnectionBlock == null ||
                 currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0) {
+                newCableEdgeConnection = true;
                 deleteButton.Visible = false;
                 currentCableEdgeConnectionBlock = new Cableedgeconnectionblock();
                 currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock = 0;
@@ -272,6 +276,13 @@ namespace IBM1410SMS
                     explicitDestinationCheckBox.Checked = false;
                     disableDestinationBoxes();
                 }
+                else {
+                    //  No match, so mark it explicit.
+                    explicitDestinationCheckBox.Checked = true;
+                }
+            }
+            else {
+                explicitDestinationCheckBox.Checked = true;
             }
 
             //  If we didn't find a match, set some defaults.
@@ -310,13 +321,18 @@ namespace IBM1410SMS
 
             populateFrameComboBox();
             populateDestinationFrameComboBox();
+            populateCardTypeComboBox();
 
-            //  If we have an explicit destination flag and value, fill in the
-            //  cable/edge connection block top note unless it already has a value.
+            //  If we have an explicit destination flag and value, and this is not
+            //  a brand new block, fill in the cable/edge connection block top 
+            //  note unless it already has a value.
 
-            if (currentCableEdgeConnectionBlock.topNote.Length == 0 &&
+            if (newCableEdgeConnection == false &&
+                currentCableEdgeConnectionBlock.topNote.Length == 0 &&
+                cableConnectorCardTypes.Contains(((Cardtype)cardTypeComboBox.SelectedItem).type) &&
+                !cePanelNames.Contains(currentDestinationCardSlotInfo.panelName) &&
                 currentCableEdgeConnectionBlock.explicitDestination > 0) {
-                cableEdgeConnectionBlock.topNote = "TO " +
+                currentCableEdgeConnectionBlock.topNote = "TO " +
                     currentDestinationCardSlotInfo.ToSmallString().ToUpper();
             }
 
@@ -482,6 +498,27 @@ namespace IBM1410SMS
 
         }
 
+        //  Routine to populate the card type combo box - we do it in two places.
+
+        void populateCardTypeComboBox() {
+
+            //  Get type from cable/edge connection block, or if none there, from the
+            //  card location, if possible.  Otherwise, default to the first
+            //  one in the list.
+
+            if (currentCableEdgeConnectionBlock.connectionType > 0) {
+                cardTypeComboBox.SelectedItem = cardTypeList.Find(
+                    x => x.idCardType == currentCableEdgeConnectionBlock.connectionType);
+            }
+            else if (currentCardLocation != null && currentCardLocation.type != 0) {
+                cardTypeComboBox.SelectedItem = cardTypeList.Find(
+                    x => x.idCardType == currentCardLocation.type);
+            }
+            else {
+                cardTypeComboBox.SelectedItem = cardTypeList[0];
+            }
+        }
+
         void populateDialog() {
 
             Cableedgeconnectionecotag currentEcoTag = null;
@@ -516,25 +553,18 @@ namespace IBM1410SMS
 
             cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
 
-            //  Get type from cable/edge connection block, or if none there, from the
-            //  card location, if possible.  Otherwise, default to the first
-            //  one in the list.
+            populateCardTypeComboBox();
 
-            if (currentCableEdgeConnectionBlock.connectionType > 0) {
-                cardTypeComboBox.SelectedItem = cardTypeList.Find(
-                    x => x.idCardType == currentCableEdgeConnectionBlock.connectionType);
-            }
-            else if (currentCardLocation != null && currentCardLocation.type != 0) {
-                cardTypeComboBox.SelectedItem = cardTypeList.Find(
-                    x => x.idCardType == currentCardLocation.type);
-            }
-            else {
-                cardTypeComboBox.SelectedItem = cardTypeList[0];
-            }
+            //  If the card type is not CABL or CONN, then disable the destination stuff.
+            //  Otherwise, if the destination is explicit, enable them.  Otherwise, leave
+            //  it alone.
 
-            //  If the destination is explicit, indicate that on the dialog.
-
-            if (currentCableEdgeConnectionBlock.explicitDestination > 0) {
+            if(!cableConnectorCardTypes.Contains(
+                ((Cardtype)cardTypeComboBox.SelectedItem).type) ) {
+                disableDestinationBoxes();
+                explicitDestinationCheckBox.Checked = false;
+            }
+            else if (currentCableEdgeConnectionBlock.explicitDestination > 0) {
                 explicitDestinationCheckBox.Checked = true;
                 enableDestinationBoxes();
             }
@@ -602,15 +632,34 @@ namespace IBM1410SMS
                 Environment.NewLine;
             */
 
-            s += tab + bar + machineSuffix + currentMachineGate.name + currentPanel.panel +
-                bar + Environment.NewLine;
+            if(cardType.Equals("SAVE")) {
+                s += tab + bar + "    " + bar + Environment.NewLine;
+            }
+            else if(cardType.Equals("RPQ") || cardType.Equals("STRL")) {
+                s += tab + bar + "SAVE" + bar + Environment.NewLine;
+            }
+            else {
+                s += tab + bar + machineSuffix + currentMachineGate.name + currentPanel.panel +
+                    bar + Environment.NewLine;
+            }
 
             s += tab + bar + cardType +
                 (cardType.Length < 4 ? new string(' ', 4 - cardType.Length) : "") +
                 bar + Environment.NewLine;
 
-            s += tab + bar + destinationMachineSuffix + currentDestinationMachineGate.name +
-                 currentDestinationPanel.panel + bar + Environment.NewLine;
+
+            if (cableConnectorCardTypes.Contains(cardType)) {
+                if (cePanelNames.Contains(currentDestinationPanel.panel)) {
+                    s += tab + bar + "CE  " + bar + Environment.NewLine;
+                }
+                else {
+                    s += tab + bar + destinationMachineSuffix + currentDestinationMachineGate.name +
+                     currentDestinationPanel.panel + bar + Environment.NewLine;
+                }
+            }
+            else {
+                s += tab + bar + "    " + bar + Environment.NewLine;
+            }
 
             s += tab + bar + machineSuffix + currentMachineGate.name +
                 ((Cableedgeconnectionecotag)ecoTagComboBox.SelectedItem).name +
@@ -809,9 +858,11 @@ namespace IBM1410SMS
                 return;
             }
 
-            if (destinationColumnTextBox.Text == null || destinationColumnTextBox.Text.Length == 0 ||
-                !int.TryParse(destinationColumnTextBox.Text, out destinationColumn) ||
-                destinationColumn < 1 || destinationColumn > 99) {
+            if (cableConnectorCardTypes.Contains(((Cardtype)cardTypeComboBox.SelectedItem).type) &&
+                (destinationColumnTextBox.Text == null || 
+                    destinationColumnTextBox.Text.Length == 0 ||
+                    !int.TryParse(destinationColumnTextBox.Text, out destinationColumn) ||
+                    destinationColumn < 1 || destinationColumn > 99)) {
                 MessageBox.Show("Destination Card Column must be present, and be 1-99",
                     "Invalid Destination Card Column",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -828,16 +879,18 @@ namespace IBM1410SMS
             currentCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
             currentCardSlotInfo.column = column;
 
-            currentDestinationCardSlotInfo.machineName =
-                ((Machine)destinationMachineComboBox.SelectedItem).name;
-            currentDestinationCardSlotInfo.frameName =
-                ((Frame)destinationFrameComboBox.SelectedItem).name;
-            currentDestinationCardSlotInfo.gateName =
-                ((Machinegate)destinationGateComboBox.SelectedItem).name;
-            currentDestinationCardSlotInfo.panelName =
-                ((Panel)destinationPanelComboBox.SelectedItem).panel;
-            currentDestinationCardSlotInfo.row = (string)destinationRowComboBox.SelectedItem;
-            currentDestinationCardSlotInfo.column = destinationColumn;
+            if(cableConnectorCardTypes.Contains(((Cardtype)cardTypeComboBox.SelectedItem).type)) {
+                currentDestinationCardSlotInfo.machineName =
+                    ((Machine)destinationMachineComboBox.SelectedItem).name;
+                currentDestinationCardSlotInfo.frameName =
+                    ((Frame)destinationFrameComboBox.SelectedItem).name;
+                currentDestinationCardSlotInfo.gateName =
+                    ((Machinegate)destinationGateComboBox.SelectedItem).name;
+                currentDestinationCardSlotInfo.panelName =
+                    ((Panel)destinationPanelComboBox.SelectedItem).panel;
+                currentDestinationCardSlotInfo.row = (string)destinationRowComboBox.SelectedItem;
+                currentDestinationCardSlotInfo.column = destinationColumn;
+            }
 
             //  Also update some fields of the current diagram block from the dialog now.
 
@@ -905,9 +958,19 @@ namespace IBM1410SMS
 
             message += tempMessage;
 
-            currentCableEdgeConnectionBlock.Destination =
-                Helpers.getOrAddCardSlotKey(updating, currentDestinationCardSlotInfo, 
-                    out tempMessage);
+            //  For CABL or CONN, create a destiantion location if it does not already exist.
+
+            if (cableConnectorCardTypes.Contains(((Cardtype)cardTypeComboBox.SelectedItem).type)) {
+                currentCableEdgeConnectionBlock.Destination =
+                    Helpers.getOrAddCardSlotKey(updating, currentDestinationCardSlotInfo,
+                        out tempMessage);
+            }
+            else {
+                currentCableEdgeConnectionBlock.Destination = 0;
+                currentCableEdgeConnectionBlock.explicitDestination = 0;
+                tempMessage = "Clearing Destination for non CABL or CONN types\n";
+            }
+
 
             message += tempMessage;
 
@@ -995,31 +1058,40 @@ namespace IBM1410SMS
                 CardSlotInfo impliedDestination = findMatchingImpliedDestination(
                     tempCardSlotInfo);
 
-                if(impliedDestination == null) {
-                    MessageBox.Show("Implicit Destination Invalid: No source location match",
-                        "Implicit Destination Invalid", MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
-                    explicitDestinationCheckBox.Checked = true;
-                    enableDestinationBoxes();
-                }
-                else {
-                    //  This changes everything.  ;)
+                //  For non CABL and CONN card types, don't check destination,
+                //  otherwise, if implied destiation is 0, make sure we have a
+                //  matching implied destination source, and if so, fill in the
+                //  data from the implied destiantin.
 
-                    copyMatchingImpliedDestination(currentDestinationCardSlotInfo,
-                        impliedDestination);
-                    currentDestinationCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
-                    currentDestinationMachine = destinationMachineList.Find(
-                        x => x.name == currentDestinationCardSlotInfo.machineName);
-                    currentCableEdgeConnectionBlock.explicitDestination = 0;
+                if(cableConnectorCardTypes.Contains(
+                        ((Cardtype)cardTypeComboBox.SelectedItem).type)) {
+                    if(impliedDestination == null) {
+                        MessageBox.Show("Implicit Destination Invalid: No source location match",
+                            "Implicit Destination Invalid", MessageBoxButtons.OK,
+                            MessageBoxIcon.Error);
+                        explicitDestinationCheckBox.Checked = true;
+                        enableDestinationBoxes();
+                    }
+                    else {
+                        //  This changes everything.  ;)
 
-                    populatingDialog = true;
-                    destinationMachineComboBox.SelectedItem = currentDestinationMachine;
-                    populateDestinationFrameComboBox();     // This also does Gate,Panel,Row,Column
-                    disableDestinationBoxes();
-                    populateDialog();
-                    populatingDialog = false;
-                    drawCableEdgeConnectionBox();
+                        copyMatchingImpliedDestination(currentDestinationCardSlotInfo,
+                            impliedDestination);
+                        currentDestinationCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
+                        currentDestinationMachine = destinationMachineList.Find(
+                            x => x.name == currentDestinationCardSlotInfo.machineName);
+                        currentCableEdgeConnectionBlock.explicitDestination = 0;
+
+                        populatingDialog = true;
+                        destinationMachineComboBox.SelectedItem = currentDestinationMachine;
+                        populateDestinationFrameComboBox();     // This also does Gate,Panel,Row,Column
+                        disableDestinationBoxes();
+                        populateDialog();
+                        populatingDialog = false;
+                        drawCableEdgeConnectionBox();
+                    }
                 }
+
             }
             else {
                 currentCableEdgeConnectionBlock.explicitDestination = 1;
@@ -1131,13 +1203,13 @@ namespace IBM1410SMS
         private CardSlotInfo findMatchingImpliedDestination(CardSlotInfo cardSlotInfo) {
 
             foreach (CardSlotInfo impliedSource in impliedDestinationSources) {
-                if (currentCardSlotInfo.machineName.Equals(impliedSource.machineName) &&
-                   currentCardSlotInfo.frameName.Equals(impliedSource.frameName) &&
-                   currentCardSlotInfo.gateName.Equals(impliedSource.gateName) &&
-                   currentCardSlotInfo.panelName.Equals(impliedSource.panelName) &&
-                   currentCardSlotInfo.column == impliedSource.column &&
+                if (cardSlotInfo.machineName.Equals(impliedSource.machineName) &&
+                   cardSlotInfo.frameName.Equals(impliedSource.frameName) &&
+                   cardSlotInfo.gateName.Equals(impliedSource.gateName) &&
+                   cardSlotInfo.panelName.Equals(impliedSource.panelName) &&
+                   cardSlotInfo.column == impliedSource.column &&
                    (impliedSource.row.Equals("*") ||
-                    currentCardSlotInfo.row.Equals(
+                    cardSlotInfo.row.Equals(
                         impliedSource.row))) {
 
                     //  Found a matching entry.  Return the corresponding destination
