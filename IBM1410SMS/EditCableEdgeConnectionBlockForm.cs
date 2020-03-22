@@ -906,7 +906,8 @@ namespace IBM1410SMS
             message += tempMessage;
 
             currentCableEdgeConnectionBlock.Destination =
-                Helpers.getOrAddCardSlotKey(updating, currentDestinationCardSlotInfo, out tempMessage);
+                Helpers.getOrAddCardSlotKey(updating, currentDestinationCardSlotInfo, 
+                    out tempMessage);
 
             message += tempMessage;
 
@@ -931,6 +932,8 @@ namespace IBM1410SMS
 
             string message = "";
 
+            //  Here would be code to check if this database entryw as referred to by
+            //  any others - but so far that does not happen with cableEdgeconnectionBlocks.
 
             if (message.Length > 0) {
                 message = "Cannot delete Cable/Edge Connection Block with Database ID=" +

@@ -192,6 +192,9 @@ namespace IBM1410SMS
                 "WHERE machine='" + machine.idMachine + "' AND volume='" +
                 volume.idVolume + "' ORDER BY page.name");
 
+            //  TODO:  It would probably be best to remove diagramPages and
+            //  cableEdgeConnectionPages from this list.
+
             pageComboBox.DataSource = pageList;
 
             //  Oddly, I found that I needed to do the following, even though
