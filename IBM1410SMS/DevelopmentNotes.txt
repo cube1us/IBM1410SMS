@@ -1032,7 +1032,27 @@ properly.
 1/23/2020:  Changed EditEdgeConnectorsForm to have Environment.Newline at the end
 of all messages.
 
-2/22/2020 Added pages, interconnect, logic blocks, DOT functions etc. to documentation.
+2/17/2020:  Put application up on GitHub
+
+2/22/2020:  Added pages, interconnect, logic blocks, DOT functions etc. to documentation.
+
+3/21/2020:  Cleaned up database for Cable/Edge connector pages.  Those pages
+had both ALD Diagram pages and Card Location Pages that pointed to them
+incorrectly.  In each case, the diagram page, card location page and original
+page were deleted (D), and a new cable/edge connector page and associated page were
+added.  The 6 digit numbers are the "id" key for the associated table
+
+Page Name      Page(D)  Card Loc. Page(D)  Diagram Page(D)  New Cable/Edge Page    New Page
+11.04.02.3    162995        162997          168890             280153           280152
+11.04.03.3    163003        163005          170688             280155           280154
+11.04.04.3    163010        163011          172255             280160           280159
+11.04.05.3    163016        163017          173865             280163           280162
+11.04.06.3    163021        163022          175465             280167           280166
+11.04.06.4    163023        163024          175824             280171           280170
+11.04.07.3    163029        163031          177006             280175           280174
+11.04.08.3    163036        163037          178155             280177           280176
+11.04.09.3    163041        163042          179433             280181           280180
+14.04.01.3    163047        163049          182205             280185           280184
 
 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
 How might it have gotten there?
@@ -1091,8 +1111,6 @@ but that feature is not in the list.)
 
 TODO:  Logic Synth:  Card type DGM will require simulation to ensure interpretation.
 Current gate defintions are just set to match ALD diagram pages.
-
-TODO:  GIT.
 
 TODO:  EditCardLocationChart should warn if more than one card location page row
 found for a given page name.
@@ -1270,3 +1288,4 @@ INFO:  NOR (DTL) Gates:  DEG, DEH, DEJ, DEK, DEL, DGL, DGM, DHL, DMN, DMX,
 DPD, DPE, DPQ, DPB, DPV, DPM, YLH, YLJ, TNL
 
 So far, only page we see using them is 12.12.46.1
+
