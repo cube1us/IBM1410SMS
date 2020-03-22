@@ -1054,6 +1054,16 @@ Page Name      Page(D)  Card Loc. Page(D)  Diagram Page(D)  New Cable/Edge Page 
 11.04.09.3    163041        163042          179433             280181           280180
 14.04.01.3    163047        163049          182205             280185           280184
 
+TODO:  Add documentation for new cable/Edge connector pages and implied rule database table.
+
+TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
+the diagram page was the same as the database ID for the first card location entry.   I
+suspect IMPORT did not increment the ID number after getting the ID for the page.
+
+TODO:  When adding a new Edge Connector page, the first page gets selected after an add.
+If possible it would be better to select the new page, instead.  (Same issue probably
+exists for diagram pages and card location pages)
+
 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
 How might it have gotten there?
 
