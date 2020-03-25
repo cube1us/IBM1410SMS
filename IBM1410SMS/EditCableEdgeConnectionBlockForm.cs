@@ -635,7 +635,8 @@ namespace IBM1410SMS
             if(cardType.Equals("SAVE")) {
                 s += tab + bar + "    " + bar + Environment.NewLine;
             }
-            else if(cardType.Equals("RPQ") || cardType.Equals("STRL")) {
+            else if(cardType.Equals("RPQ") || cardType.Equals("STRL") ||
+                   cardType.Equals("TIE")) {
                 s += tab + bar + "SAVE" + bar + Environment.NewLine;
             }
             else {

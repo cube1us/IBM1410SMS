@@ -60,7 +60,7 @@ namespace IBM1410SMS
         //  List of card types that are Cable/Edge Connection card types
 
         internal static string[] cableEdgeConnectionCardTypes = new string[]
-            {"CABL", "CONN", "RPQ", "SAVE", "STRL"};
+            {"CABL", "CONN", "RPQ", "SAVE", "STRL", "TIE"};
 
         private static readonly Helpers instance = new Helpers();
 
