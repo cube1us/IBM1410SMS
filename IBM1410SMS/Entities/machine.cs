@@ -17,5 +17,6 @@ namespace IBM1410SMS
 		[MyColumn(Key=true)] public int idMachine { get; set; }
 		[MyColumn] public string name { get; set; }
 		[MyColumn] public string description { get; set; }
+		[MyColumn] public string aldMachineType { get; set; }
 	}
 }
