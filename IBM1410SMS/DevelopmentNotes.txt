@@ -1067,7 +1067,8 @@ entred the data from the IBM 1410 cable/edge connector pages.
 
 3/28/2020:  Added aldMachineType column to table machine, to be used when drawing ALD
    diagram blocks and buttons.  Updated documentation to explain how it should be used
-   (even though the code isn't there yet)
+   Also added labels to use for what the application internally calls Frames, Gates,
+   Panels, Rows and Columns (even though the code isn't there to use it yet)
 
 3/28/2020:  There were some places where the code was using the machineGate name when it really
 should have been using the frame name.  Fixed.  (EditCableEdgeConnectionBlock(s) and

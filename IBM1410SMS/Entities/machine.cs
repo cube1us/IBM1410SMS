@@ -18,5 +18,10 @@ namespace IBM1410SMS
 		[MyColumn] public string name { get; set; }
 		[MyColumn] public string description { get; set; }
 		[MyColumn] public string aldMachineType { get; set; }
+		[MyColumn] public string frameLabel { get; set; }
+		[MyColumn] public string gateLabel { get; set; }
+		[MyColumn] public string panelLabel { get; set; }
+		[MyColumn] public string rowLabel { get; set; }
+		[MyColumn] public string columnLabel { get; set; }
 	}
 }
