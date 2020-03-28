@@ -94,6 +94,13 @@ namespace IBM1410SMS
         bool bottomNotesModified = false;
         bool populatingDataGridView = false;
 
+        string frameLabel = "Frame";
+        string gateLabel = "Gate";
+        string panelLabel = "Panel";
+        string rowLabel = "Row";
+        string columnLabel = "Column";
+
+
         public EditCardLocationForm() {
             InitializeComponent();
 
@@ -259,8 +266,8 @@ namespace IBM1410SMS
                         "WHERE gate='" + g.idGate + "' ORDER BY panel");
                     foreach(Panel p in tempPanelList) {
                         panelList.Add(p);
-                        panelComboBox.Items.Add("Frame: " + f.name +
-                            ", Gate: " + g.name + ", Panel: " + p.panel);
+                        panelComboBox.Items.Add(frameLabel + ": " + f.name +
+                            ", " + gateLabel + ": " + g.name + ", " + panelLabel + ": " + p.panel);
                     } 
                 }
             }
@@ -350,6 +357,19 @@ namespace IBM1410SMS
 
         private void machineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             currentMachine = (Machine) machineComboBox.SelectedItem;
+            frameLabel = currentMachine.frameLabel;
+            gateLabel = currentMachine.gateLabel;
+            panelLabel = currentMachine.panelLabel;
+            rowLabel = currentMachine.rowLabel;
+            columnLabel = currentMachine.columnLabel;
+            if(gateLabel != null && gateLabel.Equals(frameLabel)) {
+                gateLabel = gateLabel + "(Gate)";
+            }
+
+            selectPanelLabel.Text = panelLabel + ":";
+            selectColumnLabel.Text = columnLabel + ":";
+            selectRowLabel.Text = rowLabel + ":";
+
             populatePageComboBox(currentMachine, currentVolume);
             populateFeatureComboBox(currentMachine);
             populatePanelComboBox(currentMachine);
@@ -428,18 +448,18 @@ namespace IBM1410SMS
             if(e.ColumnIndex == cardLocationBlockDataGridView.Columns["diagramRow"].Index) {
                 if(string.IsNullOrEmpty(e.FormattedValue.ToString()) ||
                     Array.IndexOf(validDiagramRows, e.FormattedValue.ToString()) < 0) {
-                    message = "Invalid Row Value (A-I)";
+                    message = "Invalid Diagram Row Value (A-I)";
                     e.Cancel = true;
                 }
             }
             else if(e.ColumnIndex == cardLocationBlockDataGridView.Columns["diagramColumn"].Index) {
                 int v;
                 if(!int.TryParse(sv,out v)) {
-                    message = "Invalid Column: Column must be an integer, 1-5";
+                    message = "Invalid Diagram Column: Column must be an integer, 1-5";
                     e.Cancel = true;
                 }
                 else if (Array.IndexOf(validDiagramColumns,v) < 0) {
-                    message = "Invalid Column Value: Must be 1-5";
+                    message = "Invalid Diagram Column Value: Must be 1-5";
                     e.Cancel = true;
                 }
             }
@@ -634,9 +654,9 @@ namespace IBM1410SMS
 
             if(cardSlotList.Count > 1) {
                 MessageBox.Show("ERROR: More than one Card Slot with " +
-                    "Panel=" + currentPanel.idPanel +
-                    ", Row=" + rowList[rowComboBox.SelectedIndex] +
-                    " and Column=" + columnList[columnComboBox.SelectedIndex],
+                    panelLabel + "=" + currentPanel.idPanel +
+                    ", " + rowLabel + "=" + rowList[rowComboBox.SelectedIndex] +
+                    " and " + columnLabel + "=" + columnList[columnComboBox.SelectedIndex],
                     "Multiple Card Slots Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return;
@@ -661,9 +681,9 @@ namespace IBM1410SMS
                 MessageBox.Show("ERROR: Multiple Card Locations found for " +
                     "page=" + currentPage.name +
                     ", ECO=" + currentECO.eco +
-                    ", panel=" + currentPanel.panel +
-                    ", Row=" + rowList[rowComboBox.SelectedIndex] +
-                    "and Column=" + columnList[columnComboBox.SelectedIndex],
+                    ", " + panelLabel + "=" + currentPanel.panel +
+                    ", " + rowLabel + "=" + rowList[rowComboBox.SelectedIndex] +
+                    "and " + columnLabel + "=" + columnList[columnComboBox.SelectedIndex],
                     "Multiple Card Locations Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return;
@@ -922,8 +942,8 @@ namespace IBM1410SMS
 
             DialogResult status =
                 MessageBox.Show("Confirm that you wish to DELETE card location diagram " +
-                    "block for Row " + rowComboBox.SelectedItem.ToString() +
-                    ", Column " + columnComboBox.SelectedItem.ToString() +
+                    "block for " + rowLabel + " " + rowComboBox.SelectedItem.ToString() +
+                    ", " + columnLabel + " " + columnComboBox.SelectedItem.ToString() +
                     " (Database ID " + currentCardLocation.idCardLocation + ") " +
                     (deletedBottomNotesList.Count > 0 || 
                      deletedCardLocationBlockList.Count > 0 ?
@@ -996,8 +1016,8 @@ namespace IBM1410SMS
                 currentCardLocation.idCardLocation = 0;
                 message += "Add New Card Location to Page " +
                     currentPage.name +
-                    ", Row " + rowComboBox.SelectedItem.ToString() +
-                    ", Column + " + columnComboBox.SelectedItem.ToString() +
+                    ", " + rowLabel + " " + rowComboBox.SelectedItem.ToString() +
+                    ", " + columnLabel + " " + columnComboBox.SelectedItem.ToString() +
                     "\n";
             }
 
@@ -1072,8 +1092,8 @@ namespace IBM1410SMS
 
                 message += "Delete Card Location Block for Page " +
                     getDiagramPageName(pageKey) +
-                    ", Row " + clb.diagramRow +
-                    ", Column " + clb.diagramColumn + "\n";
+                    ", Page Row " + clb.diagramRow +
+                    ", Page Column " + clb.diagramColumn + "\n";
                 }
             }
 
@@ -1281,14 +1301,14 @@ namespace IBM1410SMS
 
                 if(clb.idCardLocationBlock == 0) {
                     message += "Add Card Location Block, Page " + pageName +
-                        ", Row " + clb.diagramRow + ", Column " +
-                        clb.diagramColumn.ToString() + "\n";
+                        ", Row " + clb.diagramRow + 
+                        ", Column " + clb.diagramColumn.ToString() + "\n";
                 }
                 else {
                     message += "Modifying Card Location Block (Database ID " +
                         clb.idCardLocationBlock + ") Page " + pageName +
-                        ", Row " + clb.diagramRow + ", Column " +
-                        clb.diagramColumn.ToString() + "\n";
+                        ", Row " + clb.diagramRow + 
+                        ", Column " + clb.diagramColumn.ToString() + "\n";
                 }
                 ++rowIndex;
             }
@@ -1311,9 +1331,9 @@ namespace IBM1410SMS
                 int.TryParse(columnComboBox.SelectedValue.ToString(), out v);
                 currentCardSlot.cardColumn = v;
                 currentCardSlot.idCardSlot = 0;
-                message += "Add Card Slot Row " + currentCardSlot.cardRow +
-                    ", Column " + currentCardSlot.cardColumn +
-                    " to Panel " + currentPanel.panel + "\n";
+                message += "Add Card Slot " + rowLabel + " " + currentCardSlot.cardRow +
+                    ", " + columnLabel + " " + currentCardSlot.cardColumn +
+                    " to " + panelLabel + " " + currentPanel.panel + "\n";
             }
 
             //  If nothing has changed, let the user know that.
@@ -1348,9 +1368,9 @@ namespace IBM1410SMS
             if(currentCardSlot.idCardSlot == 0) {
                 currentCardSlot.idCardSlot = IdCounter.incrementCounter();
                 cardSlotTable.insert(currentCardSlot);
-                message += "Added Card Slot For Panel " + currentCardSlot.panel +
-                    ", Row " + currentCardSlot.cardRow +
-                    ", Column " + currentCardSlot.cardColumn +
+                message += "Added Card Slot For " + panelLabel + " " + currentCardSlot.panel +
+                    ", " + rowLabel + " " + currentCardSlot.cardRow +
+                    ", " + columnLabel + " " + currentCardSlot.cardColumn +
                     " Database ID" + currentCardSlot.idCardSlot + "\n";
             }
 
@@ -1375,8 +1395,8 @@ namespace IBM1410SMS
                 cardLocationTable.insert(currentCardLocation);
                 message += "Added Card Location for Page " +
                     currentPage.name +
-                    ", Row " + rowComboBox.SelectedItem.ToString() +
-                    ", Column " + columnComboBox.SelectedItem.ToString() + 
+                    ", " + rowLabel + " " + rowComboBox.SelectedItem.ToString() +
+                    ", " + columnLabel + " " + columnComboBox.SelectedItem.ToString() + 
                     " Database ID=" + currentCardLocation.idCardLocation + "\n";                        
             }
             else if(currentCardLocation.modified == true) {
@@ -1659,7 +1679,7 @@ namespace IBM1410SMS
                     clb.idCardLocationBlock = IdCounter.incrementCounter();
                     cardLocationBlockTable.insert(clb);
                     message += "Added Card Location Block on page " + pageName +
-                        ", Row " + clb.diagramRow + ", Column " + clb.diagramColumn +
+                        ", Page Row " + clb.diagramRow + ", Page Column " + clb.diagramColumn +
                         " Database ID=" + clb.idCardLocationBlock + "\n";
                 }
                 else {
@@ -1667,7 +1687,7 @@ namespace IBM1410SMS
                     message += "Updated Card Location Block " +
                         " (Database ID " + clb.idCardLocationBlock +
                         " on page " + pageName +
-                        ", Row " + clb.diagramRow + ", Column " + clb.diagramColumn +
+                        ", Page Row " + clb.diagramRow + ", Page Column " + clb.diagramColumn +
                         "\n";
                 }
 

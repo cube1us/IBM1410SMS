@@ -41,7 +41,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.ecoComboBox = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.label10 = new System.Windows.Forms.Label();
+            this.selectPanelLabel = new System.Windows.Forms.Label();
             this.panelComboBox = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
             this.sheetsComboBox = new System.Windows.Forms.ComboBox();
@@ -207,15 +207,15 @@
             this.label9.Text = "Previous ECO (opt):";
             this.toolTip1.SetToolTip(this.label9, "Previous ECO identified on  page");
             // 
-            // label10
+            // selectPanelLabel
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(45, 171);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(37, 13);
-            this.label10.TabIndex = 18;
-            this.label10.Text = "Panel:";
-            this.toolTip1.SetToolTip(this.label10, "Panel/Gate/Frame that this page lays out");
+            this.selectPanelLabel.AutoSize = true;
+            this.selectPanelLabel.Location = new System.Drawing.Point(45, 171);
+            this.selectPanelLabel.Name = "selectPanelLabel";
+            this.selectPanelLabel.Size = new System.Drawing.Size(37, 13);
+            this.selectPanelLabel.TabIndex = 18;
+            this.selectPanelLabel.Text = "Panel:";
+            this.toolTip1.SetToolTip(this.selectPanelLabel, "Panel/Gate/Frame that this page lays out");
             // 
             // panelComboBox
             // 
@@ -408,7 +408,7 @@
             this.Controls.Add(this.sheetsComboBox);
             this.Controls.Add(this.label11);
             this.Controls.Add(this.panelComboBox);
-            this.Controls.Add(this.label10);
+            this.Controls.Add(this.selectPanelLabel);
             this.Controls.Add(this.previousEcoComboBox);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.ecoComboBox);
@@ -456,7 +456,7 @@
         private System.Windows.Forms.ComboBox ecoComboBox;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ComboBox previousEcoComboBox;
-        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label selectPanelLabel;
         private System.Windows.Forms.ComboBox panelComboBox;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox sheetsComboBox;

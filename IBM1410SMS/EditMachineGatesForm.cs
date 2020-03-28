@@ -46,6 +46,9 @@ namespace IBM1410SMS
         Machine currentMachine = null;
         Frame currentFrame = null;
 
+        string frameLabel = "";
+        string gateLabel = "";
+
         public EditMachineGatesForm() {
             InitializeComponent();
 
@@ -127,6 +130,19 @@ namespace IBM1410SMS
             frameList = frameTable.getWhere("WHERE machine='" +
                 currentMachine.idMachine + "'");
             frameComboBox.DataSource = frameList;       //  Might be empty!
+
+            //  Apply the appropriate labels based on the selected machine.
+            //  Some machines may try and use the same label for both frames and
+            //  gates, in which case we tweak it to make sure which which.
+
+            frameLabel = machine.frameLabel;
+            gateLabel = machine.gateLabel;
+            if(gateLabel == null || gateLabel.Equals(frameLabel)) {
+                gateLabel = gateLabel + "(Gate)";
+            }
+
+            selectFrameLabel.Text = "Then Select " + frameLabel + ":";
+            Text = "Edit " + gateLabel + "s";
 
             //  Then if the machine has frames, set the current frame as
             //  the first one.
@@ -210,7 +226,7 @@ namespace IBM1410SMS
             //  Run through the deleted Frame list.
 
             foreach (Machinegate mg in deletedMachineGateList) {
-                message += "Deleting Machine Gate " + mg.name +
+                message += "Deleting " + gateLabel + " " + mg.name +
                     " (Database ID: " + mg.idGate + ")\n";
                 areChanges = true;
             }
@@ -219,12 +235,12 @@ namespace IBM1410SMS
 
             foreach (Machinegate mg in machineGateList) {
                 if (mg.idGate == 0) {
-                    message += "Adding Machine Gate " + mg.name + "\n";
+                    message += "Adding " + gateLabel + " " + mg.name + "\n";
                     areChanges = true;
                 }
                 else if (mg.modified) {
-                    message += "Changing Machine Gate Database ID: " + mg.idGate +
-                        " to Machine Gate name " + mg.name + "\n";
+                    message += "Changing " + gateLabel + " Database ID: " + mg.idGate +
+                        " to " + gateLabel + " name " + mg.name + "\n";
                     areChanges = true;
                 }
             }
@@ -232,16 +248,16 @@ namespace IBM1410SMS
             //  If there are not any changes, tell user and quit.
 
             if (!areChanges) {
-                MessageBox.Show("No Machine Gate changes were completed",
-                    "No Machine Gates updated",
+                MessageBox.Show("No " + gateLabel + " changes were completed",
+                    "No " + gateLabel + "s updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             DialogResult status = MessageBox.Show("Confirm that you wish to make " +
-                "the following changes to Machine Gates for machine " +
-                currentMachine.name + ", Frame " + currentFrame.name + ":\n\n" + message,
-                "Confirm Machine Gate changes",
+                "the following changes to " + gateLabel + "s for machine " +
+                currentMachine.name + ", " + frameLabel + " " + currentFrame.name + 
+                ":\n\n" + message, "Confirm " + gateLabel + " changes",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
 
             //  If the user hits cancel button, just return.  Do NOT close
@@ -257,7 +273,7 @@ namespace IBM1410SMS
 
             else if (status == DialogResult.OK) {
 
-                message = "Machine Gate(s) Updated:\n\n";
+                message = gateLabel + "(s) Updated:\n\n";
 
                 db.BeginTransaction();
 
@@ -266,7 +282,7 @@ namespace IBM1410SMS
 
                 foreach (Machinegate mg in deletedMachineGateList) {
                     machineGateTable.deleteByKey(mg.idGate);
-                    message += "Machine Gate " + mg.name + " removed.\n";
+                    message += gateLabel + " " + mg.name + " removed.\n";
                 }
 
                 //  Next we do the adds and changes...
@@ -276,19 +292,19 @@ namespace IBM1410SMS
                         mg.idGate = IdCounter.incrementCounter();
                         mg.frame = currentFrame.idFrame;
                         machineGateTable.insert(mg);
-                        message += "Machine Gate " + mg.name + " added.  ID=" +
+                        message += gateLabel + " " + mg.name + " added.  ID=" +
                             mg.idGate + "\n";
                     }
                     else if (mg.modified) {
                         machineGateTable.update(mg);
-                        message += "Machine Gate " + mg.name + " updated.  ID=" +
+                        message += gateLabel + " " + mg.name + " updated.  ID=" +
                             mg.idGate + "\n";
                     }
                 }
 
                 db.CommitTransaction();
 
-                MessageBox.Show(message, "Frame(s) updated",
+                MessageBox.Show(message, gateLabel + "(s) updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 //  For this one, we don't close the form, so that the user

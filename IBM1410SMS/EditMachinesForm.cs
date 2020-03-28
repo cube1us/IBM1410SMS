@@ -83,6 +83,18 @@ namespace IBM1410SMS
             machinesDataGridView.Columns["name"].Width = 10 * 8;
             machinesDataGridView.Columns["description"].HeaderText = "Description";
             machinesDataGridView.Columns["description"].Width = 40 * 8;
+            machinesDataGridView.Columns["aldmachinetype"].Width = 5 * 8;
+            machinesDataGridView.Columns["aldmachinetype"].HeaderText = "Type";
+            machinesDataGridView.Columns["framelabel"].Width = 8 * 8;
+            machinesDataGridView.Columns["framelabel"].HeaderText = "Frame";
+            machinesDataGridView.Columns["gatelabel"].Width = 8 * 8;
+            machinesDataGridView.Columns["gatelabel"].HeaderText = "Gate";
+            machinesDataGridView.Columns["panellabel"].Width = 8 * 8;
+            machinesDataGridView.Columns["panellabel"].HeaderText = "Panel";
+            machinesDataGridView.Columns["rowlabel"].Width = 8 * 8;
+            machinesDataGridView.Columns["rowlabel"].HeaderText = "Row";
+            machinesDataGridView.Columns["columnlabel"].Width = 8 * 8;
+            machinesDataGridView.Columns["columnlabel"].HeaderText = "Column";
 
             //  Start a new list of possible deletions.
 
@@ -91,18 +103,22 @@ namespace IBM1410SMS
 
         private void machinesDataGridView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e) {
 
+            String columnName = machinesDataGridView.Columns[e.ColumnIndex].Name;
             DataGridViewRow row = machinesDataGridView.Rows[e.RowIndex];
             row.ErrorText = "";
+
+            //  Skip if we are building the datagrid view or we are on a header
+            //  row or a new row or if the string is empty.
 
             //  If this is on a new row, ignore it.  Otherwise the user can end
             //  up in a "Catch-22" in cases where they didn't really mean to add
             //  a row, such as by hitting tab after editing the last existing row.
 
-            if (machinesDataGridView.Rows[e.RowIndex].IsNewRow) {
+            if (e.RowIndex < 0 || machinesDataGridView.Rows[e.RowIndex].IsNewRow) {
                 return;
             }
 
-            string columnName = machinesDataGridView.Columns[e.ColumnIndex].Name;
+            // string columnName = machinesDataGridView.Columns[e.ColumnIndex].Name;
             if (String.Compare(columnName, "name") == 0) {
                 if (e.FormattedValue == null || e.FormattedValue.ToString().Length == 0 ||
                     e.FormattedValue.ToString().Length > 8) {
@@ -114,6 +130,42 @@ namespace IBM1410SMS
             else if (String.Compare(columnName, "description") == 0) {
                 if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 255) {
                     row.ErrorText = columnName + "has a max length of 255 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "aldMachineType") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 2) {
+                    row.ErrorText = "ALD Machine Type has a max length of 2 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "frameLabel") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = "Frame label has a max length of 8 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "gateLabel") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = "Gate label has a max length of 8 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "panelLabel") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = "Panel label has a max length of 8 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "rowLabel") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = "Row label has a max length of 8 characters.";
+                    e.Cancel = true;
+                }
+            }
+            else if (String.Compare(columnName, "columnLabel") == 0) {
+                if (e.FormattedValue != null && e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = "Column label has a max length of 8 characters.";
                     e.Cancel = true;
                 }
             }

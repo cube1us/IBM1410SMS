@@ -65,6 +65,10 @@ namespace IBM1410SMS
         bool pageModified = false;
         bool populatingDialog = false;
 
+        string panelLabel = "Panel";
+        string frameLabel = "Frame";
+        string gateLabel = "Gate";
+
         public EditCardLocationPageForm() {
             InitializeComponent();
 
@@ -236,8 +240,8 @@ namespace IBM1410SMS
                     foreach(Panel panel in panelTable.getWhere(
                         "WHERE gate='" + gate.idGate + "' ORDER BY panel")) {
                         panelList.Add(panel);
-                        panelComboBox.Items.Add("Frame: " + frame.name +
-                            " Gate: " + gate.name + " Panel: " + panel.panel);
+                        panelComboBox.Items.Add(frameLabel + ": " + frame.name + " " +
+                            gateLabel + ": " + gate.name + " " + panelLabel + ": " + panel.panel);
                     }
                 }
             }
@@ -380,7 +384,7 @@ namespace IBM1410SMS
                             " (Database ID " +
                             currentCardLocationPage.idCardLocationPage +
                             ") For machine " + currentMachine.name +
-                            ", Panel " + (currentPanel != null ? currentPanel.panel : "") +
+                            ", " + panelLabel + (currentPanel != null ? currentPanel.panel : "") +
                             ",Volume " + currentVolume.name +
                             " currently has an ECO database ID " +
                             currentCardLocationPage.eco +
@@ -411,7 +415,7 @@ namespace IBM1410SMS
                             " (Database ID " +
                             currentCardLocationPage.idCardLocationPage +
                             ") For machine " + currentMachine.name +
-                            ", Panel " + (currentPanel != null ? currentPanel.panel : "") +
+                            "," + panelLabel + (currentPanel != null ? currentPanel.panel : "") +
                             ",Volume " + currentVolume.name +
                             " currently has a Previous ECO, database ID " +
                             currentCardLocationPage.previousECO +
@@ -464,6 +468,14 @@ namespace IBM1410SMS
             }
 
             currentMachine = machineList[machineComboBox.SelectedIndex];
+
+            frameLabel = currentMachine.frameLabel;
+            gateLabel = currentMachine.gateLabel;
+            if(gateLabel != null && gateLabel.Equals(frameLabel)) {
+                gateLabel = gateLabel + "(Gate)";
+            }
+            panelLabel = currentMachine.panelLabel;
+            selectPanelLabel.Text = panelLabel + ":";
 
             //  Repopulate the other affected combo boxes.
 
@@ -673,8 +685,8 @@ namespace IBM1410SMS
             //  Also make sure a panel and ECO are selected.
 
             if (panelComboBox.Text.Length == 0 || ecoComboBox.Text.Length == 0) {
-                MessageBox.Show("Error:  Panel and ECO are required.",
-                    "Panel and ECO Required",
+                MessageBox.Show("Error: " + panelLabel + " and ECO are required.",
+                    panelLabel + " and ECO Required",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }

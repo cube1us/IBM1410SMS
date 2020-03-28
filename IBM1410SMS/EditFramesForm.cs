@@ -43,6 +43,8 @@ namespace IBM1410SMS
         BindingList<Frame> frameBindingList;
         Machine currentMachine = null;
 
+        String frameLabel = "Frame";
+
         public EditFramesForm() {
             InitializeComponent();
 
@@ -70,6 +72,11 @@ namespace IBM1410SMS
         private void populateFrameTable(Machine machine) {
 
             TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+
+            //  Set the appropriate dialog title
+
+            frameLabel = machine.frameLabel;
+            Text = "Edit " + frameLabel;
 
             //  Clear out the existing grid...
 
@@ -152,10 +159,10 @@ namespace IBM1410SMS
             //  Otherwise, add it to the list of entries that we may delete later.
 
             if (machineGateList.Count > 0) {
-                MessageBox.Show("ERROR: Frame " + changedFrame.name +
+                MessageBox.Show("ERROR: " + frameLabel + changedFrame.name +
                     ", database ID: " + changedFrame.idFrame + " is referenced" +
                     " by entries in the Machine Gate table and cannot be removed.",
-                    "Frame entry referenced by other entries",
+                    frameLabel + " entry referenced by other entries",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 e.Cancel = true;
             }
@@ -179,7 +186,7 @@ namespace IBM1410SMS
             //  Run through the deleted Frame list.
 
             foreach (Frame f in deletedFrameList) {
-                message += "Deleting Frame " + f.name + 
+                message += "Deleting " + frameLabel + " " + f.name + 
                     " (Database ID: " + f.idFrame + ")\n";
                 areChanges = true;
             }
@@ -188,12 +195,12 @@ namespace IBM1410SMS
 
             foreach (Frame f in frameList) {
                 if (f.idFrame == 0) {
-                    message += "Adding Frame " + f.name + "\n";
+                    message += "Adding " + frameLabel + " " + f.name + "\n";
                     areChanges = true;
                 }
                 else if (f.modified) {
-                    message += "Changing Frame Database ID: " + f.idFrame +
-                        " to frame name " + f.name + "\n";
+                    message += "Changing " + frameLabel + " Database ID: " + f.idFrame +
+                        " to " + frameLabel + " name " + f.name + "\n";
                     areChanges = true;
                 }
             }
@@ -201,16 +208,16 @@ namespace IBM1410SMS
             //  If there are not any changes, tell user and quit.
 
             if (!areChanges) {
-                MessageBox.Show("No Frame changes were completed",
-                    "No Frames updated",
+                MessageBox.Show("No " + frameLabel + " changes were completed",
+                    "No " + frameLabel + "s updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             DialogResult status = MessageBox.Show("Confirm that you wish to make " +
-                "the following changes to Frames for machine " +
+                "the following changes to " + frameLabel + "s for machine " +
                 currentMachine.name + ":\n\n" + message,
-                "Confirm Frame changes",
+                "Confirm " + frameLabel + " changes",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
 
             //  If the user hits cancel button, just return.  Do NOT close
@@ -226,7 +233,7 @@ namespace IBM1410SMS
 
             else if (status == DialogResult.OK) {
 
-                message = "Frames Updated:\n\n";
+                message = frameLabel + "s Updated:\n\n";
 
                 db.BeginTransaction();
 
@@ -235,7 +242,7 @@ namespace IBM1410SMS
 
                 foreach (Frame f in deletedFrameList) {
                     frameTable.deleteByKey(f.idFrame);
-                    message += "Frame " + f.name + " removed.\n";
+                    message += frameLabel + " " + f.name + " removed.\n";
                 }
 
                 //  Next we do the adds and changes...
@@ -245,19 +252,19 @@ namespace IBM1410SMS
                         f.idFrame = IdCounter.incrementCounter();
                         f.machine = currentMachine.idMachine;
                         frameTable.insert(f);
-                        message += "Frame " + f.name + " added.  ID=" +
+                        message += frameLabel + " " + f.name + " added.  ID=" +
                             f.idFrame + "\n";
                     }
                     else if (f.modified) {
                         frameTable.update(f);
-                        message += "Frame " + f.name + " updated.  ID=" +
+                        message += frameLabel + " " + f.name + " updated.  ID=" +
                             f.idFrame + "\n";
                     }
                 }
 
                 db.CommitTransaction();
 
-                MessageBox.Show(message, "Frame(s) updated",
+                MessageBox.Show(message, frameLabel + "(s) updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 this.Close();

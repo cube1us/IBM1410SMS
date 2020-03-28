@@ -28,8 +28,8 @@
             this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
+            this.selectFrameLabel = new System.Windows.Forms.Label();
+            this.selectGateLabel = new System.Windows.Forms.Label();
             this.machineComboBox = new System.Windows.Forms.ComboBox();
             this.frameComboBox = new System.Windows.Forms.ComboBox();
             this.machineGateComboBox = new System.Windows.Forms.ComboBox();
@@ -50,26 +50,26 @@
             this.toolTip1.SetToolTip(this.label1, "Select the Machine, then the Frame and then the Gate that these Panels are part o" +
         "f.");
             // 
-            // label2
+            // selectFrameLabel
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(23, 62);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(100, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Then Select Frame:";
-            this.toolTip1.SetToolTip(this.label2, "Select the Machine, then the Frame and then the Gate that these Panels are part o" +
+            this.selectFrameLabel.AutoSize = true;
+            this.selectFrameLabel.Location = new System.Drawing.Point(23, 62);
+            this.selectFrameLabel.Name = "selectFrameLabel";
+            this.selectFrameLabel.Size = new System.Drawing.Size(100, 13);
+            this.selectFrameLabel.TabIndex = 4;
+            this.selectFrameLabel.Text = "Then Select Frame:";
+            this.toolTip1.SetToolTip(this.selectFrameLabel, "Select the Machine, then the Frame and then the Gate that these Panels are part o" +
         "f.");
             // 
-            // label3
+            // selectGateLabel
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(23, 99);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(94, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "Then Select Gate:";
-            this.toolTip1.SetToolTip(this.label3, "Select the Machine, then the Frame and then the Gate that these Panels are part o" +
+            this.selectGateLabel.AutoSize = true;
+            this.selectGateLabel.Location = new System.Drawing.Point(23, 99);
+            this.selectGateLabel.Name = "selectGateLabel";
+            this.selectGateLabel.Size = new System.Drawing.Size(94, 13);
+            this.selectGateLabel.TabIndex = 5;
+            this.selectGateLabel.Text = "Then Select Gate:";
+            this.toolTip1.SetToolTip(this.selectGateLabel, "Select the Machine, then the Frame and then the Gate that these Panels are part o" +
         "f.");
             // 
             // machineComboBox
@@ -90,7 +90,7 @@
             this.frameComboBox.DisplayMember = "name";
             this.frameComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.frameComboBox.FormattingEnabled = true;
-            this.frameComboBox.Location = new System.Drawing.Point(141, 59);
+            this.frameComboBox.Location = new System.Drawing.Point(159, 59);
             this.frameComboBox.Name = "frameComboBox";
             this.frameComboBox.Size = new System.Drawing.Size(172, 21);
             this.frameComboBox.TabIndex = 7;
@@ -103,7 +103,7 @@
             this.machineGateComboBox.DisplayMember = "name";
             this.machineGateComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.machineGateComboBox.FormattingEnabled = true;
-            this.machineGateComboBox.Location = new System.Drawing.Point(141, 96);
+            this.machineGateComboBox.Location = new System.Drawing.Point(190, 96);
             this.machineGateComboBox.Name = "machineGateComboBox";
             this.machineGateComboBox.Size = new System.Drawing.Size(172, 21);
             this.machineGateComboBox.TabIndex = 8;
@@ -119,7 +119,7 @@
             this.panelsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.panelsDataGridView.Location = new System.Drawing.Point(26, 142);
             this.panelsDataGridView.Name = "panelsDataGridView";
-            this.panelsDataGridView.Size = new System.Drawing.Size(287, 150);
+            this.panelsDataGridView.Size = new System.Drawing.Size(403, 150);
             this.panelsDataGridView.TabIndex = 9;
             this.toolTip1.SetToolTip(this.panelsDataGridView, "Enter Panels Here");
             this.panelsDataGridView.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.panelsDataGridView_CellValidating);
@@ -152,15 +152,15 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(344, 386);
+            this.ClientSize = new System.Drawing.Size(460, 386);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.panelsDataGridView);
             this.Controls.Add(this.machineGateComboBox);
             this.Controls.Add(this.frameComboBox);
             this.Controls.Add(this.machineComboBox);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.selectGateLabel);
+            this.Controls.Add(this.selectFrameLabel);
             this.Controls.Add(this.label1);
             this.Name = "EditPanelsForm";
             this.Text = "Edit Panels";
@@ -175,8 +175,8 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ToolTip toolTip1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label selectFrameLabel;
+        private System.Windows.Forms.Label selectGateLabel;
         private System.Windows.Forms.ComboBox machineComboBox;
         private System.Windows.Forms.ComboBox frameComboBox;
         private System.Windows.Forms.ComboBox machineGateComboBox;

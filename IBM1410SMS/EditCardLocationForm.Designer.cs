@@ -35,11 +35,11 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
+            this.selectPanelLabel = new System.Windows.Forms.Label();
             this.panelComboBox = new System.Windows.Forms.ComboBox();
-            this.label7 = new System.Windows.Forms.Label();
+            this.selectRowLabel = new System.Windows.Forms.Label();
             this.rowComboBox = new System.Windows.Forms.ComboBox();
-            this.label8 = new System.Windows.Forms.Label();
+            this.selectColumnLabel = new System.Windows.Forms.Label();
             this.columnComboBox = new System.Windows.Forms.ComboBox();
             this.label9 = new System.Windows.Forms.Label();
             this.cardTypeComboBox = new System.Windows.Forms.ComboBox();
@@ -150,15 +150,15 @@
             this.label5.Text = "Card Slot";
             this.toolTip1.SetToolTip(this.label5, "Select the Panel, Row and Column containing this card");
             // 
-            // label6
+            // selectPanelLabel
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(280, 48);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(37, 13);
-            this.label6.TabIndex = 104;
-            this.label6.Text = "Panel:";
-            this.toolTip1.SetToolTip(this.label6, "Select the Panel, Row and Column containing this card");
+            this.selectPanelLabel.AutoSize = true;
+            this.selectPanelLabel.Location = new System.Drawing.Point(280, 48);
+            this.selectPanelLabel.Name = "selectPanelLabel";
+            this.selectPanelLabel.Size = new System.Drawing.Size(37, 13);
+            this.selectPanelLabel.TabIndex = 104;
+            this.selectPanelLabel.Text = "Panel:";
+            this.toolTip1.SetToolTip(this.selectPanelLabel, "Select the Panel, Row and Column containing this card");
             // 
             // panelComboBox
             // 
@@ -171,15 +171,15 @@
             this.toolTip1.SetToolTip(this.panelComboBox, "Select the Panel, Row and Column containing this card");
             this.panelComboBox.SelectedIndexChanged += new System.EventHandler(this.panelComboBox_SelectedIndexChanged);
             // 
-            // label7
+            // selectRowLabel
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(280, 82);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(57, 13);
-            this.label7.TabIndex = 106;
-            this.label7.Text = "Card Row:";
-            this.toolTip1.SetToolTip(this.label7, "Select the Panel, Row and Column containing this card");
+            this.selectRowLabel.AutoSize = true;
+            this.selectRowLabel.Location = new System.Drawing.Point(280, 82);
+            this.selectRowLabel.Name = "selectRowLabel";
+            this.selectRowLabel.Size = new System.Drawing.Size(57, 13);
+            this.selectRowLabel.TabIndex = 106;
+            this.selectRowLabel.Text = "Card Row:";
+            this.toolTip1.SetToolTip(this.selectRowLabel, "Select the Panel, Row and Column containing this card");
             // 
             // rowComboBox
             // 
@@ -192,15 +192,15 @@
             this.toolTip1.SetToolTip(this.rowComboBox, "Select the Panel, Row and Column containing this card");
             this.rowComboBox.SelectedIndexChanged += new System.EventHandler(this.rowComboBox_SelectedIndexChanged);
             // 
-            // label8
+            // selectColumnLabel
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(280, 115);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(50, 13);
-            this.label8.TabIndex = 108;
-            this.label8.Text = "Card Col:";
-            this.toolTip1.SetToolTip(this.label8, "Select the Panel, Row and Column containing this card");
+            this.selectColumnLabel.AutoSize = true;
+            this.selectColumnLabel.Location = new System.Drawing.Point(280, 115);
+            this.selectColumnLabel.Name = "selectColumnLabel";
+            this.selectColumnLabel.Size = new System.Drawing.Size(50, 13);
+            this.selectColumnLabel.TabIndex = 108;
+            this.selectColumnLabel.Text = "Card Col:";
+            this.toolTip1.SetToolTip(this.selectColumnLabel, "Select the Panel, Row and Column containing this card");
             // 
             // columnComboBox
             // 
@@ -412,11 +412,11 @@
             this.Controls.Add(this.cardTypeComboBox);
             this.Controls.Add(this.label9);
             this.Controls.Add(this.columnComboBox);
-            this.Controls.Add(this.label8);
+            this.Controls.Add(this.selectColumnLabel);
             this.Controls.Add(this.rowComboBox);
-            this.Controls.Add(this.label7);
+            this.Controls.Add(this.selectRowLabel);
             this.Controls.Add(this.panelComboBox);
-            this.Controls.Add(this.label6);
+            this.Controls.Add(this.selectPanelLabel);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
@@ -446,11 +446,11 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label selectPanelLabel;
         private System.Windows.Forms.ComboBox panelComboBox;
-        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label selectRowLabel;
         private System.Windows.Forms.ComboBox rowComboBox;
-        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label selectColumnLabel;
         private System.Windows.Forms.ComboBox columnComboBox;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.ComboBox cardTypeComboBox;

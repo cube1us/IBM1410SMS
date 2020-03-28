@@ -56,6 +56,12 @@ namespace IBM1410SMS
         Frame currentFrame = null;
         Machinegate currentMachineGate = null;
 
+        string frameLabel = "Frame";
+        string gateLabel = "Gate";
+        string panelLabel = "Panel";
+        string rowLabel = "row";
+        string columnLabel = "column";
+
         string[] validColumnList = Enumerable.Range(1, 50).ToList().ToArray().
             Select(i => i.ToString()).ToArray();
 
@@ -193,10 +199,15 @@ namespace IBM1410SMS
 
             //  Set the width of the various columns
 
+            panelsDataGridView.Columns["panel"].HeaderText = panelLabel;
             panelsDataGridView.Columns["panel"].Width = 10 * 8;
+            panelsDataGridView.Columns["minRow"].HeaderText = "min " + rowLabel.Substring(0, 3);
             panelsDataGridView.Columns["minRow"].Width = 10 * 6;
+            panelsDataGridView.Columns["maxRow"].HeaderText = "max " + rowLabel.Substring(0, 3);
             panelsDataGridView.Columns["maxRow"].Width = 10 * 6;
+            panelsDataGridView.Columns["minCol"].HeaderText = "min " + columnLabel.Substring(0, 3);
             panelsDataGridView.Columns["minCol"].Width = 10 * 6;
+            panelsDataGridView.Columns["maxCol"].HeaderText = "max " + columnLabel.Substring(0, 3);
             panelsDataGridView.Columns["maxCol"].Width = 10 * 6;
         }
 
@@ -206,6 +217,19 @@ namespace IBM1410SMS
             //  First, change the current machine.
 
             currentMachine = machineList[machineComboBox.SelectedIndex];
+
+            frameLabel = currentMachine.frameLabel;
+            gateLabel = currentMachine.gateLabel;
+            panelLabel = currentMachine.panelLabel;
+            rowLabel = currentMachine.rowLabel;
+            columnLabel = currentMachine.columnLabel;
+
+            if (gateLabel != null && gateLabel.Equals(frameLabel)) {
+                gateLabel = frameLabel + " (Gate)";
+            }
+            selectFrameLabel.Text = "Then Select " + frameLabel + ":";
+            selectGateLabel.Text = "Then Select " + gateLabel + ":";
+            Text = "Edit " + panelLabel + "s" ;
 
             //  Next, reset the Frames combo box and the Machine Gate Combo Box
             //  and the data grid.
@@ -264,8 +288,9 @@ namespace IBM1410SMS
                 String.Compare(columnName, "maxRow") == 0) {
                 if (changedPanel.maxRow != null && changedPanel.minRow != null &&
                     String.Compare(changedPanel.minRow, changedPanel.maxRow) > 0) {
-                    MessageBox.Show("Warning:  First row of panel must be <= last row.",
-                        "Panel Rows Invalid",
+                    MessageBox.Show("Warning:  First " + rowLabel + 
+                        " of " + panelLabel + " must be <= last " + rowLabel + ".",
+                        panelLabel + " " + rowLabel + "s Invalid",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -275,8 +300,9 @@ namespace IBM1410SMS
                 if (changedPanel.maxCol > 0 && 
                     changedPanel.minCol > changedPanel.maxCol) {
                     MessageBox.Show(
-                        "Warning:  First column of panel must be <= last column.",
-                        "Panel Rows Invalid",
+                        "Warning:  First " + columnLabel + 
+                        " of " + panelLabel + " must be <= last " + columnLabel + ".",
+                        panelLabel + " " + columnLabel + "s Invalid",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
@@ -308,7 +334,7 @@ namespace IBM1410SMS
                 if (!PanelRowColumn.ROWPATTERN.IsMatch(
                     e.FormattedValue.ToString())) {
                     row.ErrorText =
-                        columnName + " is required, and must be A-ZZ, not I or O";
+                        rowLabel + " is required, and must be A-ZZ, not I or O";
                     e.Cancel = true;
                 }
             }
@@ -319,7 +345,7 @@ namespace IBM1410SMS
                 if (!Int32.TryParse(e.FormattedValue.ToString(), out v) ||
                     v < 0 || v > 99) {
                     row.ErrorText =
-                        columnName + " is required, and must be an integer, 1-99";
+                        columnLabel + " is required, and must be an integer, 1-99";
                     e.Cancel = true;
                 }
             }
@@ -327,7 +353,7 @@ namespace IBM1410SMS
             if(String.Compare(columnName,"panel") == 0) {
                 if(e.FormattedValue == null || e.FormattedValue.ToString().Length == 0 ||
                     e.FormattedValue.ToString().Length > 8) {
-                    row.ErrorText = columnName + 
+                    row.ErrorText = panelLabel + 
                         " is required, and has a max length of 8.";
                     e.Cancel = true;
                 }
@@ -351,28 +377,28 @@ namespace IBM1410SMS
             foreach (PanelRowColumn panelRowColumn in panelRowColumnList) {
 
                 if (panelRowColumn.panel == null || panelRowColumn.panel.Length == 0) {
-                    message += "No panel id specified.\n";
+                    message += "No " + panelLabel + " id specified.\n";
                 }
 
                 if (panelRowColumn.minRow == null || panelRowColumn.maxRow == null ||
                     panelRowColumn.minRow.Length == 0 || panelRowColumn.maxRow.Length == 0 ||
                     String.Compare(panelRowColumn.minRow, panelRowColumn.maxRow) > 0) {
-                    message += "Panel " + panelRowColumn.panel + " " +
+                    message += panelLabel + " " + panelRowColumn.panel + " " +
                         (panelRowColumn.idPanel > 0 ?
                             "(Database ID " + panelRowColumn.idPanel + ") " : "") +
-                        "First Row \"" + panelRowColumn.minRow +
+                        "First " + rowLabel + " \"" + panelRowColumn.minRow +
                             "\" is empty or greater than " +
-                        "Last Row \"" + panelRowColumn.maxRow + "\"\n";
+                        "Last " + rowLabel + " \"" + panelRowColumn.maxRow + "\"\n";
                 }
 
                 if (panelRowColumn.minCol < 1 || panelRowColumn.minCol > 99 ||
                     panelRowColumn.minCol > panelRowColumn.maxCol) {
-                    message += "Panel " + panelRowColumn.panel + " " +
+                    message += panelLabel + " " + panelRowColumn.panel + " " +
                         (panelRowColumn.idPanel > 0 ?
                             "(Database ID " + panelRowColumn.idPanel + ") " : "") +
-                        "First Column " + panelRowColumn.minCol +
+                        "First " + columnLabel + " " + panelRowColumn.minCol +
                             " is <= 0 or is greater than " +
-                        "Last Column " + panelRowColumn.maxCol + "\n";
+                        "Last " + columnLabel + " " + panelRowColumn.maxCol + "\n";
                 }
             }
 
@@ -401,7 +427,7 @@ namespace IBM1410SMS
                                tieDownTable.getWhere(slotWhereClause).Count > 0 ||
                                diagramBlockTable.getWhere(slotWhereClause).Count > 0 ||
                                edgeConnectorTable.getWhere(slotWhereClause).Count > 0) {
-                                message += "Panel " + prc.panel +
+                                message += panelLabel + " " + prc.panel +
                                     (prc.idPanel > 0 ? " (Database ID " + prc.idPanel + ") " : " ") +
                                     "has Card Slot(s) now out of the specified range which are still " +
                                     "referred to in another table.\n";
@@ -416,8 +442,9 @@ namespace IBM1410SMS
             //  issue a message...
 
             if (message.Length > 0) {
-                MessageBox.Show("Errors in first/last row/columns for one or more panels:\n\n" +
-                    message, "Panel Row Column Errors",
+                MessageBox.Show("Errors in first/last " + rowLabel + "/" + columnLabel + 
+                    " for one or more " + panelLabel + "s:\n\n" +
+                    message, panelLabel + " " + rowLabel + " " + columnLabel + " Errors",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 //  And then just return so that they can fix the error(s)
@@ -429,8 +456,9 @@ namespace IBM1410SMS
             //  message
 
             foreach (PanelRowColumn prc in deletedPanelRowColumnList) {
-                message += "Deleting Panel " + prc.panel +
-                    " (Database ID: " + prc.idPanel + ") (and any empty rows/columns)\n";
+                message += "Deleting " + panelLabel + " " + prc.panel +
+                    " (Database ID: " + prc.idPanel + ") (and any empty " + 
+                    rowLabel + "s/" + columnLabel + "s)\n";
             }
 
             //  Then run through looking for adds and changes...
@@ -439,19 +467,20 @@ namespace IBM1410SMS
 
             foreach (PanelRowColumn prc in panelRowColumnList) {
                 if (prc.idPanel == 0) {
-                    message += "Adding Panel " + prc.panel + "\n";
+                    message += "Adding " + panelLabel + " " + prc.panel + "\n";
                 }
                 else if (prc.modified) {
-                    message += "Changing Panel with Database ID " + prc.idPanel +
-                        " to Panel " + prc.panel + " (and/or rows/columns) \n";
+                    message += "Changing " + panelLabel + " with Database ID " + prc.idPanel +
+                        " to " + panelLabel + " " + prc.panel + 
+                        "(and/or " + rowLabel + "s/" + columnLabel + "s) \n";
                 }
             }
 
             //  If there were no changes, tell the user and quit.
 
             if (message.Length == 0) {
-                MessageBox.Show("No Panel changes were completed.",
-                    "No Panels Updated",
+                MessageBox.Show("No " + panelLabel + " changes were completed.",
+                    "No " + panelLabel + "s Updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
@@ -459,10 +488,10 @@ namespace IBM1410SMS
             //  There were changes, so get confirmation...
 
             DialogResult status = MessageBox.Show("Confirm that you wish to make " +
-                "the following changes to Panel(s) for machine " +
-                currentMachine.name + ", Frame " + currentFrame.name +
-                ", Machine Gate " + currentMachineGate.name + ":\n\n" + message,
-                "Confirm Panel(s) changes",
+                "the following changes to " + panelLabel + "(s) for machine " +
+                currentMachine.name + ", " + frameLabel + " " + currentFrame.name +
+                ", " + gateLabel + " " + currentMachineGate.name + ":\n\n" + message,
+                "Confirm " + panelLabel + "(s) changes",
                 MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
 
             //  If the user hits cancel button, just return.  Do NOT close
@@ -480,7 +509,7 @@ namespace IBM1410SMS
 
                 db.BeginTransaction();
 
-                message = "Panel(s) Updated: \n\n";
+                message = panelLabel + "(s) Updated: \n\n";
 
                 //  First, do the deletes, starting with any (unreferenced)
                 //  cardslots that refer to the panel to be deleted.  Note that
@@ -500,7 +529,7 @@ namespace IBM1410SMS
                     }
 
                     panelTable.deleteByKey(prc.idPanel);
-                    message += "Panel " + prc.panel + 
+                    message += panelLabel + " " + prc.panel + 
                         " (Database ID " + prc.idPanel + ") removed.";
                     if(deletedSlotsCount > 0) {
                         message += " (" + deletedSlotsCount + " slots)";
@@ -525,7 +554,7 @@ namespace IBM1410SMS
                             panel.idPanel = IdCounter.incrementCounter();
                             panel.gate = currentMachineGate.idGate;
                             panelTable.insert(panel);
-                            message += "Panel " + panel.panel + " added, " +
+                            message += panelLabel + " " + panel.panel + " added, " +
                                 "Database ID = " + panel.idPanel;
                             //  Remember the new database ID.
                             prc.idPanel = panel.idPanel;
@@ -535,7 +564,7 @@ namespace IBM1410SMS
                             panel.idPanel = prc.idPanel;
                             panel.gate = prc.gate;
                             panelTable.update(panel);
-                            message += "Panel " + panel.panel +
+                            message += panelLabel + " " + panel.panel +
                                 " (Database ID = " + panel.idPanel + ")";
                         }
 
@@ -609,7 +638,7 @@ namespace IBM1410SMS
 
                 db.CommitTransaction();
 
-                MessageBox.Show(message, "Panel(s) / Slot(s) Updated",
+                MessageBox.Show(message, panelLabel + "(s) / Slot(s) Updated",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 //  For this one we don't close the form, so that the user can
@@ -672,11 +701,11 @@ namespace IBM1410SMS
             }
 
             if(referringTables.Length > 0) {
-                MessageBox.Show("ERROR: Panel " + changedPanelRowColumn.panel +
+                MessageBox.Show("ERROR: " + panelLabel + " " + changedPanelRowColumn.panel +
                     ", database ID: " + changedPanelRowColumn.idPanel + " is referenced" +
                     " by one or more entries in table(s) " + referringTables + 
                     " and cannot be removed.",
-                    "Panel or Card Slot entry referenced by other entries",
+                    panelLabel + " or Card Slot entry referenced by other entries",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 e.Cancel = true;
             }

@@ -29,7 +29,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.machineComboBox = new System.Windows.Forms.ComboBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.label2 = new System.Windows.Forms.Label();
+            this.selectFrameLabel = new System.Windows.Forms.Label();
             this.frameComboBox = new System.Windows.Forms.ComboBox();
             this.machineGatesDataGridView = new System.Windows.Forms.DataGridView();
             this.applyButton = new System.Windows.Forms.Button();
@@ -59,15 +59,15 @@
             this.toolTip1.SetToolTip(this.machineComboBox, "Select the Machine, then the Frame that these Gates are part of.");
             this.machineComboBox.SelectedIndexChanged += new System.EventHandler(this.machineComboBox_SelectedIndexChanged);
             // 
-            // label2
+            // selectFrameLabel
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(23, 66);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(100, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Then Select Frame:";
-            this.toolTip1.SetToolTip(this.label2, "Select the Machine, then the Frame that these Gates are part of.");
+            this.selectFrameLabel.AutoSize = true;
+            this.selectFrameLabel.Location = new System.Drawing.Point(23, 66);
+            this.selectFrameLabel.Name = "selectFrameLabel";
+            this.selectFrameLabel.Size = new System.Drawing.Size(100, 13);
+            this.selectFrameLabel.TabIndex = 3;
+            this.selectFrameLabel.Text = "Then Select Frame:";
+            this.toolTip1.SetToolTip(this.selectFrameLabel, "Select the Machine, then the Frame that these Gates are part of.");
             // 
             // frameComboBox
             // 
@@ -128,7 +128,7 @@
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.machineGatesDataGridView);
             this.Controls.Add(this.frameComboBox);
-            this.Controls.Add(this.label2);
+            this.Controls.Add(this.selectFrameLabel);
             this.Controls.Add(this.machineComboBox);
             this.Controls.Add(this.label1);
             this.Name = "EditMachineGatesForm";
@@ -144,7 +144,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ComboBox machineComboBox;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label selectFrameLabel;
         private System.Windows.Forms.ComboBox frameComboBox;
         private System.Windows.Forms.DataGridView machineGatesDataGridView;
         private System.Windows.Forms.Button applyButton;
