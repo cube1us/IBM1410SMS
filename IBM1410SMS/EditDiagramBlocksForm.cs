@@ -230,8 +230,10 @@ namespace IBM1410SMS
                                     outputConnections.ToString();
                             }
 
+                            //  Generalize: The following may need work for machines other than 1410
+
                             button.Text = Helpers.getTwoCharMachineName(cardSlotInfo.machineName) +
-                                cardSlotInfo.gateName + ecoTagLetter +
+                                cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
                                 Environment.NewLine + cardTypeName + 
@@ -277,7 +279,7 @@ namespace IBM1410SMS
                             }
 
                             button.Text = Helpers.getTwoCharMachineName(currentMachine.name) +
-                                cardSlotInfo.gateName + ecoTagLetter +
+                                cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
                                 Environment.NewLine + cardTypeName;

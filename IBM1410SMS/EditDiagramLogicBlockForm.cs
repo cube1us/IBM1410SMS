@@ -584,7 +584,7 @@ namespace IBM1410SMS
                 " " + (outLevel.Length > 0 ? outLevel.Substring(0, 1) : " ") +
                 bar + Environment.NewLine;
 
-            s += tab + bar + machineSuffix + currentMachineGate.name +
+            s += tab + bar + machineSuffix + currentFrame.name +
                 ((Diagramecotag) ecoTagComboBox.SelectedItem).name + 
                 bar + Environment.NewLine;
 

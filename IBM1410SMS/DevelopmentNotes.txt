@@ -1036,6 +1036,12 @@ of all messages.
 
 2/22/2020:  Added pages, interconnect, logic blocks, DOT functions etc. to documentation.
 
+3/21/2020  Connectors pages (11.04.02.3, 11.04.03.3, 11.04.04.3, 11.04.05.3,
+           11.04.06.3, 11.04.06.4, 11.04.07.3, 11.04.08.3, 11.04.09.3, 14.04.01.3) are
+	   currently listed in BOTH the diagramPage table and the cardLocationPage table -
+	   and so do not show up in lists.  After adding new table cableEdgeConnPage, removed
+	   these bogus references.  (See below for details)
+
 3/21/2020:  Cleaned up database for Cable/Edge connector pages.  Those pages
 had both ALD Diagram pages and Card Location Pages that pointed to them
 incorrectly.  In each case, the diagram page, card location page and original
@@ -1059,130 +1065,138 @@ entred the data from the IBM 1410 cable/edge connector pages.
 
 3/25/2020:  Updated documentation to inlcude Cable/Edge connection pages.
 
-TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
+3/28/2020:  Added aldMachineType column to table machine, to be used when drawing ALD
+   diagram blocks and buttons.  Updated documentation to explain how it should be used
+   (even though the code isn't there yet)
+
+3/28/2020:  There were some places where the code was using the machineGate name when it really
+should have been using the frame name.  Fixed.  (EditCableEdgeConnectionBlock(s) and
+EditDiagramBlock(s))
+
+ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.
 
-TODO:  When adding a new Edge Connector page, the first page gets selected after an add.
+ENTERED #2 TODO:  When adding a new Edge Connector page, the first page gets selected after an add.
 If possible it would be better to select the new page, instead.  (Same issue probably
 exists for diagram pages and card location pages)
 
-TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
+ENTERED #3 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
 How might it have gotten there?
 
-TODO:  Performance:  Indexes for queries?
+ENTERED #4 TODO:  Performance:  Indexes for queries?
    When displaying sheet of logic blocks
    When changing volumes in Edit ALD Diagram
 
-TODO:  Logic Synth.  If a DOT function is fed from SDTRL NAND gates (S level) it is an
+ENTERED #5 TODO:  Logic Synth.  If a DOT function is fed from SDTRL NAND gates (S level) it is an
 OR.  If it is fed from DTL (NOR or NAND, depending on the diodes) gates (B Level) 
 it is an AND !!!!!   [NEED TO RETHINK THIS.  B Level?  Y Level?  It looks like for
 Y level it would still be an OR.]
 
-DONE:  EditDiagramLogicBlock:  Keep an eye on it sent a change when there is
+ENTERED #6 DONE:  EditDiagramLogicBlock:  Keep an eye on it sent a change when there is
    none - it is probably a null vs. blank compare on the new block notes field?
    YES - That is almost certainly what was going on.
 
-WATCH:  BUG:  EditDiagramPageForm:  cannot pre-select volume because it
+ENTERED #7 WATCH:  BUG:  EditDiagramPageForm:  cannot pre-select volume because it
    causes an index out of range condition puzzle, and messes up ECOs.  diagnose.
    Update:  Tried to reproduce on 1/23/2020, but was unable to do so.
 
-PENDING:  BUG:  Edit Connection.  Editing a gate to gate connection that has an
+ENTERED #8 PENDING:  BUG:  Edit Connection.  Editing a gate to gate connection that has an
    edge reference from the input side loses the reference.  (One ought to
    be able to add it from the input side anyway).  It also really ought to
    support two references, just like sheet signal edge connections.
    (Wish I had provided an example - not sure what this was about)
 
-TODO:  Logic Synth: Add a check box for do not generate, add flag to database, check in
+ENTERED TODO: #9 Logic Synth: Add a check box for do not generate, add flag to database, check in
    logic synth.
 
-TODO:  Logic Synth:  WARN if a sheet edge to a DOT function is an input to
+ENTERED TODO: #10 Logic Synth:  WARN if a sheet edge to a DOT function is an input to
    more than one sheet or is an output to more than one sheet.
 
-TODO:  Logic Synth:  LAMPS.  Generate signal LAMP_<name from block> as an 
+ENTERED TODO: #11 Logic Synth:  LAMPS.  Generate signal LAMP_<name from block> as an 
    output and assign from lamp.
 
-TODO:  Logic Synth:  Switches  
+ENTERED TODO: #12 Logic Synth:  Switches  
    - Generate a bit vector[0 to n], input
    - If we are lucky, C will always be common input (squawk if it is an output pin)
    - Assign bits in alpha order of pins  [NOTE:  Now have them as "specials" to define pins]
    - Typically active low (user interface can worry about that)
 
-TODO:  Logic Synth:  SS should parse the logic block title to figure out
+ENTERED TODO: #13  Logic Synth:  SS should parse the logic block title to figure out
     the hold time, convert to microseconds or milliseconds and generate as a 
 	SPECIAL would with a name SMS_SS_[MS|US]_(time in MS or US), which would then be
 	hand coded.  OR, we could try a VHDL generic and pass the value that way,
 	which presumably would force the synthesis tool to synthesize each SS 
 	separately - which it would have to do anyway.  
 
-TODO:  Logic Synth:  If a signal flows through a resistor to a capacitor on the other side,
+ENTERED TODO: #14 Logic Synth:  If a signal flows through a resistor to a capacitor on the other side,
    consider generating some kind of delay/debounce automagically.
 
-TODO:  Logic Synth:  Have a checklist of features - remember it.  (There are pages that
+ENTERED TODO: #15 Logic Synth:  Have a checklist of features - remember it.  (There are pages that
 have different cards missing generating a common signal.  Ignore cards that have a feature,
 but that feature is not in the list.)
 
-TODO:  Logic Synth:  Card type DGM will require simulation to ensure interpretation.
+ENTERED TODO: #16 Logic Synth:  Card type DGM will require simulation to ensure interpretation.
 Current gate defintions are just set to match ALD diagram pages.
 
-TODO:  EditCardLocationChart should warn if more than one card location page row
+ENTERED TODO: #17 EditCardLocationChart should warn if more than one card location page row
 found for a given page name.
 
-TODO:  Test what happens if there is more than 1 card location page for a given page -
+ENTERED TODO: (Also #17) Test what happens if there is more than 1 card location page for a given page -
    edit card location selection should warn.
 
-TODO:  Import: Card Type Import needs to accept I,O on regular pins (not just intra card pins)
+ENTERED TODO: #18 Import: Card Type Import needs to accept I,O on regular pins (not just intra card pins)
 
-TODO:  The ImportCardTypes sets the machine for card ECOs to 0, instead of looking for 
+ENTERED TODO: #19 The ImportCardTypes sets the machine for card ECOs to 0, instead of looking for 
 machine "SMS".
 
-TODO:  MISSING KNOWN SHEETS:  12.30.04.1, 13.64.03.1, 13.72.06.1 
+ENTERED TODO: #20  MISSING KNOWN SHEETS:  12.30.04.1, 13.64.03.1, 13.72.06.1 
 14.18.04.1, 15.41.06.1 ++ (see spreadsheet)
 
-TODO:  Connectors pages (11.04.02.3, 11.04.03.3, 11.04.04.3, 11.04.05.3,
-       11.04.06.3, 11.04.06.4, 11.04.07.3, 11.04.08.3, 11.04.09.3, 14.04.01.3) are
-	   currently listed in BOTH the diagramPage table and the cardLocationPage table -
-	   and so do not show up in lists.  After adding new table cableEdgeConnPage, remove
-	   these bogus references.
-
-TODO:  Add connectors table and form.
-
-TODO:  It seems as though editDiagramLogicBlock is using the input level to populate both
+ENTERED TODO: #21 It seems as though editDiagramLogicBlock is using the input level to populate both
        the input *and* output levels for a gate.
-TODO:  Warn if a given output pin is both - and + (during edit and as a separate check)
-TODO:  Verify edge connections against each other and against a connectors table.
-TODO:  Verify each edge connection is used at least once on a sheet, and only by 1 gate.
-TODO:  Check that the signals in and out match up: only 1 out, and where it goes matches
-TODO:  Check that a given transistor/gate is not used more than once (exclude resistors,
+
+ENTERED TODO: #22 Warn if a given output pin is both - and +
+ (Don't remember if this was referring to the SMS card pin editing process or while editing logic block connections)
+
+ENTERED TODO: #23  Report on inconsistent cable/edge connections
+ENTERED TODO: #24  Verify edge connections against each other and against a connectors table.
+ENTERED TODO: (Also #24)  Cross check cable/edge connections with connections at bottom of ALD page
+ENTERED TODO: (Also #24)  Verify each edge connection is used at least once on a sheet, and only by 1 gate.
+
+ENTERED TODO: #25  Check that the signals in and out match up: only 1 out, and where it goes matches
+ENTERED TODO: #26  Check that a given transistor/gate is not used more than once (exclude resistors,
        switches)
-TODO:  Report on unused gates/transistors (to handle above situations)
-TODO:  Report where a pin used is not actually on the selected gate (checked already in gen?)
-TODO:  Check gates that are -A/+O are NOR and +A/-O are NAND
-TODO:  Check logic gates IBM logic function (+A, IP, ...)TODO:  
-TODO:  Signal references query.  Given LIKE style signal, show all references,
+ENTERED TODO: #27 Report on unused gates/transistors (to handle above situations)
+ENTERED TODO: #28 Report where a pin used is not actually on the selected gate (checked already in gen?)
+ENTERED TODO: #29 Check gates that are -A/+O are NOR and +A/-O are NAND
+ENTERED TODO: #30  Check logic gates IBM logic function (+A, IP, ...) 
+ENTERED TODO: #31  Signal references query.  Given LIKE style signal, show all references,
    identifying each as left or right side, with page name (or error: bad page)
    (constrain by machine prefix?)
-TODO:  Check that a "--" (no pin) input signal comes from an edge or the same
+ENTERED TODO: #32  Check that a "--" (no pin) input signal comes from an edge or the same
        gate.  (Also output / to as above).
-TODO:  EditALDDiagram form, expand size of displayed comment to at least 4 lines.
-TODO:  EditDiagramLogicBlock form:  Keyboard shortcuts to get to critical fields
+ENTERED TODO: #33  EditALDDiagram form, expand size of displayed comment to at least 4 lines.
+ENTERED TODO: #34  EditDiagramLogicBlock form:  Keyboard shortcuts to get to critical fields
        (e.g. ALT+G to get to Gate, Alt+N to get to notes, Alt+F to get to Frame
 	   alt+M to get to Machine, Alt+T to get to type, Alt+E to get to ECO)
-TODO:  Report on cases where a given card slot contains different card types on
+ENTERED TODO: #35  Report on cases where a given card slot contains different card types on
        different sheets.
-TODO:  Report on cases where a given gate is used more than one time (exception for
+ENTERED TODO: #36  Report on cases where a given gate is used more than one time (exception for
        Resistors)
-TODO:  Report on inconsistent gate pins + vs. -, and inconsistent load pin.
+ENTERED TODO: #37  Report on inconsistent gate pins + vs. -, and inconsistent load pin.
 
-TODO:  If while defining a connection pin, a key is entered, select the first/next available
+
+
+ENTERED TODO: #38  If while defining a connection pin, a key is entered, select the first/next available
    entry that contains that pin.
 
-TODO:  See if we can spot ORDER BY clauses and surround column names with `` .
+ENTERED TODO: #40  See if we can spot ORDER BY clauses and surround column names with `` .
 
-TODO:  When selecting a card location page to edit, selecting the gate should pre-populate
+ENTERED TODO: #31  When selecting a card location page to edit, selecting the gate should pre-populate
        the Volume and page, and vice versa.
 
-TODO:  The Edit tiedown page should have a page numbe reference.  (It is in the database,
+ERRATA TODO: #39  The Edit tiedown page should have a page number reference.  (It is in the database,
        just not displayed / selectable.)
 
 ERRATA:
@@ -1191,7 +1205,7 @@ These are things that are not errors in the application, but things that are eit
 inconsistent or apparently incorrect in the IBM 1410 SMS ALDs (sometimes likely because
 some of the sheets are for a machine with the accelerator RPQ but others are not.)
 
-5/19/2018:  11.10.02.1 - There is a "Wired OR" between DEY 3B pin B and YLF 3D pin D -
+ENTERED TODO: #42 5/19/2018:  11.10.02.1 - There is a "Wired OR" between DEY 3B pin B and YLF 3D pin D -
 but neither one is actually open collector.  Wonder if that issue persisted on real
 machines.  (There are more cases of that in other sheets)
 
@@ -1218,7 +1232,7 @@ card location rows referring to it.)
 
 6/28/2018:  Cards DGA, DFZ not set up properly.  Inputs, by gate, should be
 QP, DK, EF and HR.  Main output, by gate, is B, A, C, L.  Auxiliary outputs
-on all gates are  G, J and M.
+on all gates are  G, J and M.  (Fixed - checked 3/7/2020)
 
 6/29/2018:  Card DFD not set up properly.  Pin R is an input to Gate 4,
 along with P and Q.  Fixed.
@@ -1234,6 +1248,7 @@ on the sheet rather than the chart.
 12.12.67.1 has +S E CH In PROCESS from sheet 13.60.04.1, but the
 latter sheet does not show the signal as being output to 
 12.12.67.1.  (I left it in place, with the signal present)
+[Entered Report TODO #43]
 
 7/19/2018:  Sheet 13.65.07.1 EC 251829 has a logic block at 3E,
 11D3E25.  However the card location chart does not show that block,
@@ -1250,11 +1265,13 @@ I will use the later E.C. as the correct one for now.  Since 3B is
 the source for that signal, there is a pretty good chance that 
 said block was simply dropped in the later E.C., which is why it was
 not in the card location chart.
+[Entered as part of Report TODO #43]
 
 [UNRESOLVED] 7/22/2018:  Sheet 13.67.02.1 EC 251823 shows output signal
 "+S F CH SECOND SAMPLE B" as going to sheet 13.64.05.1 EC
 251829.  However, the latter does not show that signal as an input.
 (They do agree on signal "-S F CH STATUS SAMPLE B DELAY")
+[Entered as part of Report TODO #43]
 
 7/22/2018:  Sheet 13.70.02.1 EC 252637 shows a signal
 "+S 1401 CARD PRINT IN PROC" but sheet 13.60.04.1 named the
@@ -1269,11 +1286,12 @@ end of the F channel signal to differentiate it.
 [UNRESOLVED] 7/26/2018:  Page 12.12.67.1 has an input signal
 "-S F CH FILE OP" which originates on page 13.74.01.1, however
 the latter page does not output that signal.  (Would be easy to create
-logic to do that, however)
+logic to do that, however)  [Entered as Report TODO #43]
 
 [UNRESOLVED] 7/26/2018:   Page 12.12.67.1 has an input signal
 "+S FILE OP DLY EXTENSION" which originates on page 13.74.01.1, however
-the latter page does not output that signal.
+the latter page does not output that signal.  [Entered as part of Report
+TODO #43]
 
 9/12/2018:  The signals coming from 15.30.0[1-6].1 to 15.41.04.1 and
 15.41.07.1 did not match with their destinations.  The two destination 

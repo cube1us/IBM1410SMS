@@ -137,9 +137,6 @@ namespace IBM1410SMS
             cardTypeList = cardTypeList.FindAll(
                 x => Array.IndexOf(Helpers.cableEdgeConnectionCardTypes, x.type) >= 0);
 
-            //  TODO:  Currently the cardslot info constructor assumes the gate will
-            //  be the same as the frame.  That needs changing.
-
             impliedDestinationsRules = cableImpliedDestinationsTable.getAll();
 
             foreach(Cableimplieddestinations cableImpliedDestinationRule in impliedDestinationsRules) { 
@@ -640,7 +637,7 @@ namespace IBM1410SMS
                 s += tab + bar + "SAVE" + bar + Environment.NewLine;
             }
             else {
-                s += tab + bar + machineSuffix + currentMachineGate.name + currentPanel.panel +
+                s += tab + bar + machineSuffix + currentFrame.name + currentPanel.panel +
                     bar + Environment.NewLine;
             }
 
@@ -654,7 +651,7 @@ namespace IBM1410SMS
                     s += tab + bar + "CE  " + bar + Environment.NewLine;
                 }
                 else {
-                    s += tab + bar + destinationMachineSuffix + currentDestinationMachineGate.name +
+                    s += tab + bar + destinationMachineSuffix + currentDestinationFrame.name +
                      currentDestinationPanel.panel + bar + Environment.NewLine;
                 }
             }
@@ -662,7 +659,7 @@ namespace IBM1410SMS
                 s += tab + bar + "    " + bar + Environment.NewLine;
             }
 
-            s += tab + bar + machineSuffix + currentMachineGate.name +
+            s += tab + bar + machineSuffix + currentFrame.name +
                 ((Cableedgeconnectionecotag)ecoTagComboBox.SelectedItem).name +
                 bar + Environment.NewLine;
 
