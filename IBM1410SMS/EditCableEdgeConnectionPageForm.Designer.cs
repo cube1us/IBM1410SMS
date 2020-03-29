@@ -245,7 +245,7 @@
             // removeButton
             // 
             this.removeButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.removeButton.Location = new System.Drawing.Point(300, 569);
+            this.removeButton.Location = new System.Drawing.Point(300, 607);
             this.removeButton.Name = "removeButton";
             this.removeButton.Size = new System.Drawing.Size(75, 23);
             this.removeButton.TabIndex = 101;
@@ -257,7 +257,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(532, 569);
+            this.cancelButton.Location = new System.Drawing.Point(532, 607);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 102;
@@ -268,7 +268,7 @@
             // addApplyButton
             // 
             this.addApplyButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.addApplyButton.Location = new System.Drawing.Point(68, 569);
+            this.addApplyButton.Location = new System.Drawing.Point(68, 607);
             this.addApplyButton.Name = "addApplyButton";
             this.addApplyButton.Size = new System.Drawing.Size(75, 23);
             this.addApplyButton.TabIndex = 100;
@@ -281,9 +281,9 @@
             this.ecosDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
             this.ecosDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.ecosDataGridView.Location = new System.Drawing.Point(235, 373);
+            this.ecosDataGridView.Location = new System.Drawing.Point(235, 429);
             this.ecosDataGridView.Name = "ecosDataGridView";
-            this.ecosDataGridView.Size = new System.Drawing.Size(240, 168);
+            this.ecosDataGridView.Size = new System.Drawing.Size(240, 158);
             this.ecosDataGridView.TabIndex = 123;
             this.ecosDataGridView.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.ecosDataGridView_CellValidating);
             this.ecosDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.ecosDataGridView_CellValueChanged);
@@ -293,7 +293,7 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(246, 344);
+            this.label8.Location = new System.Drawing.Point(245, 396);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(213, 13);
             this.label8.TabIndex = 124;
@@ -317,7 +317,7 @@
             this.commentTextBox.Multiline = true;
             this.commentTextBox.Name = "commentTextBox";
             this.commentTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.commentTextBox.Size = new System.Drawing.Size(570, 43);
+            this.commentTextBox.Size = new System.Drawing.Size(570, 84);
             this.commentTextBox.TabIndex = 60;
             // 
             // label10
@@ -333,7 +333,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(710, 624);
+            this.ClientSize = new System.Drawing.Size(710, 662);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.commentTextBox);
             this.Controls.Add(this.editCableEdgeBlocksButton);
