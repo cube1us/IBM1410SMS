@@ -86,6 +86,17 @@ namespace IBM1410SMS
         bool modifiedMachineGatePanelFrame = false;
         bool newCableEdgeConnection = false;        // Tried using deleteButton.Visible, failed?
 
+        string sourceFrameLabel = "Frame";
+        string sourceGateLabel = "Gate";
+        string sourcePanelLabel = "Panel";
+        string sourceRowLabel = "Row";
+        string sourceColumnLabel = "Column";
+        string destFrameLabel = "Frame";
+        string destGateLabel = "Gate";
+        string destPanelLabel = "Panel";
+        string destRowLabel = "Row";
+        string destColumnLabel = "Column";
+
         public EditCableEdgeConnectionBlockForm(
             Cableedgeconnectionblock cableEdgeConnectionBlock,
             Machine machine,
@@ -615,7 +626,8 @@ namespace IBM1410SMS
                 s += Environment.NewLine;
             }
 
-            s += new string(' ', tabLen + width - 1 - cableEdgeConnectionBlockTitleTextBox.Text.Length / 2) +
+            s += new string(' ',
+                tabLen + width - 1 - cableEdgeConnectionBlockTitleTextBox.Text.Length / 2) +
                 cableEdgeConnectionBlockTitleTextBox.Text.ToUpper() + Environment.NewLine;
 
             s += tab + new string(underscore, width + 2) + Environment.NewLine;
@@ -637,7 +649,8 @@ namespace IBM1410SMS
                 s += tab + bar + "SAVE" + bar + Environment.NewLine;
             }
             else {
-                s += tab + bar + machineSuffix + currentFrame.name + currentPanel.panel +
+                s += tab + bar + currentMachine.aldMachineType + 
+                    currentFrame.name + currentPanel.panel +
                     bar + Environment.NewLine;
             }
 
@@ -651,7 +664,8 @@ namespace IBM1410SMS
                     s += tab + bar + "CE  " + bar + Environment.NewLine;
                 }
                 else {
-                    s += tab + bar + destinationMachineSuffix + currentDestinationFrame.name +
+                    s += tab + bar + currentDestinationMachine.aldMachineType + 
+                     currentDestinationFrame.name +
                      currentDestinationPanel.panel + bar + Environment.NewLine;
                 }
             }
@@ -685,6 +699,21 @@ namespace IBM1410SMS
 
 
         private void machineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+
+            Machine sourceMachine = (Machine)machineComboBox.SelectedItem;
+
+            sourceFrameLabel = sourceMachine.frameLabel;
+            sourceGateLabel = sourceMachine.gateLabel;
+            sourcePanelLabel = sourceMachine.panelLabel;
+            sourceRowLabel = sourceMachine.rowLabel;
+            sourceColumnLabel = sourceMachine.columnLabel;
+
+            selectSourceFrameLabel.Text = sourceFrameLabel + ":";
+            selectSourceGateLabel.Text = sourceGateLabel + ":";
+            selectSourcePanelLabel.Text = sourcePanelLabel + ":";
+            selectSourceRowLabel.Text = sourceRowLabel + ":";
+            selectSourceColumnLabel.Text = sourceColumnLabel + ":";
+
             if (!populatingDialog) {
                 currentMachine = (Machine)machineComboBox.SelectedItem;
                 if (currentCardSlotInfo.machineName != currentMachine.name) {
@@ -696,6 +725,21 @@ namespace IBM1410SMS
         }
 
         private void destinationMachineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+
+            Machine destMachine = (Machine)machineComboBox.SelectedItem;
+
+            destFrameLabel = destMachine.frameLabel;
+            destGateLabel = destMachine.gateLabel;
+            destPanelLabel = destMachine.panelLabel;
+            destRowLabel = destMachine.rowLabel;
+            destColumnLabel = destMachine.columnLabel;
+
+            selectDestFrameLabel.Text = destFrameLabel + ":";
+            selectDestGateLabel.Text = destGateLabel + ":";
+            selectDestPanelLabel.Text = destPanelLabel + ":";
+            selectDestRowLabel.Text = destRowLabel + ":";
+            selectDestColumnLabel.Text = destColumnLabel + ":";
+
             if (!populatingDialog) {
                 currentDestinationMachine = (Machine)destinationMachineComboBox.SelectedItem;
                 if (currentDestinationCardSlotInfo.machineName != currentDestinationMachine.name) {

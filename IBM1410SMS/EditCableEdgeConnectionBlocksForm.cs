@@ -210,7 +210,7 @@ namespace IBM1410SMS
                                 }
                             }
 
-                            button.Text = Helpers.getTwoCharMachineName(cardSlotInfo.machineName) +
+                            button.Text = currentMachine.aldMachineType +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
@@ -256,7 +256,7 @@ namespace IBM1410SMS
                                 }
                             }
 
-                            button.Text = Helpers.getTwoCharMachineName(currentMachine.name) +
+                            button.Text = currentMachine.aldMachineType +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +

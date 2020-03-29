@@ -525,7 +525,9 @@ namespace IBM1410SMS
         }
 
         //  Get 2nd two characters of a machine name
+        //  Replaced by Machine.aldMachineType
 
+        /* 
         public static string getTwoCharMachineName(string machineName) {
 
             string val;
@@ -540,6 +542,7 @@ namespace IBM1410SMS
 
             return (val);
         }
+        */
 
 
         //  Routine to look up Frame, Gate, Panel, Row and Column for

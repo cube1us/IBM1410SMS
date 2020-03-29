@@ -1074,6 +1074,13 @@ entred the data from the IBM 1410 cable/edge connector pages.
 should have been using the frame name.  Fixed.  (EditCableEdgeConnectionBlock(s) and
 EditDiagramBlock(s))
 
+3/29/2020:  Went through and changed code to use the generalization fields in the Machine table
+   for Frames, Gates, Panels, Rows and Columns in various editing dialog's dialog combo boxes
+   and fields, and also the aldMachineType in blocks and buttons.  Also fixed up messages to
+   use the corresponding label (and fixed a few that were wrong that I noticed in the process.)
+   Also removed a now "dead" method in Helpers, that was supplanted by the aldMachineType field.
+   [Issue #45]
+
 ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.

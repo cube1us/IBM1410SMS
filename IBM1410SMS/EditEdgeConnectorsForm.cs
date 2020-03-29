@@ -46,6 +46,7 @@ namespace IBM1410SMS
         Diagrampage currentDiagramPage = null;
         Page currentPage = null;
         string machinePrefix;
+        string rowLabel = "Row";
         bool populatingDialog = false;
 
         //  Number of pins/connections.  If you change this, you must also change the
@@ -82,6 +83,8 @@ namespace IBM1410SMS
                 currentVolume.name;
             pageTextBox.ReadOnly = true;
             pageTextBox.Text = currentPage.name;
+
+            rowLabel = currentMachine.rowLabel;
 
             //  Populate the data grid view..
 
@@ -234,7 +237,8 @@ namespace IBM1410SMS
                     string rowName = match.Groups[4].Value.ToUpper();
                     string pinName = match.Groups[6].Value.ToUpper();
                     if(Array.IndexOf(Helpers.validRows,rowName) < 0) {
-                        message = "Entry " + entryNumber + ": Invalid row name. " + 
+                        message = "Entry " + entryNumber + ": Invalid " + 
+                            rowLabel + " name. " + 
                             Environment.NewLine;
                     }
                     if(Array.IndexOf(Helpers.validPins,pinName[0]) < 0) {
