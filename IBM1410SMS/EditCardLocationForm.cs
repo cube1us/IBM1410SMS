@@ -199,8 +199,44 @@ namespace IBM1410SMS
                 "WHERE machine='" + machine.idMachine + "' AND volume='" +
                 volume.idVolume + "' ORDER BY page.name");
 
-            //  TODO:  It would probably be best to remove diagramPages and
-            //  cableEdgeConnectionPages from this list.
+            //  Remove diagramPages and cableEdgeConnectionPages from this list.
+
+            List<Page> pagesToRemoveList = new List<Page>();
+            foreach (Page p in pageList) {
+                List<Diagrampage> diagramPageList =
+                    diagramPageTable.getWhere(
+                    "WHERE diagrampage.page='" + p.idPage + "'");
+                if (diagramPageList.Count > 0) {
+                    pagesToRemoveList.Add(p);
+                }
+                List<Cableedgeconnectionpage> cableEdgeConnectionPageList =
+                    cableEdgeConnectionPageTable.getWhere(
+                    "WHERE cableedgeconnectionpage.page='" + p.idPage + "'");
+                if (cableEdgeConnectionPageList.Count > 0) {
+                    pagesToRemoveList.Add(p);
+                }
+            }
+            foreach (Page p in pagesToRemoveList) {
+                pageList.Remove(p);
+            }
+
+            //  Now, check that a given page appears only once
+
+            string message = "";
+            foreach (Page p in pageList) {
+                List<Page> checkList = pageList.FindAll(
+                    x => x.name.Equals(p.name));
+                if(checkList.Count > 1) {
+                    message += "WARNING: More than one page for page name " + p.name + "\n";
+                }
+            }
+
+            if(message.Length > 0) {
+                MessageBox.Show(message +
+                    "This should be resolved before proceeding any further.\n",
+                    "Unexpected Multiple Pages Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Stop);
+            }
 
             pageComboBox.DataSource = pageList;
 
@@ -1179,20 +1215,34 @@ namespace IBM1410SMS
                     return;
                 }
 
-                //  See if we have a matching Page and Diagram Page
+                //  See if we have a matching Page and Diagram Page, or
+                //  if we might have already created it from an earlier
+                //  entry in the list.
 
                 Page tempPage = machinePageList.Find(
                     x => x.name.CompareTo(pageName) == 0);
                 if(tempPage == null) {
+                    tempPage = addedPageList.Find(
+                        x => x.name.CompareTo(pageName) == 0);
+                }
+                if(tempPage == null) {
                     tempPage = new Page();
                     tempPage.idPage = 0;
+                }
+
+                //  If we just added the page during a previous trip through
+                //  the loop, skip the part below where we add either a
+                //  ALD Diagram Page or a Cable/Edge connection page.
+
+                if(tempPage.idPage == -1) {
+
                 }
 
                 //  Add a page.  If we can find the right volume using the 
                 //  pageName, use that volume.  Otherwise, Use a volume called
                 //  "Unassigned" (and add that too, if needed).
 
-                if(tempPage.idPage == 0) {
+                else if(tempPage.idPage == 0) {
 
                     Volume v;
 
@@ -1209,8 +1259,7 @@ namespace IBM1410SMS
                     //  unassigned volume name.
 
                     if(tempPage.volume == 0) {
-                        v = volumeList.Find(
-                            x => x.name == "Unassigned");
+                        v = volumeList.Find(x => x.name == "Unassigned");
                         if(v != null && v.idVolume != 0) {
                             tempPage.volume = v.idVolume;
                         }
@@ -1231,7 +1280,7 @@ namespace IBM1410SMS
                             "selected volume set.\n";
                     }
 
-                    tempPage.idPage = 0;
+                    tempPage.idPage = -1;           //  Will get filled in later.
                     tempPage.machine = currentMachine.idMachine;
                     tempPage.part = "";
                     tempPage.title = "Added Via Card Location Block Reference";
@@ -1241,7 +1290,11 @@ namespace IBM1410SMS
                     message += "Add Page AND diagram or cable/edge connection page " + 
                         pageName + "\n";
                 }
-                else {
+
+                //  The page looks like it already exists, but we might need
+                //  to add a diagram page or cable/edge connection page for it.
+
+                else {      
 
                     //  See if we need to add the appropriate kind of page (ALD
                     //  diagram or Cable/Edge connection)
@@ -1251,9 +1304,20 @@ namespace IBM1410SMS
 
                     if (Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
                         ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {
+
+                        //  See if the page already exists, either coming into the
+                        //  dialog, or because it had already been added during this
+                        //  loop
+
                         Cableedgeconnectionpage tempCableEdgeConnectionPage =
                             machineCableEdgeConnectionPageList.Find(
                                 x => x.page == tempPage.idPage);
+                        if(tempCableEdgeConnectionPage == null) {
+                            tempCableEdgeConnectionPage =
+                                addedCableEdgeConnectionPageList.Find(
+                                    x => x.page == tempPage.idPage);
+                        }
+
                         if(tempCableEdgeConnectionPage == null) {
                             MessageBox.Show("Page " + tempPage.name +
                                 " is not a cable/edge connection page.  ABORT.",
@@ -1270,8 +1334,15 @@ namespace IBM1410SMS
                         }
                     }
                     else {
+
+                        //  Similar story for ALD diagram pages.
+
                         Diagrampage tempDiagramPage = machineDiagramPageList.Find(
                             x => x.page == tempPage.idPage);
+                        if(tempDiagramPage == null) {
+                            tempDiagramPage = addedDiagramPageList.Find(
+                                x => x.page == tempPage.idPage);
+                        }
                         if(tempDiagramPage == null) {
                             MessageBox.Show("Page " + tempPage.name +
                                 " is not a diagram connection page.  ABORT.",
@@ -1446,8 +1517,11 @@ namespace IBM1410SMS
                 pageTable.insert(page);
 
                 message += "Added page " + page.name +
-                    " Database ID=" + page.idPage +
-                    " WITH a ZERO volume key.\n";
+                    " Database ID=" + page.idPage;
+                if (page.volume == 0) {
+                    message += " WITH a ZERO volume key.\n";
+                }
+                message += "\n";
 
                 if (Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
                     ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {
@@ -1602,8 +1676,6 @@ namespace IBM1410SMS
                     tempPage = new Page();
                     tempPage.idPage = 0;
                 }
-
-                //  TODO  Change to add in cable/edge connection pages
 
                 if(Array.IndexOf(Helpers.cableEdgeConnectionCardTypes,
                     ((Cardtype)cardTypeComboBox.SelectedItem).type) >= 0) {

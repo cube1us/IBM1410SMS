@@ -1081,6 +1081,14 @@ EditDiagramBlock(s))
    Also removed a now "dead" method in Helpers, that was supplanted by the aldMachineType field.
    [Issue #45]
 
+3/29/2020:  Fixed some problems in EditCardLocationForm which caused issues when adding a new
+   card location chart entry and specifying more than one gate on the same ALD diagram or
+   cable/edge connection diagram - which is perfectly legitimate.  Tested.  Also changed
+   EditCardLocationForm to warn if it finds the same page name twice in the page list.
+   I also noted that EditCardLocationPageForm, EditCableEdgeConnectionPageForm and
+   EditDiagramPageForm can all create (intentional) duplicates - and left it that way,
+   at least for now.
+
 ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.
@@ -1147,11 +1155,11 @@ but that feature is not in the list.)
 ENTERED TODO: #16 Logic Synth:  Card type DGM will require simulation to ensure interpretation.
 Current gate defintions are just set to match ALD diagram pages.
 
-ENTERED TODO: #17 EditCardLocationChart should warn if more than one card location page row
+CLOSED  TODO: #17 EditCardLocationChart should warn if more than one card location page row
 found for a given page name.
 
-ENTERED TODO: (Also #17) Test what happens if there is more than 1 card location page for a given page -
-   edit card location selection should warn.
+CLOSED  TODO: (Also #17) Test what happens if there is more than 1 card location page for a 
+   given page - edit card location selection should warn.
 
 ENTERED TODO: #18 Import: Card Type Import needs to accept I,O on regular pins (not just intra card pins)
 
@@ -1184,7 +1192,7 @@ ENTERED TODO: #31  Signal references query.  Given LIKE style signal, show all r
    (constrain by machine prefix?)
 ENTERED TODO: #32  Check that a "--" (no pin) input signal comes from an edge or the same
        gate.  (Also output / to as above).
-ENTERED TODO: #33  EditALDDiagram form, expand size of displayed comment to at least 4 lines.
+CLOSED  TODO: #33  EditALDDiagram form, expand size of displayed comment to at least 4 lines.
 ENTERED TODO: #34  EditDiagramLogicBlock form:  Keyboard shortcuts to get to critical fields
        (e.g. ALT+G to get to Gate, Alt+N to get to notes, Alt+F to get to Frame
 	   alt+M to get to Machine, Alt+T to get to type, Alt+E to get to ECO)
@@ -1193,8 +1201,6 @@ ENTERED TODO: #35  Report on cases where a given card slot contains different ca
 ENTERED TODO: #36  Report on cases where a given gate is used more than one time (exception for
        Resistors)
 ENTERED TODO: #37  Report on inconsistent gate pins + vs. -, and inconsistent load pin.
-
-
 
 ENTERED TODO: #38  If while defining a connection pin, a key is entered, select the first/next available
    entry that contains that pin.
