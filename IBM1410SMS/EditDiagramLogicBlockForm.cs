@@ -74,6 +74,12 @@ namespace IBM1410SMS
         List<Logicfunction> logicFunctionList;
 
         string machinePrefix;
+        string frameLabel = "Frame";
+        string gateLabel = "Gate";
+        string panelLabel = "Panel";
+        string rowLabel = "Row";
+        string columnLabel = "Column";
+
         bool populatingDialog = true;
         bool applySuccessful = false;
         bool modifiedMachineGatePanelFrame = false;
@@ -584,7 +590,7 @@ namespace IBM1410SMS
                 " " + (outLevel.Length > 0 ? outLevel.Substring(0, 1) : " ") +
                 bar + Environment.NewLine;
 
-            s += tab + bar + machineSuffix + currentFrame.name +
+            s += tab + bar + currentMachine.aldMachineType + currentFrame.name +
                 ((Diagramecotag) ecoTagComboBox.SelectedItem).name + 
                 bar + Environment.NewLine;
 
@@ -622,12 +628,28 @@ namespace IBM1410SMS
 
 
         private void machineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+
+            Machine labelMachine = (Machine)machineComboBox.SelectedItem;
+
+            frameLabel = labelMachine.frameLabel;
+            gateLabel = labelMachine.gateLabel;
+            panelLabel = labelMachine.panelLabel;
+            rowLabel = labelMachine.rowLabel;
+            columnLabel = labelMachine.columnLabel;
+
+            selectFrameLabel.Text = frameLabel + ":";
+            selectGateLabel.Text = gateLabel + ":";
+            selectPanelLabel.Text = panelLabel + ":";
+            selectRowLabel.Text = "Card " + rowLabel + ":";
+            selectColumnLabel.Text = "Card " + columnLabel + ":";
+
             if (!populatingDialog) {
                 currentMachine = (Machine)machineComboBox.SelectedItem;
                 if(currentCardSlotInfo.machineName != currentMachine.name) {
                     currentCardSlotInfo.machineName = currentMachine.name;
                     modifiedMachineGatePanelFrame = true;
                 }
+
                 populateFrameComboBox();
             }
         }
@@ -726,8 +748,8 @@ namespace IBM1410SMS
             if(cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
                 !int.TryParse(cardColumnTextBox.Text, out column) || 
                 column < 1 || column > 99) {
-                MessageBox.Show("Card Column must be present, and be 1-99",
-                    "Invalid Card Column",
+                MessageBox.Show("Card " + columnLabel + " must be present, and be 1-99",
+                    "Invalid Card " + columnLabel,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 cardColumnTextBox.Focus();
                 return;

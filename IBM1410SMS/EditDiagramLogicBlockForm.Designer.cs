@@ -49,17 +49,17 @@
             this.outputModeComboBox = new System.Windows.Forms.ComboBox();
             this.label11 = new System.Windows.Forms.Label();
             this.machineComboBox = new System.Windows.Forms.ComboBox();
-            this.label12 = new System.Windows.Forms.Label();
+            this.selectFrameLabel = new System.Windows.Forms.Label();
             this.frameComboBox = new System.Windows.Forms.ComboBox();
-            this.label13 = new System.Windows.Forms.Label();
+            this.selectGateLabel = new System.Windows.Forms.Label();
             this.gateComboBox = new System.Windows.Forms.ComboBox();
             this.label14 = new System.Windows.Forms.Label();
             this.ecoTagComboBox = new System.Windows.Forms.ComboBox();
-            this.label15 = new System.Windows.Forms.Label();
+            this.selectPanelLabel = new System.Windows.Forms.Label();
             this.panelComboBox = new System.Windows.Forms.ComboBox();
-            this.label16 = new System.Windows.Forms.Label();
+            this.selectRowLabel = new System.Windows.Forms.Label();
             this.cardRowComboBox = new System.Windows.Forms.ComboBox();
-            this.label17 = new System.Windows.Forms.Label();
+            this.selectColumnLabel = new System.Windows.Forms.Label();
             this.label18 = new System.Windows.Forms.Label();
             this.cardTypeComboBox = new System.Windows.Forms.ComboBox();
             this.extendedCheckBox = new System.Windows.Forms.CheckBox();
@@ -67,6 +67,8 @@
             this.extendedBelowRadioButton = new System.Windows.Forms.RadioButton();
             this.label21 = new System.Windows.Forms.Label();
             this.cardGateComboBox = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.notesTextBox = new System.Windows.Forms.TextBox();
             this.flippedCheckBox = new System.Windows.Forms.CheckBox();
             this.label19 = new System.Windows.Forms.Label();
             this.blockConfigurationTextBox = new System.Windows.Forms.TextBox();
@@ -78,8 +80,6 @@
             this.label20 = new System.Windows.Forms.Label();
             this.editConnectionsButton = new System.Windows.Forms.Button();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.notesTextBox = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -313,15 +313,15 @@
         "");
             this.machineComboBox.SelectedIndexChanged += new System.EventHandler(this.machineComboBox_SelectedIndexChanged);
             // 
-            // label12
+            // selectFrameLabel
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(258, 190);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(39, 13);
-            this.label12.TabIndex = 47;
-            this.label12.Text = "Frame:";
-            this.toolTip1.SetToolTip(this.label12, "The Frame containing the card associated with this logic block");
+            this.selectFrameLabel.AutoSize = true;
+            this.selectFrameLabel.Location = new System.Drawing.Point(258, 190);
+            this.selectFrameLabel.Name = "selectFrameLabel";
+            this.selectFrameLabel.Size = new System.Drawing.Size(39, 13);
+            this.selectFrameLabel.TabIndex = 47;
+            this.selectFrameLabel.Text = "Frame:";
+            this.toolTip1.SetToolTip(this.selectFrameLabel, "The Frame containing the card associated with this logic block");
             // 
             // frameComboBox
             // 
@@ -335,22 +335,22 @@
             this.toolTip1.SetToolTip(this.frameComboBox, "The Frame containing the card associated with this logic block");
             this.frameComboBox.SelectedIndexChanged += new System.EventHandler(this.frameComboBox_SelectedIndexChanged);
             // 
-            // label13
+            // selectGateLabel
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(10, 225);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(33, 13);
-            this.label13.TabIndex = 52;
-            this.label13.Text = "Gate:";
-            this.toolTip1.SetToolTip(this.label13, "The Gate containing the card associated with this logic block");
+            this.selectGateLabel.AutoSize = true;
+            this.selectGateLabel.Location = new System.Drawing.Point(10, 225);
+            this.selectGateLabel.Name = "selectGateLabel";
+            this.selectGateLabel.Size = new System.Drawing.Size(33, 13);
+            this.selectGateLabel.TabIndex = 52;
+            this.selectGateLabel.Text = "Gate:";
+            this.toolTip1.SetToolTip(this.selectGateLabel, "The Gate containing the card associated with this logic block");
             // 
             // gateComboBox
             // 
             this.gateComboBox.DisplayMember = "name";
             this.gateComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.gateComboBox.FormattingEnabled = true;
-            this.gateComboBox.Location = new System.Drawing.Point(49, 222);
+            this.gateComboBox.Location = new System.Drawing.Point(62, 222);
             this.gateComboBox.Name = "gateComboBox";
             this.gateComboBox.Size = new System.Drawing.Size(54, 21);
             this.gateComboBox.TabIndex = 70;
@@ -381,15 +381,15 @@
         "e (e.g. A, B, C, D, E, ...)");
             this.ecoTagComboBox.SelectedIndexChanged += new System.EventHandler(this.ecoTagComboBox_SelectedIndexChanged);
             // 
-            // label15
+            // selectPanelLabel
             // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(10, 260);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(37, 13);
-            this.label15.TabIndex = 56;
-            this.label15.Text = "Panel:";
-            this.toolTip1.SetToolTip(this.label15, "The panel containing the card associated with this logic block");
+            this.selectPanelLabel.AutoSize = true;
+            this.selectPanelLabel.Location = new System.Drawing.Point(10, 260);
+            this.selectPanelLabel.Name = "selectPanelLabel";
+            this.selectPanelLabel.Size = new System.Drawing.Size(37, 13);
+            this.selectPanelLabel.TabIndex = 56;
+            this.selectPanelLabel.Text = "Panel:";
+            this.toolTip1.SetToolTip(this.selectPanelLabel, "The panel containing the card associated with this logic block");
             // 
             // panelComboBox
             // 
@@ -403,36 +403,38 @@
             this.toolTip1.SetToolTip(this.panelComboBox, "The panel containing the card associated with this logic block");
             this.panelComboBox.SelectedIndexChanged += new System.EventHandler(this.panelComboBox_SelectedIndexChanged);
             // 
-            // label16
+            // selectRowLabel
             // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(117, 260);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(57, 13);
-            this.label16.TabIndex = 58;
-            this.label16.Text = "Card Row:";
-            this.toolTip1.SetToolTip(this.label16, "The row of the card slot that contains the card associated with this logic block");
+            this.selectRowLabel.AutoSize = true;
+            this.selectRowLabel.Location = new System.Drawing.Point(115, 260);
+            this.selectRowLabel.Name = "selectRowLabel";
+            this.selectRowLabel.Size = new System.Drawing.Size(57, 13);
+            this.selectRowLabel.TabIndex = 58;
+            this.selectRowLabel.Text = "Card Row:";
+            this.selectRowLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.toolTip1.SetToolTip(this.selectRowLabel, "The row of the card slot that contains the card associated with this logic block");
             // 
             // cardRowComboBox
             // 
             this.cardRowComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cardRowComboBox.FormattingEnabled = true;
-            this.cardRowComboBox.Location = new System.Drawing.Point(180, 257);
+            this.cardRowComboBox.Location = new System.Drawing.Point(184, 257);
             this.cardRowComboBox.Name = "cardRowComboBox";
             this.cardRowComboBox.Size = new System.Drawing.Size(44, 21);
             this.cardRowComboBox.TabIndex = 84;
             this.toolTip1.SetToolTip(this.cardRowComboBox, "The row of the card slot that contains the card associated with this logic block");
             this.cardRowComboBox.SelectedIndexChanged += new System.EventHandler(this.cardRowComboBox_SelectedIndexChanged);
             // 
-            // label17
+            // selectColumnLabel
             // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(237, 260);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(70, 13);
-            this.label17.TabIndex = 60;
-            this.label17.Text = "Card Column:";
-            this.toolTip1.SetToolTip(this.label17, "The column of the card slot that contains the card associated with this logic blo" +
+            this.selectColumnLabel.AutoSize = true;
+            this.selectColumnLabel.Location = new System.Drawing.Point(244, 261);
+            this.selectColumnLabel.Name = "selectColumnLabel";
+            this.selectColumnLabel.Size = new System.Drawing.Size(70, 13);
+            this.selectColumnLabel.TabIndex = 60;
+            this.selectColumnLabel.Text = "Card Column:";
+            this.selectColumnLabel.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            this.toolTip1.SetToolTip(this.selectColumnLabel, "The column of the card slot that contains the card associated with this logic blo" +
         "ck");
             // 
             // label18
@@ -512,6 +514,26 @@
             this.cardGateComboBox.Size = new System.Drawing.Size(121, 21);
             this.cardGateComboBox.TabIndex = 57;
             this.toolTip1.SetToolTip(this.cardGateComboBox, "This is the gate of the specified SMS Card Type associated with this logic block");
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(10, 330);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(68, 13);
+            this.label22.TabIndex = 114;
+            this.label22.Text = "Block Notes:";
+            this.toolTip1.SetToolTip(this.label22, "Use this field to describe internal jumprers/cuts.  Comma Separated, L: for left," +
+        " R: for right  e.g.  R:AJ for a capacitor.");
+            // 
+            // notesTextBox
+            // 
+            this.notesTextBox.Location = new System.Drawing.Point(84, 327);
+            this.notesTextBox.Name = "notesTextBox";
+            this.notesTextBox.Size = new System.Drawing.Size(399, 20);
+            this.notesTextBox.TabIndex = 115;
+            this.toolTip1.SetToolTip(this.notesTextBox, "Use this field to describe internal jumprers/cuts.  Comma Separated, L: for left," +
+        " R: for right  e.g.  R:AJ for a capacitor.");
             // 
             // flippedCheckBox
             // 
@@ -621,26 +643,6 @@
             this.cardColumnTextBox.TabIndex = 85;
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(10, 330);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(68, 13);
-            this.label22.TabIndex = 114;
-            this.label22.Text = "Block Notes:";
-            this.toolTip1.SetToolTip(this.label22, "Use this field to describe internal jumprers/cuts.  Comma Separated, L: for left," +
-        " R: for right  e.g.  R:AJ for a capacitor.");
-            // 
-            // notesTextBox
-            // 
-            this.notesTextBox.Location = new System.Drawing.Point(84, 327);
-            this.notesTextBox.Name = "notesTextBox";
-            this.notesTextBox.Size = new System.Drawing.Size(399, 20);
-            this.notesTextBox.TabIndex = 115;
-            this.toolTip1.SetToolTip(this.notesTextBox, "Use this field to describe internal jumprers/cuts.  Comma Separated, L: for left," +
-        " R: for right  e.g.  R:AJ for a capacitor.");
-            // 
             // EditDiagramLogicBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -664,17 +666,17 @@
             this.Controls.Add(this.flippedCheckBox);
             this.Controls.Add(this.cardTypeComboBox);
             this.Controls.Add(this.label18);
-            this.Controls.Add(this.label17);
+            this.Controls.Add(this.selectColumnLabel);
             this.Controls.Add(this.cardRowComboBox);
-            this.Controls.Add(this.label16);
+            this.Controls.Add(this.selectRowLabel);
             this.Controls.Add(this.panelComboBox);
-            this.Controls.Add(this.label15);
+            this.Controls.Add(this.selectPanelLabel);
             this.Controls.Add(this.ecoTagComboBox);
             this.Controls.Add(this.label14);
             this.Controls.Add(this.gateComboBox);
-            this.Controls.Add(this.label13);
+            this.Controls.Add(this.selectGateLabel);
             this.Controls.Add(this.frameComboBox);
-            this.Controls.Add(this.label12);
+            this.Controls.Add(this.selectFrameLabel);
             this.Controls.Add(this.machineComboBox);
             this.Controls.Add(this.label11);
             this.Controls.Add(this.outputModeComboBox);
@@ -732,17 +734,17 @@
         private System.Windows.Forms.ComboBox outputModeComboBox;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox machineComboBox;
-        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label selectFrameLabel;
         private System.Windows.Forms.ComboBox frameComboBox;
-        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label selectGateLabel;
         private System.Windows.Forms.ComboBox gateComboBox;
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.ComboBox ecoTagComboBox;
-        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Label selectPanelLabel;
         private System.Windows.Forms.ComboBox panelComboBox;
-        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label selectRowLabel;
         private System.Windows.Forms.ComboBox cardRowComboBox;
-        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.Label selectColumnLabel;
         private System.Windows.Forms.Label label18;
         private System.Windows.Forms.ComboBox cardTypeComboBox;
         private System.Windows.Forms.CheckBox flippedCheckBox;

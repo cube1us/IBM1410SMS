@@ -69,6 +69,12 @@ namespace IBM1410SMS
         Machine currentMachine = null;
         Volumeset currentVolumeSet = null;
 
+        string frameLabel = "Frame";
+        string gateLabel = "Gate";
+        string panelLabel = "Panel";
+        string rowLabel = "Row";
+        string columnLabel = "Column";
+
         bool populatingDataGridView = false;
 
         public EditTieDownsForm() {
@@ -141,6 +147,12 @@ namespace IBM1410SMS
         private void populateTieDowns(Machine machine, Volumeset volumeSet) {
 
             populatingDataGridView = true;
+
+            frameLabel = machine.frameLabel;
+            gateLabel = machine.gateLabel;
+            panelLabel = machine.panelLabel;
+            rowLabel = machine.rowLabel;
+            columnLabel = machine.columnLabel;
 
             //  Clear out any existing data grid view
 
@@ -295,31 +307,35 @@ namespace IBM1410SMS
 
             DataGridViewTextBoxColumn frameColumn =
                 new DataGridViewTextBoxColumn();
-            frameColumn.HeaderText = "Frame";
-            frameColumn.Width = 5 * 8;
             frameColumn.Name = "frame";
+            frameColumn.Width = Math.Max(5,frameLabel.Length) * 8;
+            frameColumn.HeaderText = frameLabel;
+
 
             DataGridViewTextBoxColumn gateColumn =
                 new DataGridViewTextBoxColumn();
-            gateColumn.HeaderText = "Gate";
-            gateColumn.Width = 4 * 8;
             gateColumn.Name = "gate";
+            gateColumn.Width = Math.Max(4,gateLabel.Length) * 8;
+            gateColumn.HeaderText = gateLabel;
+
 
             DataGridViewTextBoxColumn panelColumn =
                 new DataGridViewTextBoxColumn();
-            panelColumn.HeaderText = "Panel";
+            panelColumn.HeaderText = panelLabel;
             panelColumn.Width = 5 * 8;
             panelColumn.Name = "panel";
 
-
             DataGridViewTextBoxColumn rowColumn =
                 new DataGridViewTextBoxColumn();
-            rowColumn.HeaderText = "Row";
+            rowColumn.HeaderText = rowLabel.Length <= 4 ?
+                rowLabel :  rowLabel.Substring(0,3) + ".";
             rowColumn.Width = 4 * 8;
             rowColumn.Name = "row";
+
             DataGridViewTextBoxColumn columnColumn =
                 new DataGridViewTextBoxColumn();
-            columnColumn.HeaderText = "Col.";
+            columnColumn.HeaderText = columnLabel.Length <= 4 ?
+                columnLabel : columnLabel.Substring(0, 3) + ".";
             columnColumn.Width = 4 * 8;
             columnColumn.Name = "column";
 
@@ -440,7 +456,7 @@ namespace IBM1410SMS
                 //  Gate should be numeric <= 99 or a single letter
                 if(!(int.TryParse(sv, out v) && v > 0 && v <= 99) && 
                    !(sv.Length == 1 && char.IsLetter(sv[0]))) {
-                    message = "Gate must be numeric 1-99 or a single letter";
+                    message = gateLabel + " must be numeric 1-99 or a single letter";
                     e.Cancel = true;
                 }
             }
@@ -449,7 +465,7 @@ namespace IBM1410SMS
                 //  Frame should also be numeric <= 99 or a single letter
                 if (!(int.TryParse(sv, out v) && v > 0 && v <= 99) &&
                    !(sv.Length == 1 && char.IsLetter(sv[0]))) {
-                    message = "Gate must be numeric 1-99 or a single letter";
+                    message = frameLabel + " must be numeric 1-99 or a single letter";
                     e.Cancel = true;
                 }
 
@@ -457,8 +473,9 @@ namespace IBM1410SMS
 
             else if (e.ColumnIndex == tieDownsDataGridView.Columns["panel"].Index) {
                 //  Panel should be numeric <= 99
-                if (!(int.TryParse(sv, out v) && v > 0 && v <= 99)) { 
-                    message = "Gate must be numeric 1-99 or a single letter";
+                if (!(int.TryParse(sv, out v) && v > 0 && v <= 99) &&
+                    !(sv.Length == 1 && char.IsLetter(sv[0]))) { 
+                    message = panelLabel + " must be numeric 1-99 or a single letter";
                     e.Cancel = true;
                 }
             }
@@ -466,7 +483,7 @@ namespace IBM1410SMS
             else if (e.ColumnIndex == tieDownsDataGridView.Columns["row"].Index) {
                 if(sv.Length != 1 || 
                     Array.IndexOf(Helpers.validRows,sv.ToUpper()) < 0) {
-                    message = "Row must be a valid Card Slot Row";
+                    message = rowLabel + " must be a valid Card Slot Row";
                     e.Cancel = true;
                 }
             }
@@ -474,7 +491,7 @@ namespace IBM1410SMS
             else if (e.ColumnIndex == tieDownsDataGridView.Columns["column"].Index) {
                 //  Column should be numeric <= 99
                 if (!(int.TryParse(sv, out v) && v > 0 && v <= 99)) {
-                    message = "Gate must be numeric 1-99 or a single letter";
+                    message = columnLabel + " must be numeric 1-99";
                     e.Cancel = true;
                 }
             }
@@ -528,7 +545,6 @@ namespace IBM1410SMS
 
             DataGridViewRow dgvRow;
 
-
             //  First, check any of the rows that have been modified for
             //  valid data.
 
@@ -562,8 +578,8 @@ namespace IBM1410SMS
                         "row", "column", "type", "pin"}) {
                     if(dgvRow.Cells[field] == null ||
                         dgvRow.Cells[field].FormattedValue.ToString().Length == 0) {
-                        dgvRow.ErrorText =
-                            "Field " + field + " is required.";
+                        dgvRow.ErrorText = "Field " + 
+                            tieDownsDataGridView.Columns[field].HeaderText + " is required.";
                         errors = true;
                         break;  //   On to the next row.
                     }

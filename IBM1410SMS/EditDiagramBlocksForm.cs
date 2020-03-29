@@ -232,7 +232,8 @@ namespace IBM1410SMS
 
                             //  Generalize: The following may need work for machines other than 1410
 
-                            button.Text = Helpers.getTwoCharMachineName(cardSlotInfo.machineName) +
+                            button.Text = /* Helpers.getTwoCharMachineName(cardSlotInfo.machineName)  + */
+                                currentMachine.aldMachineType +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
@@ -278,7 +279,8 @@ namespace IBM1410SMS
                                 }
                             }
 
-                            button.Text = Helpers.getTwoCharMachineName(currentMachine.name) +
+                            button.Text = /* Helpers.getTwoCharMachineName(currentMachine.name) + */
+                                currentMachine.aldMachineType +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
@@ -335,9 +337,11 @@ namespace IBM1410SMS
             string rowName = Helpers.validDiagramRows[cell.Row - 1];
             int columnNumber = Helpers.maxDiagramColumn - (cell.Column / 2);
 
+            /*
             Console.WriteLine("Button at cell " + tableLayoutPanel1.GetCellPosition(
                 clickedButton) + ", Drawing Row Name: " + rowName +
                 ", Drawing Column " + columnNumber);
+            */
 
             Diagramblock diagramBlock = diagramBlockList.Find(
                 x => x.diagramRow != null && x.diagramRow == rowName &&
@@ -370,10 +374,12 @@ namespace IBM1410SMS
 
             string rowName = Helpers.validDiagramRows[cell.Row - 1];
             int columnNumber = Helpers.maxDiagramColumn - (cell.Column / 2) + 1;
-
+        
+            /*
             Console.WriteLine("Button at cell " + tableLayoutPanel1.GetCellPosition(
                 clickedButton) + ", Drawing Row Name: " + rowName + 
                 ", Drawing Column " + columnNumber);
+            */
 
             Dotfunction dotFunction = dotFunctionList.Find(
                 x => x.diagramRowTop != null && x.diagramRowTop == rowName && 
