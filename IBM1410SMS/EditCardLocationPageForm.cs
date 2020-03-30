@@ -307,8 +307,6 @@ namespace IBM1410SMS
                 removeButton.Visible = true;
                 addApplyButton.Text = "Apply";
             }
-
-
             
             //  See if there is a matching cardLocationPage to this page yet...
             //  If not, then clear any existing card location page entity object.
@@ -900,6 +898,30 @@ namespace IBM1410SMS
             //  used to *define* a page.
 
             currentPanel = panelList[panelComboBox.SelectedIndex];
+
+            //  Find the (first) corresponding page, if any. 
+
+            List<Cardlocationpage> clpList = cardLocationPageTable.getWhere(
+                "WHERE panel = '" + currentPanel.idPanel + "'");
+
+            if(clpList == null || clpList.Count == 0) {
+                return;
+            }
+
+            //  If we have a matching page in the page list, make that one current.
+
+            Page page = pageList.Find(x => x.idPage == clpList[0].page);
+
+            //  If there is already a current page and it is different from the
+            //  one we are about to select, and if there are modifications,
+            //  confirm that the user wishes to discard them.
+
+            if(page != null && page != pageComboBox.SelectedItem &&
+                checkForModifications() == DialogResult.Cancel) {
+                return;
+            }
+
+            pageComboBox.SelectedItem = page;
         }
 
         private void ecoComboBox_TextChanged(object sender, EventArgs e) {

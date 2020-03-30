@@ -1089,6 +1089,12 @@ EditDiagramBlock(s))
    EditDiagramPageForm can all create (intentional) duplicates - and left it that way,
    at least for now.
 
+3/30/2020:  Gave up on issue #39 - providng a tie down page reference.  See later in this
+   document for reason.
+
+3/30/2020:  Issue #31:  Fixed EditCardLocationForm and EditCardLocationPageForm so that if
+   one changes the page, the panel combo box follows suit, and vice versa.
+
 ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.
@@ -1207,11 +1213,22 @@ ENTERED TODO: #38  If while defining a connection pin, a key is entered, select 
 
 ENTERED TODO: #40  See if we can spot ORDER BY clauses and surround column names with `` .
 
-ENTERED TODO: #31  When selecting a card location page to edit, selecting the gate should pre-populate
+CLOSED TODO: #41  When selecting a card location page to edit, selecting the gate should pre-populate
        the Volume and page, and vice versa.
 
-ERRATA TODO: #39  The Edit tiedown page should have a page number reference.  (It is in the database,
-       just not displayed / selectable.)
+CANCELLED TODO: #39  The Edit tiedown page should have a page number reference.  (It is in the database,
+       just not displayed / selectable.)  I looked at this, but there is no "tie down page" to use
+	   for this - nowhere to put the page name.  Abandoned.
+
+ENTERED TODO: #44  Need reports showing logic block usage by
+   1.  Logic Family (e.g., DTL)
+   2.  Card Type
+   3.  Card Location (where a particular card is used - essentially like the card location 
+       chart would have been generated)
+
+ENTERED TODO: #46  EditCardLocationPageForm, EditDiagramPageForm and EditCableEdgeConnectionForm 
+   all have a variable "pageModified" that is supposed to be set when a field value changes, 
+   but none of them are actually doing that.
 
 ERRATA:
 

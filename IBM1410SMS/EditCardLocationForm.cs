@@ -425,6 +425,20 @@ namespace IBM1410SMS
 
         private void pageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
             currentPage = (Page) pageComboBox.SelectedItem;
+
+            //  Find the corresponding card location page, and if found, find the
+            //  index of the corresponding entry in panellist, and use that to change 
+            //  the selected index in the panel combo box.
+
+            if(currentPage != null) {
+                List<Cardlocationpage> clpList = cardLocationPageTable.getWhere(
+                    "WHERE page = '" + currentPage.idPage + "'");
+                if(clpList != null && clpList.Count > 0) {
+                    int panelIndex = panelList.FindIndex(x => x.idPanel == clpList[0].panel);
+                    panelComboBox.SelectedIndex = panelIndex;
+                }
+            }
+
             populatePageECOComboBox(currentPage);
             populateDialog();
         }
@@ -438,6 +452,21 @@ namespace IBM1410SMS
 
             if (panelComboBox.SelectedIndex >= 0) {
                 currentPanel = panelList[panelComboBox.SelectedIndex];
+
+                //  Find the (first) corresponding page, if any.
+
+                List<Cardlocationpage> clpList = cardLocationPageTable.getWhere(
+                    "WHERE panel = '" + currentPanel.idPanel + "'");
+                if (clpList == null || clpList.Count == 0) {
+                    //  No such page - blank on the page combo box
+                    pageComboBox.SelectedItem = null;
+                    return;
+                }
+
+                //  If we have a matching page in the page list, make that one current.
+
+                Page page = pageList.Find(x => x.idPage == clpList[0].page);
+                pageComboBox.SelectedItem = page;
             }
             else {
                 currentPanel = null;
