@@ -282,7 +282,12 @@ namespace IBM1410SMS
             populateFrameComboBox();
             populateDialog();
             populatingDialog = false;
-            drawLogicbox();            
+            drawLogicbox();
+
+            //  I looked for a way to have the little dotted box for 
+            //  selection of a particular combo box show up before the
+            //  tab key is pressed, but was unsuccessful.  
+
         }
 
         //  Method to populate combo boxes that depend on the selections
@@ -1035,5 +1040,50 @@ namespace IBM1410SMS
                 currentDiagramBlock.notes != notesTextBox.Text
                 );
         }
+
+        //  Handler to support shortcut keys for the form to select different fields quickly
+        //  ALT+G is Gate, and so on.
+
+        private void EditDiagramLogicBlockForm_KeyDown(object sender, KeyEventArgs e) {
+
+            bool handled = false;
+
+            if (e.Alt) {
+                switch(e.KeyCode) {
+                    case Keys.E:
+                        ecoTagComboBox.Focus();
+                        handled = true;
+                        break;
+                    case Keys.F:
+                        frameComboBox.Focus();
+                        handled = true;
+                        break;
+                    case Keys.G:
+                        gateComboBox.Focus();
+                        handled = true;
+                        break;
+                    case Keys.M:
+                        machineComboBox.Focus();
+                        handled = true;
+                        break;
+                    case Keys.N:
+                        notesTextBox.Focus();
+                        handled = true;
+                        break;
+                    case Keys.T:
+                        cardTypeComboBox.Focus();
+                        handled = true;
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            if(handled) {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
     }
 }

@@ -699,9 +699,11 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.volumeTextBox);
             this.Controls.Add(this.label2);
+            this.KeyPreview = true;
             this.Name = "EditDiagramLogicBlockForm";
             this.Text = "Edit Diagram Logic Block";
             this.toolTip1.SetToolTip(this, "The Input logic level for this block (e.g. \"S\")");
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.EditDiagramLogicBlockForm_KeyDown);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

@@ -1199,9 +1199,11 @@ ENTERED TODO: #31  Signal references query.  Given LIKE style signal, show all r
 ENTERED TODO: #32  Check that a "--" (no pin) input signal comes from an edge or the same
        gate.  (Also output / to as above).
 CLOSED  TODO: #33  EditALDDiagram form, expand size of displayed comment to at least 4 lines.
-ENTERED TODO: #34  EditDiagramLogicBlock form:  Keyboard shortcuts to get to critical fields
+CLOSED  TODO: #34  EditDiagramLogicBlock form:  Keyboard shortcuts to get to critical fields
        (e.g. ALT+G to get to Gate, Alt+N to get to notes, Alt+F to get to Frame
 	   alt+M to get to Machine, Alt+T to get to type, Alt+E to get to ECO)
+	   [Fixed.  However, selection box isn't visible unless one hits tab first.  Why??]
+
 ENTERED TODO: #35  Report on cases where a given card slot contains different card types on
        different sheets.
 ENTERED TODO: #36  Report on cases where a given gate is used more than one time (exception for
