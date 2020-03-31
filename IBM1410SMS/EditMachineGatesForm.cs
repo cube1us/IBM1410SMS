@@ -65,7 +65,20 @@ namespace IBM1410SMS
             //  we started out with.
 
             machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if (lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if (currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
 
             //  Then do the same for the frame combo box, but just for the
             //  frames in this machine.  This also populates the data grid.
@@ -130,6 +143,7 @@ namespace IBM1410SMS
             frameList = frameTable.getWhere("WHERE machine='" +
                 currentMachine.idMachine + "'");
             frameComboBox.DataSource = frameList;       //  Might be empty!
+            currentFrame = null;
 
             //  Apply the appropriate labels based on the selected machine.
             //  Some machines may try and use the same label for both frames and
@@ -145,9 +159,22 @@ namespace IBM1410SMS
             Text = "Edit " + gateLabel + "s";
 
             //  Then if the machine has frames, set the current frame as
-            //  the first one.
+            //  the last one we worked with, or, if no match, the first one
+            //  in the list, if any.
 
-            currentFrame = frameList.Count > 0 ? frameList[0] : null;
+            string lastFrame = Parms.getParmValue("frame");
+            if(lastFrame.Length > 0) {
+                currentFrame = frameList.Find(x => x.idFrame.ToString() == lastFrame);
+            }
+
+            if(currentFrame == null || currentFrame.idFrame == 0) {
+                currentFrame = frameList.Count > 0 ? frameList[0] : null;
+            }
+
+            if(currentFrame != null) {
+                frameComboBox.SelectedItem = currentFrame;
+            }
+
             populateMachineGateTable(currentFrame);
         }
 
@@ -301,6 +328,11 @@ namespace IBM1410SMS
                             mg.idGate + "\n";
                     }
                 }
+
+                //  Remember the user's last selections.
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+                Parms.setParmValue("frame", currentFrame.idFrame.ToString());
 
                 db.CommitTransaction();
 

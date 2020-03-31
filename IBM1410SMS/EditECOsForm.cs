@@ -69,7 +69,20 @@ namespace IBM1410SMS
             //  we started out with.
 
             machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if (lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if (currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
 
             //  Then fill in the ECO table with entries for that machine.
 
@@ -316,6 +329,10 @@ namespace IBM1410SMS
                             eco.idECO + "\n";
                     }
                 }
+
+                //  Remember the last machine we worked with, for use in later dialogs
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
 
                 db.CommitTransaction();
 

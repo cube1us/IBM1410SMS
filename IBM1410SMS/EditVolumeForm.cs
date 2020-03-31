@@ -44,6 +44,8 @@ namespace IBM1410SMS
         Volumeset currentVolumeSet = null;
 
         public EditVolumeForm() {
+
+            int selectedVolumeSet = 0;
             InitializeComponent();
 
 
@@ -56,19 +58,28 @@ namespace IBM1410SMS
 
             //  Build up the combo box entries.  We don't just use the
             //  list as a datasource becuase we want other context in the
-            //  pull down.
+            //  pull down.  
 
+            //  While we are at it, look for the last volume set we worked with.
+
+            string lastVolumeSet = Parms.getParmValue("volume set");
+
+            int index = 0;
             foreach (Volumeset volumeset in volumeSetList) {
                 volumeSetComboBox.Items.Add("Machine Type: " + volumeset.machineType +
                     (volumeset.machineSerial.ToString().Length != 0 ?
                         " S/N: " + volumeset.machineSerial : "") +
                     " ID: " + volumeset.idVolumeSet);
+                if(volumeset.idVolumeSet.ToString().Equals(lastVolumeSet)) {
+                    selectedVolumeSet = index;
+                }
+                ++index;
             }
 
-            //  Select the first entry by default.
+            //  Select the appropriate entry.
 
-            volumeSetComboBox.SelectedIndex = 0;
-            currentVolumeSet = volumeSetList[0];
+            volumeSetComboBox.SelectedIndex = selectedVolumeSet;
+            currentVolumeSet = volumeSetList[selectedVolumeSet];
 
             //  Similarly, initialize the volume combo box with volumes from
             //  the selected volume set.
@@ -240,6 +251,10 @@ namespace IBM1410SMS
                             v.idVolume + "\n";
                     }
                 }
+
+                //  Remember the volume set we updated, to select it in later dialogs.
+
+                Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
 
                 db.CommitTransaction();
 

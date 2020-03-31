@@ -57,7 +57,20 @@ namespace IBM1410SMS
             cardLocationTable = db.getCardLocationTable();
 
             machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if(lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString().Equals(lastMachine));
+            }
+
+            if(currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
 
             //  Then fill the feature table with entries for that machine
 
@@ -202,6 +215,8 @@ namespace IBM1410SMS
                             f.idFeature + "\n";
                     }
                 }
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
 
                 db.CommitTransaction();
 

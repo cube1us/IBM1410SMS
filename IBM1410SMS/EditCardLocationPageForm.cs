@@ -97,13 +97,38 @@ namespace IBM1410SMS
             //  we started out with.
 
             machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if (lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if (currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
 
             //  Same for the volume set list - which is not tied to machine
 
             volumeSetList = volumeSetTable.getAll();
+
             volumeSetComboBox.DataSource = volumeSetList;
-            currentVolumeSet = volumeSetList[0];
+
+            string lastVolumeSet = Parms.getParmValue("volume set");
+            if (lastVolumeSet.Length > 0) {
+                currentVolumeSet = volumeSetList.Find(
+                    x => x.idVolumeSet.ToString() == lastVolumeSet);
+            }
+
+            if (currentVolumeSet == null || currentVolumeSet.idVolumeSet == 0) {
+                currentVolumeSet = volumeSetList[0];
+            }
+
+            volumeSetComboBox.SelectedItem = currentVolumeSet;
 
             // Then populate the other combo boxes
 
@@ -116,11 +141,12 @@ namespace IBM1410SMS
 
         private void populateVolumeComboBox(Volumeset volumeSet, Machine machine) {
 
+            currentVolume = null;
+            
             //  If there is no volume set then this combo box must be empty
             //  as well.
 
             if (volumeSet == null) {
-                currentVolume = null;
                 volumeComboBox.Items.Clear();
             }
             else {
@@ -134,7 +160,21 @@ namespace IBM1410SMS
                     currentVolume = null;
                     volumeComboBox.Items.Clear();
                 }
+
                 volumeComboBox.DataSource = volumeList;
+
+                //  Retrieve the last volume we worked with, and select it, if
+                //  it is relevant.
+
+                string lastVolume = Parms.getParmValue("volume");
+                if(lastVolume.Length > 0) {
+                    currentVolume = volumeList.Find(x => x.idVolume.ToString() == lastVolume);
+                }
+                if(currentVolume == null || currentVolume.idVolume == 0) {
+                    currentVolume = volumeList[0];
+                }
+                volumeComboBox.SelectedItem = currentVolume;
+
             }
 
             //  Even if there are no volumes, populate the page combo box.
@@ -147,12 +187,13 @@ namespace IBM1410SMS
 
         private void populatePageComboBox(Machine machine, Volume volume) {
 
+            currentPage = null;
+
             //  If there is no machine or no volume, then this combo box
             //  has to be left empty.
 
             if(machine == null || volume == null) {
                 pageList = new List<Page>();
-                currentPage = null;
                 currentCardLocationPage = null;
                 pageComboBox.Items.Clear();
                 return;
@@ -171,7 +212,11 @@ namespace IBM1410SMS
             //  spoken for as diagram pages or cable/edge connection pages
             //  remain in the list - they may become diagram pages via this form).
 
+            //  Also, while we are at it, if we find a page that matches the last
+            //  page we used, select it.
+
             List<Page> pagesToRemoveList = new List<Page>();
+
             foreach(Page p in pageList) {
                 List<Diagrampage> diagramPageList = diagramPageTable.getWhere(
                     "WHERE diagrampage.page='" + p.idPage + "'");
@@ -190,19 +235,29 @@ namespace IBM1410SMS
                 pageList.Remove(p);
             }
 
-            //  If the list is not empty, set the current page (and the
-            //  dialog, later) to the first entry. 
+            pageComboBox.DataSource = pageList;
 
             if (pageList.Count > 0) {
                 currentPage = pageList[0];
+                //  If the list is not empty, set the current page (and the
+                //  dialog, later) to the one we last used, or, if there is no match,
+                //  to the first page in the list.
+
+                string lastPage = Parms.getParmValue("page");
+                if (lastPage.Length > 0) {
+                    currentPage = pageList.Find(x => x.idPage.ToString() == lastPage);
+                }
+                if (currentPage == null || currentPage.idPage == 0) {
+                    currentPage = pageList[0];
+                }
+                pageComboBox.SelectedItem = currentPage;
             }
             else {
                 //  Otherwise clear the dialog.
                 currentPage = null;
                 currentCardLocationPage = null;
+                pageComboBox.SelectedIndex = -1;
             }
-
-            pageComboBox.DataSource = pageList;
 
             //  Sheets defaults to 1.
 
@@ -221,6 +276,8 @@ namespace IBM1410SMS
             panelList = new List<Panel>();
             panelComboBox.Items.Clear();
             currentPanel = null;
+            int selectedPanel = 0;
+
 
             Table<Frame> frameTable = db.getFrameTable();
             Table<Machinegate> machineGateTable = db.getMachineGateTable();
@@ -229,8 +286,14 @@ namespace IBM1410SMS
             //  building the combo box as text, and keep a list of panel
             //  entities that match to use later.
 
+            //  While we are at it, see if any of them match the last panel we
+            //  we used, and if so, select it.
+
             //  This could have been a join -- I *know*.
 
+            string lastPanel = Parms.getParmValue("panel");
+
+            int index = 0;
             foreach(Frame frame in
                 frameTable.getWhere("" + "WHERE machine='" + 
                     machine.idMachine + "' ORDER BY frame.name")) {
@@ -242,6 +305,10 @@ namespace IBM1410SMS
                         panelList.Add(panel);
                         panelComboBox.Items.Add(frameLabel + ": " + frame.name + " " +
                             gateLabel + ": " + gate.name + " " + panelLabel + ": " + panel.panel);
+                        if(panel.idPanel.ToString() == lastPanel) {
+                            selectedPanel = index;
+                        }
+                        ++index;
                     }
                 }
             }
@@ -250,8 +317,8 @@ namespace IBM1410SMS
             //  panel in the list.
 
             if(panelList.Count > 0) {
-                panelComboBox.SelectedIndex = 0;
-                currentPanel = panelList[0];
+                panelComboBox.SelectedIndex = selectedPanel;
+                currentPanel = panelList[selectedPanel];
             }
 
             //  Sheets defaults to 1.
@@ -732,6 +799,8 @@ namespace IBM1410SMS
 
             message = "";
 
+            db.BeginTransaction();
+
             //  First work on the ECO and previous ECO, which may need to be
             //  added to the database.  (We do NOT remove any - there may be
             //  other references.  Leave that to the EditECOsForm.
@@ -870,6 +939,13 @@ namespace IBM1410SMS
                     currentPage.idPage + " ) updated.\n" + message;
 
             }
+            
+            //  Save some of the dialog selections for later use in this and other
+            //  dialogs.
+
+            saveSettings();
+
+            db.CommitTransaction();
 
             MessageBox.Show(message, "Add/Updates applied",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1039,10 +1115,24 @@ namespace IBM1410SMS
                 return;
             }
 
+            //  Remember some values for later use for this and other dialogs.
+
+            saveSettings();
+
             db.CommitTransaction();
 
             MessageBox.Show("Purge completed.", "Purge Completed",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        //  Method to remember some values for later use for this and other dialogs
+
+        private void saveSettings() {
+            Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+            Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
+            Parms.setParmValue("volume", currentVolume.idVolume.ToString());
+            Parms.setParmValue("page", currentPage.idPage.ToString());
+            Parms.setParmValue("panel", currentPanel.idPanel.ToString());
         }
     }
 }

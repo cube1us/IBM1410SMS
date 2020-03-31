@@ -60,7 +60,17 @@ namespace IBM1410SMS
             //  we started out with.
 
             machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+            string lastMachine = Parms.getParmValue("machine");
+            if(lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if(currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
 
             //  Then fill in the frame table with entries for that machine
 
@@ -261,6 +271,10 @@ namespace IBM1410SMS
                             f.idFrame + "\n";
                     }
                 }
+
+                //  Remember the machine we last worked with.
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
 
                 db.CommitTransaction();
 

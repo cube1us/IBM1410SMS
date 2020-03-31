@@ -89,6 +89,21 @@ namespace IBM1410SMS
 
             machineComboBox.DataSource = machineList;
 
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if (lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if (currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
+
+
             //  Then do the same for the frame combo box, but just for the
             //  frames in this machine.  This also populates the machine
             //  gate combo box and teh data grid.
@@ -110,7 +125,23 @@ namespace IBM1410SMS
             //  Then if the machine has frames, set the current frame as
             //  the first one.
 
-            currentFrame = frameList.Count > 0 ? frameList[0] : null;
+            //  Then if the machine has frames, set the current frame as
+            //  the last one we worked with, or, if no match, the first one
+            //  in the list.
+
+            string lastFrame = Parms.getParmValue("frame");
+            if (lastFrame.Length > 0) {
+                currentFrame = frameList.Find(x => x.idFrame.ToString() == lastFrame);
+            }
+
+            if (currentFrame == null || currentFrame.idFrame == 0) {
+                currentFrame = frameList.Count > 0 ? frameList[0] : null;
+            }
+
+            if (currentFrame != null) {
+                frameComboBox.SelectedItem = currentFrame;
+            }
+
             populateMachineGateComboBox(currentFrame);
         }
 
@@ -120,11 +151,12 @@ namespace IBM1410SMS
 
         private void populateMachineGateComboBox(Frame frame) {
 
+            currentMachineGate = null;
+
             //  If the frame is null, then set the current gate to null, too
 
             if (frame == null) {
                 machineGateList = new List<Machinegate>();
-                currentMachineGate = null;
             }
             else {
                 machineGateList = machineGateTable.getWhere("WHERE frame='" +
@@ -133,9 +165,21 @@ namespace IBM1410SMS
             }
 
             //  Then if the frame has gates, set the current gate as
-            //  the first one.
+            //  the last one we worked with, or, if no match, the first one
+            //  in the list, if any.
 
-            currentMachineGate = machineGateList.Count > 0 ? machineGateList[0] : null;
+            string lastGate = Parms.getParmValue("machinegate");
+            if(lastGate.Length > 0) {
+                currentMachineGate = machineGateList.Find(
+                    x => x.idGate.ToString() == lastGate);
+            }
+            if(currentMachineGate == null || currentMachineGate.idGate == 0) {
+                currentMachineGate = machineGateList.Count > 0 ? machineGateList[0] : null;
+            }
+
+            if(currentMachineGate != null) {
+                machineGateComboBox.SelectedItem = currentMachineGate;
+            }
 
             //  Finally, populate the data grid table appropriately (or not)
 
@@ -253,7 +297,12 @@ namespace IBM1410SMS
 
             //  Change the current gate...
 
-            currentMachineGate = machineGateList[machineGateComboBox.SelectedIndex];
+            if(machineGateComboBox.SelectedIndex >= 0) {
+                currentMachineGate = machineGateList[machineGateComboBox.SelectedIndex];
+            }
+            else {
+                currentMachineGate = null;
+            }
             populatePanelTable(currentMachineGate);
         }
 
@@ -635,6 +684,12 @@ namespace IBM1410SMS
                     }   //  End if new/modified
 
                 }   //  End looking through panel row/column entries
+
+                //  Remember the user's last selections.
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+                Parms.setParmValue("frame", currentFrame.idFrame.ToString());
+                Parms.setParmValue("machinegate", currentMachineGate.idGate.ToString());
 
                 db.CommitTransaction();
 

@@ -93,6 +93,7 @@ namespace IBM1410SMS
 
         bool bottomNotesModified = false;
         bool populatingDataGridView = false;
+        bool populatingDialog = false;
 
         string frameLabel = "Frame";
         string gateLabel = "Gate";
@@ -127,15 +128,35 @@ namespace IBM1410SMS
             rowComboBox.DataSource = null;
             columnComboBox.DataSource = null;
 
+            //  Tell the rest that this is the first time through 
+            //  populating the dialog so that the selectedIndexChanged methods
+            //  don't get into a snit with the page dialog box trying to update
+            //  the panel and vice-versa.
+
+            populatingDialog = true;
+
             //  The machine combo box is static, so we can fill that one out now.
 
             machineList = machineTable.getAll();
+            machineComboBox.DataSource = machineList;
 
             //  Fill in the machine combo box, and remember which machine
             //  we started out with.
 
-            machineComboBox.DataSource = machineList;
-            currentMachine = machineList[0];
+            //  Retrieve the last machine we worked with, and select it, if any.
+
+            string lastMachine = Parms.getParmValue("machine");
+            if (lastMachine.Length > 0) {
+                currentMachine = machineList.Find(
+                    x => x.idMachine.ToString() == lastMachine);
+            }
+
+            if (currentMachine == null || currentMachine.idMachine == 0) {
+                currentMachine = machineList[0];
+            }
+
+            machineComboBox.SelectedItem = currentMachine;
+
             populateFeatureComboBox(currentMachine);
             populatePanelComboBox(currentMachine);
 
@@ -147,9 +168,14 @@ namespace IBM1410SMS
 
             //  Same for the volume list - which is not tied to machine
 
+            int selectedVolume = 0;
+            string lastVolume = Parms.getParmValue("volume");
+
             volumeSetList = volumeSetTable.getWhere("ORDER BY machineType");
 
             volumeList = new List<Volume>();
+
+            int index = 0;
             foreach (Volumeset vs in volumeSetList) {
                 List<Volume> tempVolumeList = volumeTable.getWhere(
                     "WHERE volume.set='" + vs.idVolumeSet + "' ORDER BY volume.order");
@@ -157,12 +183,16 @@ namespace IBM1410SMS
                     volumeList.Add(v);
                     volumeComboBox.Items.Add("Vol. Set " + vs.machineType +
                         ", Vol. " + v.name);
+                    if(v.idVolume.ToString() == lastVolume) {
+                        selectedVolume = index;
+                    }
+                    ++index;
                 }
             }
 
             if (volumeList.Count > 0) {
-                currentVolume = volumeList[0];
-                volumeComboBox.SelectedIndex = 0;
+                currentVolume = volumeList[selectedVolume];
+                volumeComboBox.SelectedIndex = selectedVolume;
             }
             else {
 
@@ -175,7 +205,11 @@ namespace IBM1410SMS
             //  separate methods, because they also get called when
             //  selections change.
 
+            //  Set a flag so that the pageComboBox and the panelComboBox,
+            //  which can affect each other, don't, for now.
+
             populatePageComboBox(currentMachine, currentVolume);
+            populatingDialog = false;
         }
 
         private void populatePageComboBox(Machine machine, Volume volume) {
@@ -245,16 +279,33 @@ namespace IBM1410SMS
 
             pageComboBox.DisplayMember = "name";
 
-            //  If the list is not empty, set the current page to the first entry.
+            //  If there are pages, set the current page as the last one we worked
+            //  with, or, if no match, the first one in the list, if any.
 
             if (pageList.Count > 0) {
+
                 currentPage = pageList[0];
+
+                string lastPage = Parms.getParmValue("page");
+                currentPage = null;
+
+                if (lastPage.Length > 0) {
+                    currentPage = pageList.Find(x => x.idPage.ToString() == lastPage);
+                }
+
+                if (currentPage == null || currentPage.idPage == 0) {
+                    currentPage = pageList.Count > 0 ? pageList[0] : null;
+                }
+                if (currentPage != null) {
+                    pageComboBox.SelectedItem = currentPage;
+                }
+                else {
+                    pageComboBox.SelectedItem = pageList[0];
+                }
             }
             else {
                 currentPage = null;
             }
-
-            //  At this point is it handy to find the matching 
 
             populatePageECOComboBox(currentPage);
             populateDialog();
@@ -286,12 +337,16 @@ namespace IBM1410SMS
         
         private void populatePanelComboBox(Machine machine) {
 
+            int selectedPanel = 0;
+            string lastPanel = Parms.getParmValue("panel");
+
             //  Clear out the existing combo box entries and the panel list.
 
             panelComboBox.Items.Clear();
             panelComboBox.ResetText();
             panelList = new List<Panel>();
-             
+
+            int index = 0;
             List<Frame> frameList = frameTable.getWhere(
                 "WHERE machine='" + machine.idMachine + "' ORDER BY frame.name");
             foreach(Frame f in frameList) {
@@ -304,13 +359,17 @@ namespace IBM1410SMS
                         panelList.Add(p);
                         panelComboBox.Items.Add(frameLabel + ": " + f.name +
                             ", " + gateLabel + ": " + g.name + ", " + panelLabel + ": " + p.panel);
+                        if(p.idPanel.ToString() == lastPanel) {
+                            selectedPanel = index;
+                        }
+                        ++index;
                     } 
                 }
             }
 
             if (panelList.Count > 0) {
-                panelComboBox.SelectedIndex = 0;
-                currentPanel = panelList[0];
+                panelComboBox.SelectedIndex = selectedPanel;
+                currentPanel = panelList[selectedPanel];
             }
             else {
                 currentPanel = null;
@@ -430,7 +489,7 @@ namespace IBM1410SMS
             //  index of the corresponding entry in panellist, and use that to change 
             //  the selected index in the panel combo box.
 
-            if(currentPage != null) {
+            if(currentPage != null && !populatingDialog) {
                 List<Cardlocationpage> clpList = cardLocationPageTable.getWhere(
                     "WHERE page = '" + currentPage.idPage + "'");
                 if(clpList != null && clpList.Count > 0) {
@@ -463,10 +522,13 @@ namespace IBM1410SMS
                     return;
                 }
 
-                //  If we have a matching page in the page list, make that one current.
+                //  If we have a matching page in the page list, make that one current,
+                //  unless we are doing the initial dialog population.
 
-                Page page = pageList.Find(x => x.idPage == clpList[0].page);
-                pageComboBox.SelectedItem = page;
+                if (!populatingDialog) {
+                    Page page = pageList.Find(x => x.idPage == clpList[0].page);
+                    pageComboBox.SelectedItem = page;
+                }
             }
             else {
                 currentPanel = null;
@@ -1796,6 +1858,11 @@ namespace IBM1410SMS
             }
 
             // Tell the user what we did
+
+            Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+            Parms.setParmValue("volume", currentVolume.idVolume.ToString());
+            Parms.setParmValue("page", currentPage.idPage.ToString());
+            Parms.setParmValue("panel", currentPanel.idPanel.ToString());
 
             MessageBox.Show(message, "Updates Completed: \n",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
