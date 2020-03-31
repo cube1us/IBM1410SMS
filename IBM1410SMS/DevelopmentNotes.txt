@@ -1099,9 +1099,9 @@ ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where th
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.
 
-ENTERED #2 TODO:  When adding a new Edge Connector page, the first page gets selected after an add.
+CLOSED  #2 TODO:  When adding a new Edge Connector page, the first page gets selected after an add.
 If possible it would be better to select the new page, instead.  (Same issue probably
-exists for diagram pages and card location pages)
+exists for diagram pages and card location pages -- and indeed that was the case)
 
 ENTERED #3 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
 How might it have gotten there?

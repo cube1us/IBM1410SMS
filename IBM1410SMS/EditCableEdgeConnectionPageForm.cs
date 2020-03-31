@@ -817,8 +817,18 @@ namespace IBM1410SMS
 
             if (doUpdate) {
                 if (changePageComboBox) {
+
+                    //  We have to save the new page, because populatePageComboBox builds
+                    //  a nwe list, and sets the selected item. so save it.
+
+                    Page newPage = currentPage;
                     populatingDialog = true;
                     populatePageComboBox(currentMachine, currentVolume);
+
+                    //  Then select the new page using its key.  
+                    pageComboBox.SelectedItem = pageList.Find(
+                        x => x.idPage == newPage.idPage);
+
                     populatingDialog = false;
                 }
                 else {

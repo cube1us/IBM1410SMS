@@ -622,13 +622,14 @@ namespace IBM1410SMS
             currentCardLocationPage = null;
 
             //  Repopulate the page combo box and the current page dialog
+            //  This will select the first entry in the remaining list for the combo box
 
             populatePageComboBox(currentMachine, currentVolume);
 
             //  Then reset the form.
 
-            currentPage = null;
-            currentCardLocationPage = null;
+            //  currentPage = null;
+            //  currentCardLocationPage = null;
             populateDialog(currentPage);
             pageModified = false;
 
@@ -876,8 +877,19 @@ namespace IBM1410SMS
             //  If we added a new page or changed a page name,
             //  repopulate the page combo box.
 
+            //  Also, in that case, arrange to have it selected as well.
+
             if(changePageComboBox) {
+
+                //  First, we have to save the current page, because populatePageComboBox
+                //  completely rebuilds the list, and sets currentPage to the first entry
+
+                Page newPage = currentPage;
                 populatePageComboBox(currentMachine, currentVolume);
+
+                //  Then select the new page or updated page
+
+                pageComboBox.SelectedItem = pageList.Find(x => x.idPage == newPage.idPage);
             }
 
             //  If we changed the ECO database, then update its combo boxes
@@ -886,20 +898,30 @@ namespace IBM1410SMS
 
             //  Then clear out the data fields on the page and redisplay it.
 
-            currentPage = null;
-            currentCardLocationPage = null;
+            // currentPage = null;
+            // currentCardLocationPage = null;
+
             populateDialog(currentPage);
             pageModified = false;
         }
 
         private void panelComboBox_SelectedIndexChanged(object sender, EventArgs e) {
 
-            //  All we do here is set the current panel, since it is not
-            //  used to *define* a page.
+            //  The user might have just selected a new machine, that caused a rebuild
+            //  of the associated list.  In that case, ignore this event - the currentPanel
+            //  will be set during that process.
+
+            if(panelList == null || panelComboBox.SelectedIndex < 0) {
+                currentPanel = null;
+                return;
+            }
+
+            //  Make the new selected panel current.
 
             currentPanel = panelList[panelComboBox.SelectedIndex];
 
-            //  Find the (first) corresponding page, if any. 
+            //  Find the (first) corresponding page, if any, rather than leaving
+            //  an arbitrary page selected, if we can.
 
             List<Cardlocationpage> clpList = cardLocationPageTable.getWhere(
                 "WHERE panel = '" + currentPanel.idPanel + "'");

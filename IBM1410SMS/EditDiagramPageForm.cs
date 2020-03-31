@@ -1068,12 +1068,24 @@ namespace IBM1410SMS
                 db.CommitTransaction();
             }
 
-            //  Update the page combo box if we added a page...
+            //  Update the page combo box if we added a page, and arrange to have it
+            //  selected, aw well.
 
             if (doUpdate) {
                 if (changePageComboBox) {
+
+                    //  Remember the current (possibly new) page, because populatePageComboBox
+                    //  completely rebuilds the list, and sets currentPage to the first entry.
+
+                    Page newPage = currentPage;
+
                     populatingDialog = true;
                     populatePageComboBox(currentMachine, currentVolume);
+
+                    //  Then select the new or updated page.
+
+                    pageComboBox.SelectedItem = pageList.Find(x => x.idPage == newPage.idPage);
+
                     populatingDialog = false;
                 }
                 else {
