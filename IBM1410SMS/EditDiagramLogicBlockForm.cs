@@ -467,7 +467,7 @@ namespace IBM1410SMS
                 outputModeComboBox.SelectedItem = templevel;
             }
             if (templevel == null) {
-                outputModeComboBox.SelectedItem = inputLogicLevelList[0];
+                outputModeComboBox.SelectedItem = outputLogicLevelList[0];
             }
 
             index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
