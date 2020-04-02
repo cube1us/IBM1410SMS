@@ -82,6 +82,8 @@ namespace IBM1410SMS
         public EditDiagramPageForm() {
             InitializeComponent();
 
+            populatingDialog = true;
+
             machineTable = db.getMachineTable();
             volumeSetTable = db.getVolumeSetTable();
             volumeTable = db.getVolumeTable();
@@ -138,6 +140,8 @@ namespace IBM1410SMS
             // Then populate the other combo boxes
 
             populateVolumeComboBox(currentVolumeSet, currentMachine);
+
+            populatingDialog = false;
         }
 
         //  Method to fill in the volume combo box
