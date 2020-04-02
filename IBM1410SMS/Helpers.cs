@@ -319,6 +319,7 @@ namespace IBM1410SMS
                     Diagrampage newDiagram = new Diagrampage();
                     newDiagram.idDiagramPage = IdCounter.incrementCounter();
                     newDiagram.page = pageKey;
+                    newDiagram.noHDLGeneration = 0;
                     diagramPageTable.insert(newDiagram);
                     message += " Database ID=" + newDiagram.idDiagramPage;
                     diagramKey = newDiagram.idDiagramPage;

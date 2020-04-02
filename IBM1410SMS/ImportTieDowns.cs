@@ -361,6 +361,7 @@ namespace IBM1410SMS
                     Diagrampage dp = new Diagrampage();
                     dp.idDiagramPage = IdCounter.incrementCounter();
                     dp.page = pageKey;
+                    dp.noHDLGeneration = 0;
                     diagramPageTable.insert(dp);
                     logMessage("Input Line " + lineNumber +
                         " Added Diagram page " + logicSource +

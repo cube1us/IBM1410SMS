@@ -633,6 +633,7 @@ namespace IBM1410SMS
                         else {
                             newDiagramPage = new Diagrampage();
                             newDiagramPage.idDiagramPage = IdCounter.getCounter();
+                            newDiagramPage.noHDLGeneration = 0;
                             newDiagramPage.page = pageList[0].idPage;
                             diagramPageTable.insert(newDiagramPage);
                             logMessage("Input Line " + lineNumber + 
@@ -683,6 +684,7 @@ namespace IBM1410SMS
                     newDiagramPage = new Diagrampage();
                     newDiagramPage.idDiagramPage = IdCounter.incrementCounter();
                     newDiagramPage.page = newPage.idPage;
+                    newDiagramPage.noHDLGeneration = 0;
                     diagramPageTable.insert(newDiagramPage);
                     sheetKey = newDiagramPage.idDiagramPage;
 

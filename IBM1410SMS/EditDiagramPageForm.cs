@@ -351,6 +351,8 @@ namespace IBM1410SMS
 
             if(currentDiagramPage != null) {
 
+                noHDLGenerationCheckBox.Checked = (currentDiagramPage.noHDLGeneration == 1);
+
                 diagramEcoTagList = diagramEcoTagTable.getWhere(
                     "WHERE diagramPage='" + currentDiagramPage.idDiagramPage +
                     "' ORDER BY diagramecotag.name");
@@ -399,8 +401,6 @@ namespace IBM1410SMS
                 sheetEdgeDataGridView.Columns["signalName"].Width = 30 * 8;
                 sheetEdgeDataGridView.Columns["signalName"].DefaultCellStyle.Font =                  
                     new Font("Courier New", 10);
-
-
 
                 //  The rest of the columns are special, as combo boxes
                 //  or dates.
@@ -820,7 +820,6 @@ namespace IBM1410SMS
         }
 
 
-
         private void addApplyButton_Click(object sender, EventArgs e) {
 
             bool errors = false;
@@ -944,6 +943,7 @@ namespace IBM1410SMS
             currentPage.stamp = stampTextBox.Text;
             currentPage.comment = commentTextBox.Text;
             currentDiagramPage.page = currentPage.idPage;
+            currentDiagramPage.noHDLGeneration = (noHDLGenerationCheckBox.Checked ? 1 : 0);
 
             //  Start a transaction...
 

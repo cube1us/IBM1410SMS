@@ -56,6 +56,7 @@
             this.editDiagramBlocksButton = new System.Windows.Forms.Button();
             this.commentTextBox = new System.Windows.Forms.TextBox();
             this.label10 = new System.Windows.Forms.Label();
+            this.noHDLGenerationCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.ecosDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.sheetEdgeDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -367,11 +368,22 @@
             this.label10.TabIndex = 131;
             this.label10.Text = "Comment:";
             // 
+            // noHDLGenerationCheckBox
+            // 
+            this.noHDLGenerationCheckBox.AutoSize = true;
+            this.noHDLGenerationCheckBox.Location = new System.Drawing.Point(452, 159);
+            this.noHDLGenerationCheckBox.Name = "noHDLGenerationCheckBox";
+            this.noHDLGenerationCheckBox.Size = new System.Drawing.Size(120, 17);
+            this.noHDLGenerationCheckBox.TabIndex = 132;
+            this.noHDLGenerationCheckBox.Text = "No HDL Generation";
+            this.noHDLGenerationCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditDiagramPageForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(850, 677);
+            this.Controls.Add(this.noHDLGenerationCheckBox);
             this.Controls.Add(this.label10);
             this.Controls.Add(this.commentTextBox);
             this.Controls.Add(this.editDiagramBlocksButton);
@@ -442,5 +454,6 @@
         private System.Windows.Forms.Button editDiagramBlocksButton;
         private System.Windows.Forms.TextBox commentTextBox;
         private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.CheckBox noHDLGenerationCheckBox;
     }
 }

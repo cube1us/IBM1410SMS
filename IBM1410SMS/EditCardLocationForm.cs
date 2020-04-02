@@ -1630,6 +1630,7 @@ namespace IBM1410SMS
                     Diagrampage newDiagramPage = new Diagrampage();
                     newDiagramPage.idDiagramPage = IdCounter.incrementCounter();
                     newDiagramPage.page = page.idPage;
+                    newDiagramPage.noHDLGeneration = 0;
                     diagramPageTable.insert(newDiagramPage);
                     message += "Added corresponding diagram page, " +
                         "Database ID=" + newDiagramPage.idDiagramPage + "\n";
@@ -1807,6 +1808,7 @@ namespace IBM1410SMS
                                 MessageBoxButtons.OK, MessageBoxIcon.Error);
                             tempDiagramPage = new Diagrampage();
                             tempDiagramPage.idDiagramPage = 0;
+                            tempDiagramPage.noHDLGeneration = 0;
                         }
                     }
 
