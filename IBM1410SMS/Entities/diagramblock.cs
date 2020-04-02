@@ -31,5 +31,6 @@ namespace IBM1410SMS
 		[MyColumn] public string blockConfiguration { get; set; }
 		[MyColumn] public int flipped { get; set; }
 		[MyColumn] public string notes { get; set; }
+		[MyColumn] public int noHDLGeneration { get; set; }
 	}
 }

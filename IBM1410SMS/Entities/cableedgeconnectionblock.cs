@@ -26,5 +26,7 @@ namespace IBM1410SMS
 		[MyColumn] public string destNote { get; set; }
 		[MyColumn] public int Destination { get; set; }
 		[MyColumn] public int explicitDestination { get; set; }
+		[MyColumn] public int doNotCrossCheckConnection { get; set; }
+		[MyColumn] public int doNotCrossCheckEdgeConnector { get; set; }
 	}
 }
