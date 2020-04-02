@@ -100,9 +100,16 @@ namespace IBM1410SMS
             //  the associated volume.
             //  This is also a fixed list, so we only need to do it once.
 
+            //  While we are at it, if we find a volume that matches the last
+            //  SMS volume used, select it.
+
+            string lastVolume = Parms.getParmValue("SMS volume");
+            int selectedVolume = 0;
 
             volumeList = new List<Volume>();
             volumeSetList = volumeSetTable.getWhere("ORDER BY machineType");
+
+            int index = 0;
             foreach(Volumeset vs in volumeSetList) {
                 List<Volume> tempVolumeList = volumeTable.getWhere(
                     "WHERE volume.set='" + vs.idVolumeSet + "' ORDER BY volume.order");
@@ -112,13 +119,17 @@ namespace IBM1410SMS
                         "Vol. Set " + vs.machineType + ", Vol. " + v.name);
                     updatedVolumeComboBox.Items.Add(
                         "Vol. Set " + vs.machineType + ", Vol. " + v.name);
+                    if(v.idVolume.ToString() == lastVolume) {
+                        selectedVolume = index;
+                    }
+                    ++index;
                 }
             }
 
             if(volumeList.Count > 0) {
-                currentVolume = volumeList[0];
-                volumeComboBox.SelectedIndex = 0;
-                updatedVolumeComboBox.SelectedIndex = 0;
+                currentVolume = volumeList[selectedVolume];
+                volumeComboBox.SelectedIndex = selectedVolume;
+                updatedVolumeComboBox.SelectedIndex = selectedVolume;
             }
             else {
 
@@ -126,8 +137,6 @@ namespace IBM1410SMS
 
                 currentVolume = null;
             }
-
-
 
             //  Then populate the Card Type combo box (and the rest of the dialog)
             //  Allow it to pick the first card type in the list for this
@@ -166,8 +175,16 @@ namespace IBM1410SMS
             //  where the combo box has text entries, and we use the
             //  current index to match up with the cardTypeList.
 
+            int index = 0;
+            int cbSelectedCardType = 0;
+            string lastCardType = Parms.getParmValue("SMS card type");
+
             foreach(Cardtype ct in cardTypeList) {
                 cardTypeComboBox.Items.Add(ct.type + ", Part No." + ct.part);
+                if(ct.idCardType.ToString() == lastCardType) {
+                    cbSelectedCardType = index;
+                }
+                ++index;
             }
 
             //  If the list is not empty, set the current card type (and
@@ -183,8 +200,11 @@ namespace IBM1410SMS
                                 i => i.idCardType == selectedCardType.idCardType));
                 }
                 else {
-                    currentCardType = cardTypeList[0];
-                    cardTypeComboBox.SelectedIndex = 0;
+                    //  Null card type, so select the one from the parameter table
+                    //  (or the first one, if no matchw as found.)
+
+                    currentCardType = cardTypeList[cbSelectedCardType];
+                    cardTypeComboBox.SelectedIndex = cbSelectedCardType;
                 }
                 cardTypeComboBox.Refresh();
             }
@@ -1058,6 +1078,11 @@ namespace IBM1410SMS
 
                 }
             }
+
+            //  Save the combo box selectsion
+
+            Parms.setParmValue("SMS volume", currentVolume.idVolume.ToString());
+            Parms.setParmValue("SMS card type", currentCardType.idCardType.ToString());
 
             //  Tell the user what we did to him/her...
 

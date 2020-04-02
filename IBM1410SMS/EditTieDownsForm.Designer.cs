@@ -142,6 +142,7 @@
             this.Controls.Add(this.label1);
             this.Name = "EditTieDownsForm";
             this.Text = "Edit Tie Downs";
+            this.Shown += new System.EventHandler(this.EditTieDownsForm_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.tieDownsDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

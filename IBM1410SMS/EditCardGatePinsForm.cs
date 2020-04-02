@@ -103,8 +103,16 @@ namespace IBM1410SMS
 
             //  This is a fixed list, so we only need to do it once.
 
+            //  While we are at it, if we find a volume that matches the last
+            //  SMS volume used, select it.
+
+            string lastVolume = Parms.getParmValue("SMS volume");
+            int selectedVolume = 0;
+
             volumeList = new List<Volume>();
             volumeSetList = volumeSetTable.getWhere("ORDER BY machineType");
+
+            int index = 0;
             foreach (Volumeset vs in volumeSetList) {
                 List<Volume> tempVolumeList = volumeTable.getWhere(
                     "WHERE volume.set='" + vs.idVolumeSet + "' ORDER BY volume.order");
@@ -112,12 +120,16 @@ namespace IBM1410SMS
                     volumeList.Add(v);
                     volumeComboBox.Items.Add("Vol. Set " + vs.machineType +
                         ", Vol. " + v.name);
+                    if (v.idVolume.ToString() == lastVolume) {
+                        selectedVolume = index;
+                    }
+                    ++index;
                 }
             }
 
             if (volumeList.Count > 0) {
-                currentVolume = volumeList[0];
-                volumeComboBox.SelectedIndex = 0;
+                currentVolume = volumeList[selectedVolume];
+                volumeComboBox.SelectedIndex = selectedVolume;
             }
             else {
 
@@ -168,8 +180,16 @@ namespace IBM1410SMS
             }
 
             //  If the list is not empty, set the current card type to either 
-            //  the current card type (if any) or to the first one in the list 
+            //  the current card type (if any), to the last one this users used,
+            //  if a match is found, or to the first one in the list 
             //  (if there is no currently selected card type).
+
+            string lastCardType = Parms.getParmValue("SMS card type");
+            int cbSelectedCardType = cardTypeList.IndexOf(
+                cardTypeList.Find(x => x.idCardType.ToString() == lastCardType));
+            if (cbSelectedCardType < 0 && cardTypeList.Count > 0) {
+                cbSelectedCardType = 0;
+            }
 
             if (cardTypeList.Count > 0) {
                 if (selectedCardType != null) {
@@ -180,8 +200,8 @@ namespace IBM1410SMS
                     cardTypeComboBox.Refresh();
                 }
                 else {
-                    currentCardType = cardTypeList[0];
-                    cardTypeComboBox.SelectedIndex = 0;
+                    currentCardType = cardTypeList[cbSelectedCardType];
+                    cardTypeComboBox.SelectedIndex = cbSelectedCardType;
                 }
             }
             else {
@@ -614,6 +634,12 @@ namespace IBM1410SMS
                             " (Database ID " + gp.idGatePin + ")\n";
                     }
                 }
+
+                //  Save the state of the selection combo boxes for later use by
+                //  this form or other dialogs
+
+                Parms.setParmValue("SMS volume", currentVolume.idVolume.ToString());
+                Parms.setParmValue("SMS card type", currentCardType.idCardType.ToString());
 
                 db.CommitTransaction();
 

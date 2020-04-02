@@ -144,11 +144,14 @@ namespace IBM1410SMS
 
         private void populateVolumeComboBox(Volumeset volumeSet, Machine machine) {
 
+            string lastVolume = Parms.getParmValue("volume");
+
+            currentVolume = null;
+
             //  If there is no volume set then this combo box must be empty
             //  as well.
 
             if (volumeSet == null) {
-                currentVolume = null;
                 volumeComboBox.Items.Clear();
             }
             else {
@@ -156,14 +159,24 @@ namespace IBM1410SMS
                 volumeList = volumeTable.getWhere(
                     "WHERE volume.set='" + volumeSet.idVolumeSet + 
                     "' ORDER BY volume.order");
+
+                volumeComboBox.DataSource = volumeList;
+
+                //  If we have a list, then see if the last volume we used is in
+                //  that list.  If so, then select it.
+
                 if (volumeList.Count > 0) {
-                    currentVolume = volumeList[0];
+                    currentVolume = volumeList.Find(x => x.idVolume.ToString() == lastVolume);
                 }
                 else {
-                    currentVolume = null;
                     volumeComboBox.Items.Clear();
                 }
-                volumeComboBox.DataSource = volumeList;
+                if(currentVolume == null || currentVolume.idVolume == 0) {
+                    currentVolume = volumeList[0];
+
+                }
+
+                volumeComboBox.SelectedItem = currentVolume;
             }
 
             //  Even if there are no volumes, populate the page combo box.
@@ -176,6 +189,8 @@ namespace IBM1410SMS
         //  Method to fill in the Page combo box.
 
         private void populatePageComboBox(Machine machine, Volume volume) {
+
+            string lastPage = Parms.getParmValue("page");
 
             //  If there is no machine or no volume, then this combo box
             //  has to be left empty.
@@ -221,19 +236,25 @@ namespace IBM1410SMS
                 pageList.Remove(p);
             }
 
+            pageComboBox.DataSource = pageList;
+
             //  If the list is not empty, set the current page (and the
-            //  dialog, later) to the first entry. 
+            //  dialog, later) to the one that the user last used, if it matches,
+            //  otherwise set it to the first entry.
 
             if (pageList.Count > 0) {
-                currentPage = pageList[0];
+                currentPage = pageList.Find(x => x.idPage.ToString() == lastPage);
+                if(currentPage == null || currentPage.idPage == 0) {
+                    currentPage = pageList[0];
+                }
+
+                pageComboBox.SelectedItem = currentPage;
             }
             else {
                 //  Otherwise clear the dialog.
                 currentPage = null;
                 currentDiagramPage = null;
             }
-
-            pageComboBox.DataSource = pageList;
 
             populateDialog(currentPage);
         }
@@ -564,6 +585,10 @@ namespace IBM1410SMS
 
         private void pageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
 
+            if(pageComboBox.SelectedIndex < 0) {
+                return;
+            }
+            
             //  If there is a current page, and if there are modifications, 
             //  confirm that the user wishes to discard them...
 
@@ -763,6 +788,12 @@ namespace IBM1410SMS
             EditEdgeConnectorsForm editEdgeConnectorsForm = new EditEdgeConnectorsForm(
                 currentMachine, currentVolumeSet, currentVolume, currentDiagramPage);
 
+            //  Save the form parameters for later use.
+
+            saveParams(true);
+
+            //  Then invoke the edge connections dialog.
+
             editEdgeConnectorsForm.ShowDialog();
 
         }
@@ -770,9 +801,16 @@ namespace IBM1410SMS
         private void editDiagramBlocksButton_Click(object sender, EventArgs e) {
             EditDiagramBlocksForm EditDiagramBlocksForm = new EditDiagramBlocksForm(
                 currentMachine, currentVolumeSet, currentVolume, currentDiagramPage);
+
+            //  Save the form parameters for later use.
+
+            saveParams(true);
+
+            //  Then invoke the ALD diagram blocks dialog
+
             EditDiagramBlocksForm.ShowDialog();
 
-            //  Refresh the dialog to pick up the changed sheet edge signal counts.
+            //  Then refresh our own dialog to pick up the changed sheet edge signal counts.
 
             populateDialog(currentPage);
         }
@@ -1069,7 +1107,8 @@ namespace IBM1410SMS
             }
 
             //  Update the page combo box if we added a page, and arrange to have it
-            //  selected, aw well.
+            //  selected, as well, and then also save the current machine, volume set,
+            //  volume and page.
 
             if (doUpdate) {
                 if (changePageComboBox) {
@@ -1091,6 +1130,8 @@ namespace IBM1410SMS
                 else {
                     populateDialog(currentPage);
                 }
+
+                saveParams(true);
             }
         }
 
@@ -1235,7 +1276,25 @@ namespace IBM1410SMS
                 populatePageComboBox(currentMachine, currentVolume);
             }
 
+            //  Save the various settings from the form for reuse later, except
+            //  for the page, which no longer exists.
+
+            saveParams(false);
+
             return;            
+        }
+
+        //  Method to save dialog parameters after significant actions, so they
+        //  will be the same after returning to this form and available for other
+        //  forms.
+
+        void saveParams(bool setPage) {
+            Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+            Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
+            Parms.setParmValue("volume", currentVolume.idVolume.ToString());
+            if (setPage) {
+                Parms.setParmValue("page", currentPage.idPage.ToString());
+            }
         }
     }
 }

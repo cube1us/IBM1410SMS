@@ -164,16 +164,16 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(12, 14);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(87, 13);
+            this.label4.Size = new System.Drawing.Size(138, 13);
             this.label4.TabIndex = 6;
-            this.label4.Text = "Diagram Volume:";
+            this.label4.Text = "SMS Card Diagram Volume:";
             this.toolTip1.SetToolTip(this.label4, "Volume in Volume Set that this card diagram appears in");
             // 
             // volumeComboBox
             // 
             this.volumeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.volumeComboBox.FormattingEnabled = true;
-            this.volumeComboBox.Location = new System.Drawing.Point(105, 11);
+            this.volumeComboBox.Location = new System.Drawing.Point(156, 11);
             this.volumeComboBox.Name = "volumeComboBox";
             this.volumeComboBox.Size = new System.Drawing.Size(259, 21);
             this.volumeComboBox.TabIndex = 1;

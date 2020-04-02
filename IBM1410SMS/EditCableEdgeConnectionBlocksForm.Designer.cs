@@ -75,6 +75,7 @@
             // 
             this.volumeTextBox.Location = new System.Drawing.Point(71, 53);
             this.volumeTextBox.Name = "volumeTextBox";
+            this.volumeTextBox.ReadOnly = true;
             this.volumeTextBox.Size = new System.Drawing.Size(302, 20);
             this.volumeTextBox.TabIndex = 5;
             this.volumeTextBox.TabStop = false;
@@ -94,6 +95,7 @@
             // 
             this.machineTextBox.Location = new System.Drawing.Point(71, 12);
             this.machineTextBox.Name = "machineTextBox";
+            this.machineTextBox.ReadOnly = true;
             this.machineTextBox.Size = new System.Drawing.Size(69, 20);
             this.machineTextBox.TabIndex = 7;
             this.machineTextBox.TabStop = false;
@@ -113,6 +115,7 @@
             // 
             this.pageTextBox.Location = new System.Drawing.Point(255, 12);
             this.pageTextBox.Name = "pageTextBox";
+            this.pageTextBox.ReadOnly = true;
             this.pageTextBox.Size = new System.Drawing.Size(118, 20);
             this.pageTextBox.TabIndex = 9;
             this.toolTip1.SetToolTip(this.pageTextBox, "Page name for this drawing (xx.yy.zz.s)");

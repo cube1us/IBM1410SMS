@@ -1119,9 +1119,10 @@ ENTERED #6 DONE:  EditDiagramLogicBlock:  Keep an eye on it sent a change when t
    none - it is probably a null vs. blank compare on the new block notes field?
    YES - That is almost certainly what was going on.
 
-ENTERED #7 WATCH:  BUG:  EditDiagramPageForm:  cannot pre-select volume because it
+CLOSED  #7 WATCH:  BUG:  EditDiagramPageForm:  cannot pre-select volume because it
    causes an index out of range condition puzzle, and messes up ECOs.  diagnose.
    Update:  Tried to reproduce on 1/23/2020, but was unable to do so.
+   Update:  With the changes to dialogs on 3/31/2020 and 4/1/2020, this seems moot.
 
 ENTERED #8 PENDING:  BUG:  Edit Connection.  Editing a gate to gate connection that has an
    edge reference from the input side loses the reference.  (One ought to

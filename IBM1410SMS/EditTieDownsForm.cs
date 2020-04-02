@@ -76,6 +76,8 @@ namespace IBM1410SMS
         string columnLabel = "Column";
 
         bool populatingDataGridView = false;
+        int selectedVolumeSet = 0;
+
 
         public EditTieDownsForm() {
             InitializeComponent();
@@ -110,8 +112,22 @@ namespace IBM1410SMS
             //  we started out with.
 
             machineComboBox.DataSource = machineList;
+
+            //  Retrieve the last machine we worked with, and select it, if any.
+
             if (machineList.Count > 0) {
-                currentMachine = machineList[0];
+
+                string lastMachine = Parms.getParmValue("machine");
+                if (lastMachine.Length > 0) {
+                    currentMachine = machineList.Find(
+                        x => x.idMachine.ToString() == lastMachine);
+                }
+
+                if (currentMachine == null || currentMachine.idMachine == 0) {
+                    currentMachine = machineList[0];
+                }
+
+                machineComboBox.SelectedItem = currentMachine;
             }
             else {
                 currentMachine = null;
@@ -123,22 +139,40 @@ namespace IBM1410SMS
             volumeSetList = volumeSetTable.getWhere(
                 "ORDER by machineType, machineSerial");
 
-            foreach(Volumeset vset in volumeSetList) {
-                volumeSetComboBox.Items.Add(
-                    "Machine " + vset.machineType +
-                    ", S/N " + vset.machineSerial);
-            }
+            //  Also, while we are at it, if the last volume set we used is in
+            //  the list, select that one, otherwise select the first one, unless
+            //  the list was empty in the first place.
 
-            volumeSetComboBox.SelectedIndex = 0;
             if (volumeSetList.Count > 0) {
+                string lastVolume = Parms.getParmValue("volume set");
+
+                int index = 0;
+                foreach (Volumeset vset in volumeSetList) {
+                    volumeSetComboBox.Items.Add(
+                        "Machine " + vset.machineType +
+                        ", S/N " + vset.machineSerial);
+                    if (vset.idVolumeSet.ToString() == lastVolume) {
+                        selectedVolumeSet = index;
+                    }
+                    ++index;
+                }
                 currentVolumeSet = volumeSetList[0];
             }
             else {
                 currentVolumeSet = null;
             }
 
-            populateTieDowns(currentMachine, currentVolumeSet);
+            //  During this constructor, we set the selected index to -1
 
+            //  I don't understand why, but I found that if I tried to
+            //  point to the "correct" entry, the datagrid view gets 
+            //  messed up, with missing data in some columns, and
+            //  columnts that should be removed were not getting removed.
+
+            volumeSetComboBox.SelectedIndex = -1;
+
+            populateTieDowns(currentMachine, currentVolumeSet);
+            
         }
 
 
@@ -156,8 +190,9 @@ namespace IBM1410SMS
 
             //  Clear out any existing data grid view
 
-            tieDownsDataGridView.Columns.Clear();
             tieDownsDataGridView.DataSource = null;
+            tieDownsDataGridView.Columns.Clear();
+            tieDownsDataGridView.Rows.Clear();
 
             List<Tiedown> deletedTieDownList = new List<Tiedown>();
 
@@ -790,11 +825,24 @@ namespace IBM1410SMS
             }
 
             if (doUpdate) {
+
+                Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+                Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
                 db.CommitTransaction();
             }
 
             return (changes);
 
+        }
+
+        //  I found that I needed to force the datagrid view to be updated
+        //  via the volumeSetComboBox_SelectedIndexChanged method.  Calling
+        //  it from inside the constructor did not work properly.  Hence
+        //  this method which is called when the form is first shown.
+
+        private void EditTieDownsForm_Shown(object sender, EventArgs e) {
+            currentVolumeSet = volumeSetList[selectedVolumeSet];
+            volumeSetComboBox.SelectedIndex = selectedVolumeSet;
         }
     }
 }

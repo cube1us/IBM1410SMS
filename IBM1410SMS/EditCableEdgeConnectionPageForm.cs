@@ -136,11 +136,14 @@ namespace IBM1410SMS
 
         private void populateVolumeComboBox(Volumeset volumeSet, Machine machine) {
 
+            string lastVolume = Parms.getParmValue("volume");
+
+            currentVolume = null;
+            
             //  If there is no volume set then this combo box must be empty
             //  as well.
 
             if (volumeSet == null) {
-                currentVolume = null;
                 volumeComboBox.Items.Clear();
             }
             else {
@@ -148,14 +151,23 @@ namespace IBM1410SMS
                 volumeList = volumeTable.getWhere(
                     "WHERE volume.set='" + volumeSet.idVolumeSet + 
                     "' ORDER BY volume.order");
+
+                volumeComboBox.DataSource = volumeList;
+
+                //  If we have a non-empty list, then see if the last volume we used
+                //  is in that list.  If so, then select it.
                 if (volumeList.Count > 0) {
-                    currentVolume = volumeList[0];
+                    currentVolume = volumeList.Find(x => x.idVolume.ToString() == lastVolume);
                 }
                 else {
-                    currentVolume = null;
                     volumeComboBox.Items.Clear();
                 }
-                volumeComboBox.DataSource = volumeList;
+
+                if(currentVolume == null || currentVolume.idVolume == 0) {
+                    currentVolume = volumeList[0];
+                }
+
+                volumeComboBox.SelectedItem = currentVolume;
             }
 
             //  Even if there are no volumes, populate the page combo box.
@@ -169,6 +181,8 @@ namespace IBM1410SMS
 
         private void populatePageComboBox(Machine machine, Volume volume) {
 
+            string lastPage = Parms.getParmValue("page");
+            
             //  If there is no machine or no volume, then this combo box
             //  has to be left empty.
 
@@ -213,11 +227,18 @@ namespace IBM1410SMS
                 pageList.Remove(p);
             }
 
+            pageComboBox.DataSource = pageList;
+
             //  If the list is not empty, set the current page (and the
-            //  dialog, later) to the first entry. 
+            //  dialog, later) to the one that the user last used, if matches,
+            //  otherwise set it to the first entry.
 
             if (pageList.Count > 0) {
-                currentPage = pageList[0];
+                currentPage = pageList.Find(x => x.idPage.ToString() == lastPage);
+                if(currentPage == null || currentPage.idPage < 0) {
+                    currentPage = pageList[0];
+                }
+                pageComboBox.SelectedItem = currentPage;
             }
             else {
                 //  Otherwise clear the dialog.
@@ -225,7 +246,6 @@ namespace IBM1410SMS
                 currentCableEdgeConnectionPage = null;
             }
 
-            pageComboBox.DataSource = pageList;
 
             populateDialog(currentPage);
         }
@@ -458,6 +478,10 @@ namespace IBM1410SMS
 
         private void pageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
 
+            if(pageComboBox.SelectedIndex < 0) {
+                return;
+            }
+            
             //  If there is a current page, and if there are modifications, 
             //  confirm that the user wishes to discard them...
 
@@ -568,6 +592,11 @@ namespace IBM1410SMS
                 new EditCableEdgeConnectionBlocksForm(currentMachine,
                 currentVolumeSet, currentVolume,
                 currentCableEdgeConnectionPage);
+
+            //  Save the state of the various dialog combo boxes in case we
+            //  come back again and/or for use later in other dialogs
+
+            saveParams(true);
 
             EditCableEdgeConnectionsBlocksForm.ShowDialog();
 
@@ -834,6 +863,10 @@ namespace IBM1410SMS
                 else {
                     populateDialog(currentPage);
                 }
+
+                //  Save the state of the pull-down boxes
+
+                saveParams(true);
             }
         }
 
@@ -968,9 +1001,25 @@ namespace IBM1410SMS
                 currentPage = null;
                 currentCableEdgeConnectionPage = null;
                 populatePageComboBox(currentMachine, currentVolume);
+
+                //  Save all parameters except for the now (nonexistent) page.
+
+                saveParams(false);
             }
 
             return;            
+        }
+
+        //  Method to save the state of various pull-down boxes, for use later
+        //  in this dialog if it is reopened, or in other dialogs.
+
+        void saveParams(bool savePage) {
+            Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+            Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
+            Parms.setParmValue("volume", currentVolume.idVolume.ToString());
+            if(savePage) {
+                Parms.setParmValue("page", currentPage.idPage.ToString());
+            }
         }
     }
 }
