@@ -75,6 +75,8 @@
             this.destinationSeparatorLabel = new System.Windows.Forms.Label();
             this.destinationLabel = new System.Windows.Forms.Label();
             this.explicitDestinationCheckBox = new System.Windows.Forms.CheckBox();
+            this.doNotCrossCheckConnectorsCheckBox = new System.Windows.Forms.CheckBox();
+            this.doNotCrossCheckEdgeConnectionCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // diagramRowTextBox
@@ -589,11 +591,36 @@
             this.explicitDestinationCheckBox.UseVisualStyleBackColor = true;
             this.explicitDestinationCheckBox.CheckedChanged += new System.EventHandler(this.explicitDestinationCheckBox_CheckedChanged);
             // 
+            // doNotCrossCheckConnectorsCheckBox
+            // 
+            this.doNotCrossCheckConnectorsCheckBox.AutoSize = true;
+            this.doNotCrossCheckConnectorsCheckBox.Location = new System.Drawing.Point(186, 240);
+            this.doNotCrossCheckConnectorsCheckBox.Name = "doNotCrossCheckConnectorsCheckBox";
+            this.doNotCrossCheckConnectorsCheckBox.Size = new System.Drawing.Size(105, 17);
+            this.doNotCrossCheckConnectorsCheckBox.TabIndex = 136;
+            this.doNotCrossCheckConnectorsCheckBox.Text = "No Conn. Check";
+            this.toolTip1.SetToolTip(this.doNotCrossCheckConnectorsCheckBox, "Select to inhibit checking this blocks connection with its destination");
+            this.doNotCrossCheckConnectorsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // doNotCrossCheckEdgeConnectionCheckBox
+            // 
+            this.doNotCrossCheckEdgeConnectionCheckBox.AutoSize = true;
+            this.doNotCrossCheckEdgeConnectionCheckBox.Location = new System.Drawing.Point(297, 240);
+            this.doNotCrossCheckEdgeConnectionCheckBox.Name = "doNotCrossCheckEdgeConnectionCheckBox";
+            this.doNotCrossCheckEdgeConnectionCheckBox.Size = new System.Drawing.Size(102, 17);
+            this.doNotCrossCheckEdgeConnectionCheckBox.TabIndex = 137;
+            this.doNotCrossCheckEdgeConnectionCheckBox.Text = "No Edge Check";
+            this.toolTip1.SetToolTip(this.doNotCrossCheckEdgeConnectionCheckBox, "Select to inihibit cross checks between this block and the ALD Diagram  Edge Conn" +
+        "ector Location lists");
+            this.doNotCrossCheckEdgeConnectionCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditCableEdgeConnectionBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(589, 470);
+            this.Controls.Add(this.doNotCrossCheckEdgeConnectionCheckBox);
+            this.Controls.Add(this.doNotCrossCheckConnectorsCheckBox);
             this.Controls.Add(this.explicitDestinationCheckBox);
             this.Controls.Add(this.destinationColumnTextBox);
             this.Controls.Add(this.selectDestColumnLabel);
@@ -700,5 +727,7 @@
         private System.Windows.Forms.TextBox destinationColumnTextBox;
         private System.Windows.Forms.Label selectDestColumnLabel;
         private System.Windows.Forms.CheckBox explicitDestinationCheckBox;
+        private System.Windows.Forms.CheckBox doNotCrossCheckConnectorsCheckBox;
+        private System.Windows.Forms.CheckBox doNotCrossCheckEdgeConnectionCheckBox;
     }
 }

@@ -80,6 +80,7 @@
             this.label20 = new System.Windows.Forms.Label();
             this.editConnectionsButton = new System.Windows.Forms.Button();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
+            this.noHDLGen = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -643,11 +644,23 @@
             this.cardColumnTextBox.TabIndex = 85;
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             // 
+            // noHDLGen
+            // 
+            this.noHDLGen.AutoSize = true;
+            this.noHDLGen.Location = new System.Drawing.Point(207, 119);
+            this.noHDLGen.Name = "noHDLGen";
+            this.noHDLGen.Size = new System.Drawing.Size(91, 17);
+            this.noHDLGen.TabIndex = 116;
+            this.noHDLGen.Text = "No HDL Gen.";
+            this.toolTip1.SetToolTip(this.noHDLGen, "Select to inhibit HDL generation for this logic block");
+            this.noHDLGen.UseVisualStyleBackColor = true;
+            // 
             // EditDiagramLogicBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(696, 470);
+            this.Controls.Add(this.noHDLGen);
             this.Controls.Add(this.notesTextBox);
             this.Controls.Add(this.label22);
             this.Controls.Add(this.cardGateComboBox);
@@ -767,5 +780,6 @@
         private System.Windows.Forms.ComboBox cardGateComboBox;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox notesTextBox;
+        private System.Windows.Forms.CheckBox noHDLGen;
     }
 }

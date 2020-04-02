@@ -233,6 +233,7 @@ namespace IBM1410SMS
                 currentDiagramBlock.blockConfiguration = "";
                 currentDiagramBlock.notes = "";
                 currentDiagramBlock.flipped = 0;
+                currentDiagramBlock.noHDLGeneration = 0;
 
                 if(cardLocation != null ) {
                     currentDiagramBlock.cardSlot = cardLocation.cardSlot;
@@ -424,6 +425,7 @@ namespace IBM1410SMS
             diagramBlockTitleTextBox.Text = currentDiagramBlock.title;
             symbolTextBox.Text = currentDiagramBlock.symbol;
             flippedCheckBox.Checked = (currentDiagramBlock.flipped == 1);
+            noHDLGen.Checked = (currentDiagramBlock.noHDLGeneration == 1);
             blockConfigurationTextBox.Text = currentDiagramBlock.blockConfiguration;
             notesTextBox.Text =
                 currentDiagramBlock.notes != null ? currentDiagramBlock.notes : "";                
@@ -811,6 +813,7 @@ namespace IBM1410SMS
             currentDiagramBlock.blockConfiguration = blockConfigurationTextBox.Text;
             currentDiagramBlock.notes = notesTextBox.Text;
             currentDiagramBlock.flipped = flippedCheckBox.Checked ? 1 : 0;
+            currentDiagramBlock.noHDLGeneration = noHDLGen.Checked ? 1 : 0;
 
             //  Tell the user what the update will actually do...
 
@@ -897,6 +900,7 @@ namespace IBM1410SMS
                         extensionBlock.blockConfiguration = currentDiagramBlock.blockConfiguration;
                         extensionBlock.notes = "";
                         extensionBlock.flipped = currentDiagramBlock.flipped;
+                        extensionBlock.noHDLGeneration = currentDiagramBlock.noHDLGeneration;
                         diagramBlockTable.insert(extensionBlock);
                     }
                     message += action + 

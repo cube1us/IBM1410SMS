@@ -237,6 +237,8 @@ namespace IBM1410SMS
                 currentCableEdgeConnectionBlock.destNote = "";
                 currentCableEdgeConnectionBlock.explicitDestination = 0;
                 currentCableEdgeConnectionBlock.Destination = 0;
+                currentCableEdgeConnectionBlock.doNotCrossCheckConnection = 0;
+                currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector = 0;
 
                 if (cardLocation != null) {
                     currentCableEdgeConnectionBlock.cardSlot = cardLocation.cardSlot;
@@ -554,6 +556,14 @@ namespace IBM1410SMS
             if (index < 0) {
                 index = 0;
             }
+
+            //  Populate the checkboxes
+
+            doNotCrossCheckConnectorsCheckBox.Checked =
+                currentCableEdgeConnectionBlock.doNotCrossCheckConnection == 1;
+
+            doNotCrossCheckEdgeConnectionCheckBox.Checked =
+                currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector == 1;
 
             //  Populate the connector row and column (source location)
 
@@ -944,6 +954,11 @@ namespace IBM1410SMS
                 (explicitDestinationCheckBox.Checked ? 1 : 0);
             currentCableEdgeConnectionBlock.connectionType =
                 ((Cardtype)cardTypeComboBox.SelectedItem).idCardType;
+            currentCableEdgeConnectionBlock.doNotCrossCheckConnection =
+                (doNotCrossCheckConnectorsCheckBox.Checked ? 1 : 0);
+            currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector =
+                (doNotCrossCheckEdgeConnectionCheckBox.Checked ? 1 : 0);
+                
 
             //  Tell the user what the update will actually do...
 
@@ -1235,7 +1250,11 @@ namespace IBM1410SMS
                 currentCableEdgeConnectionBlock.ecotag !=
                     ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
                 currentCableEdgeConnectionBlock.connectionType !=
-                    ((Cardtype)cardTypeComboBox.SelectedItem).idCardType
+                    ((Cardtype)cardTypeComboBox.SelectedItem).idCardType ||
+                (currentCableEdgeConnectionBlock.doNotCrossCheckConnection == 1) ==
+                    doNotCrossCheckConnectorsCheckBox.Checked ||
+                (currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector == 1) ==
+                    doNotCrossCheckEdgeConnectionCheckBox.Checked
                 );
         }
 
