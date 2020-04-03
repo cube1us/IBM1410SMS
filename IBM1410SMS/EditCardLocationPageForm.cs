@@ -622,11 +622,12 @@ namespace IBM1410SMS
                     "currentPage is null");
             }
 
-            //  Check to make sure no card locations refer to this page...
+            //  Check to make sure no card locations refer to this (card location) page...
 
-            if(currentPage.idPage > 0 && 
+            if(currentPage.idPage > 0 && currentCardLocationPage != null &&
                 cardLocationTable.getWhere(
-                    "WHERE cardlocation.page='" + currentPage.name + "'").Count > 0) {
+                    "WHERE cardlocation.page='" + currentCardLocationPage.idCardLocationPage +
+                     "'").Count > 0) {
                 MessageBox.Show(
                     "Page Remove: There are still one or more Card Locations " +
                     "which refer to this page.",
