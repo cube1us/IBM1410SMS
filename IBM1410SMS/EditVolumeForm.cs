@@ -182,8 +182,8 @@ namespace IBM1410SMS
             foreach(Volume v in volumeList) {
                 if(v.idVolume == 0) {
                     message += "Adding Volume " + v.name +
-                        ((v.machineSerial != null && v.machineSerial.Length > 0)
-                            //? ", Machine S/N: " + v.machineSerial : "") + "\n";
+                        ((v.machineSerial != null && v.machineSerial.Length > 0) 
+                            ? ", Machine S/N: " + v.machineSerial : "") + "\n";
                     areChanges = true;
                 }
                 else if (v.modified) {
