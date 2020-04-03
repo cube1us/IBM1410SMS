@@ -596,6 +596,10 @@ namespace IBM1410SMS
 
         private void pageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
 
+            if(pageComboBox.SelectedIndex < 0) {
+                return;
+            }
+
             //  If there is a current page, and if there are modifications, 
             //  confirm that the user wishes to discard them...
 
