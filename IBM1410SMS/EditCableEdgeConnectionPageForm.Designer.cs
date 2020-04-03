@@ -302,9 +302,9 @@
             // editCableEdgeBlocksButton
             // 
             this.editCableEdgeBlocksButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.editCableEdgeBlocksButton.Location = new System.Drawing.Point(565, 206);
+            this.editCableEdgeBlocksButton.Location = new System.Drawing.Point(565, 200);
             this.editCableEdgeBlocksButton.Name = "editCableEdgeBlocksButton";
-            this.editCableEdgeBlocksButton.Size = new System.Drawing.Size(98, 57);
+            this.editCableEdgeBlocksButton.Size = new System.Drawing.Size(98, 63);
             this.editCableEdgeBlocksButton.TabIndex = 129;
             this.editCableEdgeBlocksButton.Text = "Edit Cable/Edge Connection Blocks";
             this.editCableEdgeBlocksButton.UseVisualStyleBackColor = true;
