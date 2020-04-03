@@ -297,16 +297,21 @@ namespace IBM1410SMS
                     currentPage = pageList.Count > 0 ? pageList[0] : null;
                 }
                 if (currentPage != null) {
-                    pageComboBox.SelectedItem = currentPage;
+
+                    //  The following is now handled in the EditCardLocationForm_Shown method.
+                    // pageComboBox.SelectedItem = currentPage;
                 }
                 else {
-                    pageComboBox.SelectedItem = pageList[0];
+
+                    //  The following is now handled in the EditCardLocationForm_Shown method.
+                    // pageComboBox.SelectedItem = pageList[0];
                 }
             }
             else {
                 currentPage = null;
             }
 
+            pageComboBox.SelectedIndex = -1;
             populatePageECOComboBox(currentPage);
             populateDialog();
         }
@@ -398,7 +403,7 @@ namespace IBM1410SMS
             //  First for the rows...
 
             cardSlotList = cardSlotTable.getWhere(
-                "WHERE panel='" + panel.idPanel + "' GROUP BY cardRow");
+                "WHERE panel='" + panel.idPanel + "' GROUP BY cardRow Order by cardRow");
             foreach(Cardslot cs in cardSlotList) {
                 rowList.Add(cs.cardRow);
             }
@@ -406,7 +411,7 @@ namespace IBM1410SMS
             //  Then the columns.
 
             cardSlotList = cardSlotTable.getWhere(
-                "WHERE panel='" + panel.idPanel + "' GROUP BY cardColumn");
+                "WHERE panel='" + panel.idPanel + "' GROUP BY cardColumn Order by cardColumn");
             foreach (Cardslot cs in cardSlotList) {
                 columnList.Add(cs.cardColumn);
             }
@@ -483,6 +488,11 @@ namespace IBM1410SMS
         }
 
         private void pageComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+
+            if(pageComboBox.SelectedIndex < 0) {
+                return;
+            }
+
             currentPage = (Page) pageComboBox.SelectedItem;
 
             //  Find the corresponding card location page, and if found, find the
@@ -1875,6 +1885,14 @@ namespace IBM1410SMS
 
         }
 
+        //  I found that I needed to force the datagrid view to be updated
+        //  via the pageComboBox_SelectedIndexChanged method.  Calling
+        //  it from inside the constructor did not work properly.  Hence
+        //  this method which is called when the form is first shown.
 
+        private void EditCardLocationForm_Shown(object sender, EventArgs e) {
+            // pageComboBox.SelectedIndex = -1;
+            pageComboBox.SelectedIndex = pageList.IndexOf(currentPage);
+        }
     }
 }

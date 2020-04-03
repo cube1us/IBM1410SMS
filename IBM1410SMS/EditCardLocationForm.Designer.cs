@@ -428,6 +428,7 @@
             this.Name = "EditCardLocationForm";
             this.Text = "Edit Card Location";
             this.toolTip1.SetToolTip(this, "Select if this slot is crossed out in the Card Location Chart");
+            this.Shown += new System.EventHandler(this.EditCardLocationForm_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.cardLocationBlockDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
