@@ -205,10 +205,8 @@ namespace IBM1410SMS
             //  separate methods, because they also get called when
             //  selections change.
 
-            //  Set a flag so that the pageComboBox and the panelComboBox,
-            //  which can affect each other, don't, for now.
+            //  The page combo box now gets populated in the _Shown method.
 
-            populatePageComboBox(currentMachine, currentVolume);
             populatingDialog = false;
         }
 
@@ -295,8 +293,10 @@ namespace IBM1410SMS
 
                 if (currentPage == null || currentPage.idPage == 0) {
                         currentPage = pageList[0];
-                        pageComboBox.SelectedItem = currentPage;
                 }
+
+                pageComboBox.SelectedItem = currentPage;
+
             }
             else {
                 currentPage = null;
@@ -1882,7 +1882,7 @@ namespace IBM1410SMS
         //  this method which is called when the form is first shown.
 
         private void EditCardLocationForm_Shown(object sender, EventArgs e) {
-            pageComboBox.SelectedIndex = pageList.IndexOf(currentPage);
+            populatePageComboBox(currentMachine, currentVolume);
         }
     }
 }
