@@ -362,6 +362,7 @@
             this.Controls.Add(this.label1);
             this.Name = "EditCableEdgeConnectionPageForm";
             this.Text = "Edit Cable / Edge Connection Page";
+            this.Shown += new System.EventHandler(this.EditCableEdgeConnectionPageForm_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.ecosDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

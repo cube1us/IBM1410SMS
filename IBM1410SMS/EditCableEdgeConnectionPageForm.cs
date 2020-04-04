@@ -73,6 +73,8 @@ namespace IBM1410SMS
         bool pageModified = false;
         bool populatingDialog = false;
 
+        int selectedVolumeSet = 0;
+
         public EditCableEdgeConnectionPageForm() {
             InitializeComponent();
 
@@ -124,8 +126,17 @@ namespace IBM1410SMS
                 currentVolumeSet = volumeSetList[0];
             }
             else {
-                volumeSetComboBox.SelectedItem = currentVolumeSet;
+                // volumeSetComboBox.SelectedItem = currentVolumeSet;
             }
+
+            //  During this constructor, we set the selected index to -1
+
+            //  I don't understand why, but I found that if I tried to
+            //  point to the "correct" entry, the datagrid view gets 
+            //  messed up, with missing data in some columns, and
+            //  columns that should be removed were not getting removed.
+
+            volumeSetComboBox.SelectedIndex = -1;
 
             // Then populate the other combo boxes
 
@@ -443,6 +454,13 @@ namespace IBM1410SMS
         }
 
         private void volumeSetComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            
+            //  If we are in the constructor, ignore.
+
+            if(volumeSetComboBox.SelectedIndex < 0) {
+                return;
+            }
+
             //  Check if there are modifications, and if so, if the user wants
             //  to discard them.
 
@@ -652,34 +670,38 @@ namespace IBM1410SMS
             //  The following may end up being dead code - it was originally for sheet
             //  edge information errors.
 
-            if(errors) {
+            errors = (applyOrCheckUpdate(false, out message) == false);
+
+            if (errors) {
                 MessageBox.Show("Error:  There are one or more errors " +
                     " that must be corrected before proceeding.",
-                    "Error(s)",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Error(s)",MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             //  Find out what would change, and let the user confirm.
 
-            applyOrCheckUpdate(false, out message);
+            if (message.Length > 0) {
+                DialogResult status = MessageBox.Show(
+                    "Confirm the following Adds/Deletes/Updates: \n\n" +
+                    message, "Confirm Adds/Deletes/Updates",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
 
-            DialogResult status = MessageBox.Show("Confirm the following Adds/Deletes/Updates: \n\n" +
-                message, "Confirm Adds/Deletes/Updates",
-                MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-
-            if (status == DialogResult.OK) {
-
-                applyOrCheckUpdate(true, out message);
-
-                MessageBox.Show("The following Adds/Deletes/Updates have been applied: \n\n" +
-                    message, "Adds/Deletes/Updates Applied",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (status == DialogResult.OK) {
+                    applyOrCheckUpdate(true, out message);
+                    MessageBox.Show("The following Adds/Deletes/Updates have been applied: \n\n" +
+                        message, "Adds/Deletes/Updates Applied",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            else {
+                MessageBox.Show("There were no changes to be applied to this page",
+                    "No Changes to Apply", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
 
-        private void applyOrCheckUpdate(bool doUpdate, out string message) {
+        private bool applyOrCheckUpdate(bool doUpdate, out string message) {
 
             bool changePageComboBox = false;
             string tempMessage;
@@ -691,24 +713,99 @@ namespace IBM1410SMS
             message = "";
             int rowIndex;
 
+            //  We have to validate new rows (the existing ones are validated
+            //  in the _CellValidating() method.
+
+            rowIndex = 0;
+            foreach (Cableedgeconnectionecotag cableEdgeConnectionEcoTag in cableEdgeConnectionEcoTagList) {
+
+                //  If this row was not modified, skip it.
+
+                if(!cableEdgeConnectionEcoTag.modified) {
+                    continue;
+                }
+
+                //  Otherwise, validate it.
+
+                tempMessage = "";
+                DateTime junk;
+                String namev = 
+                    ecosDataGridView.Rows[rowIndex].Cells["name"].FormattedValue.ToString();
+                String ecov = 
+                    ecosDataGridView.Rows[rowIndex].Cells["eco"].FormattedValue.ToString();
+                String datev = 
+                    ecosDataGridView.Rows[rowIndex].Cells["date"].FormattedValue.ToString();
+                if (string.IsNullOrEmpty(namev) || namev.Length > 1) {
+                    tempMessage = "Missing or Invalid Tag (single character)";
+                }
+                else if (string.IsNullOrEmpty(ecov) || ecov.Length > 10) {
+                    tempMessage = "Missing or Invalid E.C. Number";
+                }
+                else if (string.IsNullOrEmpty(datev) || !DateTime.TryParse(datev, out junk)) {
+                    tempMessage = "Missing or Invalid E.C. Date";
+                }
+                if(tempMessage.Length > 0) {
+                    ecosDataGridView.Rows[rowIndex].ErrorText = tempMessage;
+                    message = "Errors in ECO table found.";
+                }
+                ++rowIndex;
+            }
+
+            if(message.Length > 0) {
+                MessageBox.Show(message, "Errors Found",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                message = "";
+                return (false);
+            }
+
+
             //  Validation complete, so now we can go to work, "inside out"
 
             if (currentCableEdgeConnectionPage == null) {
                 currentCableEdgeConnectionPage = new Cableedgeconnectionpage();
             }
 
-            //  Fill in the objects from the form data.
+            //  Fill in the objects from the form data, checking to see if
+            //  anything actually changed.
 
-            currentPage.machine = currentMachine.idMachine;
-            currentPage.volume = currentVolume.idVolume;
-            currentPage.part = Importer.zeroPadPartNumber(partTextBox.Text);
-            currentPage.title = titleTextBox.Text.ToUpper();
+            if (currentPage.machine != currentMachine.idMachine) {
+                currentPage.machine = currentMachine.idMachine;
+                currentPage.modified = true;
+            }
+            if (currentPage.volume != currentVolume.idVolume) {
+                currentPage.volume = currentVolume.idVolume;
+                currentPage.modified = true;
+            }
+            if(!currentPage.name.Equals(nameTextBox.Text)) {
+                //  Hold off on updating the name field in currentPage - see below.
+                currentPage.modified = true;
+            }
+            if(currentPage.part == null || 
+                !currentPage.part.Equals(Importer.zeroPadPartNumber(partTextBox.Text))) {
+                currentPage.part = Importer.zeroPadPartNumber(partTextBox.Text);
+                currentPage.modified = true;
+            }
+            if(currentPage.title == null ||
+                !currentPage.title.Equals(titleTextBox.Text.ToUpper())) {
+                currentPage.title = titleTextBox.Text.ToUpper();
+                currentPage.modified = true;
+            }
+            if(currentPage.stamp == null ||
+                !currentPage.stamp.Equals(stampTextBox.Text)) {
+                currentPage.stamp = stampTextBox.Text;
+                currentPage.modified = true;
+            }
+            if(currentPage.comment == null || 
+                !currentPage.comment.Equals(commentTextBox.Text)) {
+                currentPage.comment = commentTextBox.Text;
+                currentPage.modified = true;
+            }
+
             if (doUpdate && currentPage.name.CompareTo(nameTextBox.Text) != 0) {
                 currentPage.name = nameTextBox.Text;
                 changePageComboBox = true;
             }
-            currentPage.stamp = stampTextBox.Text;
-            currentPage.comment = commentTextBox.Text;
+
             currentCableEdgeConnectionPage.page = currentPage.idPage;
 
             //  Start a transaction...
@@ -732,10 +829,6 @@ namespace IBM1410SMS
                     message + "\n";
                 changePageComboBox = true;
             }
-            else {
-                //  Rather than check for changes, we will just force the update...
-                currentPage.modified = true;
-            }
 
             //  Next, if we are adding a Cable/Edge Connection Page, take care of that.
 
@@ -754,8 +847,14 @@ namespace IBM1410SMS
                         "\n";
             }
             else {
-                //  Rather than check for changes, we will just force the update...
-                currentCableEdgeConnectionPage.modified = true;
+
+                //  The only fields in the cableEdgeConnectionPage table are
+                //  its key and the reference to page.  The only way that changes
+                //  is if the page name changes.
+
+                // currentCableEdgeConnectionPage.modified = true;
+
+                currentCableEdgeConnectionPage.modified = changePageComboBox;
             }
 
             //  If there are any modified flags, then we need to do updates.
@@ -801,7 +900,7 @@ namespace IBM1410SMS
                 if (cableEdgeConnectionEcoTag.idcableEdgeConnectionECOtag == 0 ||
                     cableEdgeConnectionEcoTag.modified) {
                     cableEdgeConnectionEcoTag.name = cableEdgeConnectionEcoTag.name.ToUpper();
-                    if (doUpdate) {                     //  A new one.  We have already validated the data...
+                    if (doUpdate) {   //  A new one.  We have already validated the data...
                         cableEdgeConnectionEcoTag.cableEdgeConnectionPage = 
                             currentCableEdgeConnectionPage.idCableEdgeConnectionPage;
                     }
@@ -868,6 +967,8 @@ namespace IBM1410SMS
 
                 saveParams(true);
             }
+
+            return (true);
         }
 
         private void newPageButton_Click(object sender, EventArgs e) {
@@ -1020,6 +1121,10 @@ namespace IBM1410SMS
             if(savePage) {
                 Parms.setParmValue("page", currentPage.idPage.ToString());
             }
+        }
+
+        private void EditCableEdgeConnectionPageForm_Shown(object sender, EventArgs e) {
+            volumeSetComboBox.SelectedItem = currentVolumeSet;
         }
     }
 }

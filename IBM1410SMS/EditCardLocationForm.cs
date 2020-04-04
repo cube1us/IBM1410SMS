@@ -294,24 +294,15 @@ namespace IBM1410SMS
                 }
 
                 if (currentPage == null || currentPage.idPage == 0) {
-                    currentPage = pageList.Count > 0 ? pageList[0] : null;
-                }
-                if (currentPage != null) {
-
-                    //  The following is now handled in the EditCardLocationForm_Shown method.
-                    // pageComboBox.SelectedItem = currentPage;
-                }
-                else {
-
-                    //  The following is now handled in the EditCardLocationForm_Shown method.
-                    // pageComboBox.SelectedItem = pageList[0];
+                        currentPage = pageList[0];
+                        pageComboBox.SelectedItem = currentPage;
                 }
             }
             else {
                 currentPage = null;
+                pageComboBox.SelectedIndex = -1;
             }
 
-            pageComboBox.SelectedIndex = -1;
             populatePageECOComboBox(currentPage);
             populateDialog();
         }
@@ -1891,7 +1882,6 @@ namespace IBM1410SMS
         //  this method which is called when the form is first shown.
 
         private void EditCardLocationForm_Shown(object sender, EventArgs e) {
-            // pageComboBox.SelectedIndex = -1;
             pageComboBox.SelectedIndex = pageList.IndexOf(currentPage);
         }
     }
