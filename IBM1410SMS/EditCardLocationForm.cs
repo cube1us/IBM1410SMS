@@ -1331,15 +1331,23 @@ namespace IBM1410SMS
                 }
 
                 //  Add a page.  If we can find the right volume using the 
-                //  pageName, use that volume.  Otherwise, Use a volume called
-                //  "Unassigned" (and add that too, if needed).
+                //  pageName in a volume that is in the same volume set as the
+                //  current volume, use that volume.  Otherwise, Use a volume called
+                //  "Unassigned" in the current volume set (and add that too, if needed).
 
                 else if(tempPage.idPage == 0) {
 
                     Volume v;
 
                     tempPage.volume = 0;
-                    v = volumeList.Find(
+
+                    //  Look thorugh a volume list associated with the same
+                    //  volume set as the currently selected volume.
+
+                    List<Volume> tempVolumeList = volumeTable.getWhere(
+                        "WHERE `set` = '" + currentVolume.set + "'");
+
+                    v = tempVolumeList.Find(
                         x => x.firstPage != null && x.lastPage != null &&
                         pageName.CompareTo(x.firstPage) >= 0 &&
                         pageName.CompareTo(x.lastPage) <= 0);
@@ -1351,13 +1359,13 @@ namespace IBM1410SMS
                     //  unassigned volume name.
 
                     if(tempPage.volume == 0) {
-                        v = volumeList.Find(x => x.name == "Unassigned");
+                        v = tempVolumeList.Find(x => x.name == "Unassigned");
                         if(v != null && v.idVolume != 0) {
                             tempPage.volume = v.idVolume;
                         }
                     }
 
-                    //  Failing that, add a new volume...
+                    //  Failing that, add a new volume to the current set.
 
                     if(tempPage.volume == 0 && aborting == 0) {
                         v = new Volume();
