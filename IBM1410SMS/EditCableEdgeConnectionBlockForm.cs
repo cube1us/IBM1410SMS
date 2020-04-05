@@ -84,6 +84,8 @@ namespace IBM1410SMS
         bool populatingDialog = true;
         bool applySuccessful = false;
         bool modifiedMachineGatePanelFrame = false;
+        bool modifiedSourceRow = false;
+        bool modifiedSourceColumn = false;
         bool newCableEdgeConnection = false;        // Tried using deleteButton.Visible, failed?
 
         string sourceFrameLabel = "Frame";
@@ -843,7 +845,10 @@ namespace IBM1410SMS
         //  Handle row and column dialog changes (source and destination)
 
         private void cardRowComboBox_SelectedIndexChanged(object sender, EventArgs e) {
-            currentCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
+            if(currentCardSlotInfo.row != (string)cardRowComboBox.SelectedItem) {
+                modifiedSourceRow = true;
+                currentCardSlotInfo.row = (string)cardRowComboBox.SelectedItem;
+            }
             updateDestinationBoxes();
             drawCableEdgeConnectionBox();
         }
@@ -867,6 +872,7 @@ namespace IBM1410SMS
         private void cardColumnTextBox_Leave(object sender, EventArgs e) {
             int v;
             int.TryParse(cardColumnTextBox.Text, out v);
+            modifiedSourceColumn = true;
             currentCardSlotInfo.column = v;
             updateDestinationBoxes();
             drawCableEdgeConnectionBox();
@@ -899,6 +905,14 @@ namespace IBM1410SMS
             int destinationColumn = 0;
             string message = "";
             applySuccessful = false;
+
+            if(!isModified()) {
+                MessageBox.Show(
+                    "There were no updates to this cable/edge connection block." + message,
+                    "No updates to apply",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+                return;
+            }
 
             if (cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
                 !int.TryParse(cardColumnTextBox.Text, out column) ||
@@ -1043,6 +1057,8 @@ namespace IBM1410SMS
                 }
                 db.CommitTransaction();
                 modifiedMachineGatePanelFrame = false;
+                modifiedSourceRow = false;
+                modifiedSourceColumn = false;
             }
 
             return (message);
@@ -1090,7 +1106,7 @@ namespace IBM1410SMS
         private void explicitDestinationCheckBox_CheckedChanged(object sender, EventArgs e) {
 
 
-            //  If we are changing to UNchecked, the source must be valid
+            //  If we are changing to Unchecked, the source must be valid
             //  (i.e., in the impliedDestinationSources list), in which case
             //  we change to the corresponding destination, and clear the explicit
             //  destination flag database field.  If there is none implied entry
@@ -1223,12 +1239,17 @@ namespace IBM1410SMS
 
         private bool isModified() {
 
-            int column, destinationColumn;
+            int column, destinationColumn, ecotag;
 
             int.TryParse(cardColumnTextBox.Text, out column);
             int.TryParse(destinationColumnTextBox.Text, out destinationColumn);
 
+            ecotag = (ecoTagComboBox.SelectedItem == null) ? 0 :
+                ((Cableedgeconnectionecotag)ecoTagComboBox.SelectedItem).idcableEdgeConnectionECOtag;
+
             return (modifiedMachineGatePanelFrame ||
+                modifiedSourceRow ||
+                modifiedSourceColumn ||
                 currentCableEdgeConnectionBlock.idCableEdgeConnectionBlock == 0 ||
                 currentCardSlotInfo.machineName != ((Machine)machineComboBox.SelectedItem).name ||
                 currentCardSlotInfo.frameName != ((Frame)frameComboBox.SelectedItem).name ||
@@ -1247,14 +1268,15 @@ namespace IBM1410SMS
                 currentDestinationCardSlotInfo.row != (string)destinationRowComboBox.SelectedItem ||
                 currentDestinationCardSlotInfo.column != destinationColumn ||
                 currentCableEdgeConnectionBlock.topNote != cableEdgeConnectionBlockTitleTextBox.Text ||
-                currentCableEdgeConnectionBlock.ecotag !=
-                    ((Diagramecotag)ecoTagComboBox.SelectedItem).idDiagramECOTag ||
+                currentCableEdgeConnectionBlock.ecotag != ecotag ||
                 currentCableEdgeConnectionBlock.connectionType !=
                     ((Cardtype)cardTypeComboBox.SelectedItem).idCardType ||
-                (currentCableEdgeConnectionBlock.doNotCrossCheckConnection == 1) ==
+                (currentCableEdgeConnectionBlock.doNotCrossCheckConnection == 1) !=
                     doNotCrossCheckConnectorsCheckBox.Checked ||
-                (currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector == 1) ==
-                    doNotCrossCheckEdgeConnectionCheckBox.Checked
+                (currentCableEdgeConnectionBlock.doNotCrossCheckEdgeConnector == 1) !=
+                    doNotCrossCheckEdgeConnectionCheckBox.Checked ||
+                (currentCableEdgeConnectionBlock.explicitDestination == 1) !=
+                    explicitDestinationCheckBox.Checked
                 );
         }
 
