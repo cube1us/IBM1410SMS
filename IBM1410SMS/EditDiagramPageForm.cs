@@ -134,8 +134,15 @@ namespace IBM1410SMS
                 currentVolumeSet = volumeSetList[0];
             }
             else {
-                volumeSetComboBox.SelectedItem = currentVolumeSet;
+                // volumeSetComboBox.SelectedItem = currentVolumeSet;
             }
+
+            //  I don't understand why, but I found that if I tried to
+            //  point to the "correct" entry, the datagrid view gets 
+            //  messed up, with missing data in some columns, and
+            //  columns that should be removed were not getting removed.
+
+            volumeSetComboBox.SelectedIndex = -1;
 
             // Then populate the other combo boxes
 
@@ -554,6 +561,13 @@ namespace IBM1410SMS
         }
 
         private void volumeSetComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+
+            //  If we are in the constructor, ignore.
+
+            if (volumeSetComboBox.SelectedIndex < 0) {
+                return;
+            }
+
             //  Check if there are modifications, and if so, if the user wants
             //  to discard them.
 
@@ -893,9 +907,24 @@ namespace IBM1410SMS
                 return;
             }
 
-            //  Find out what would change, and let the user confirm.
+            //  Find out what would change, make sure there wer no errors, and
+            //  if none, let the user confirm the update.
 
-            applyOrCheckUpdate(false, out message);
+            errors = (applyOrCheckUpdate(false, out message) == false);
+
+            if (errors) {
+                MessageBox.Show("Error:  There are one or more errors " +
+                    " that must be corrected before proceeding.",
+                    "Error(s)", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (message.Length <= 0) {
+                MessageBox.Show("No updates to the ALD diagram page found" +
+                    message, "No Diagram Page Updates",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+                return;
+            }
 
             DialogResult status = MessageBox.Show("Confirm the following Adds/Deletes/Updates: \n\n" +
                 message, "Confirm Adds/Deletes/Updates",
@@ -912,9 +941,10 @@ namespace IBM1410SMS
         }
 
 
-        private void applyOrCheckUpdate(bool doUpdate, out string message) {
+        private bool applyOrCheckUpdate(bool doUpdate, out string message) {
 
             bool changePageComboBox = false;
+
             string tempMessage;
             DateTime tempDate;
             string action = "";
@@ -924,6 +954,51 @@ namespace IBM1410SMS
             message = "";
             int rowIndex;
 
+            //  We have to validate new rows (the existing ones are validated
+            //  in the _CellValidating() method.
+
+            rowIndex = 0;
+            foreach (Diagramecotag diagramECOTag in diagramEcoTagList) {
+
+                //  If this row was not modified, skip it.
+
+                if (!diagramECOTag.modified) {
+                    continue;
+                }
+
+                //  Otherwise, validate it.
+
+                tempMessage = "";
+                DateTime junk;
+                String namev =
+                    ecosDataGridView.Rows[rowIndex].Cells["name"].FormattedValue.ToString();
+                String ecov =
+                    ecosDataGridView.Rows[rowIndex].Cells["eco"].FormattedValue.ToString();
+                String datev =
+                    ecosDataGridView.Rows[rowIndex].Cells["date"].FormattedValue.ToString();
+                if (string.IsNullOrEmpty(namev) || namev.Length > 1) {
+                    tempMessage = "Missing or Invalid Tag (single character)";
+                }
+                else if (string.IsNullOrEmpty(ecov) || ecov.Length > 10) {
+                    tempMessage = "Missing or Invalid E.C. Number";
+                }
+                else if (string.IsNullOrEmpty(datev) || !DateTime.TryParse(datev, out junk)) {
+                    tempMessage = "Missing or Invalid E.C. Date";
+                }
+                if (tempMessage.Length > 0) {
+                    ecosDataGridView.Rows[rowIndex].ErrorText = tempMessage;
+                    message = "Errors in ECO table found.";
+                }
+                ++rowIndex;
+            }
+
+            if (message.Length > 0) {
+                MessageBox.Show(message, "Errors Found",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                message = "";
+                return (false);
+            }
+
             //  Validation complete, so now we can go to work, "inside out"
 
             if (currentDiagramPage == null) {
@@ -931,6 +1006,20 @@ namespace IBM1410SMS
             }
 
             //  Fill in the objects from the form data.
+
+            if(currentPage.machine != currentMachine.idMachine ||
+                currentPage.volume != currentVolume.idVolume ||
+                currentPage.part != partTextBox.Text ||
+                currentPage.title != titleTextBox.Text ||
+                currentPage.name != nameTextBox.Text ||
+                currentPage.stamp != stampTextBox.Text ||
+                currentPage.comment != commentTextBox.Text ) {
+                currentPage.modified = true;
+            }
+
+            if((currentDiagramPage.noHDLGeneration == 1) != noHDLGenerationCheckBox.Checked) {
+                currentDiagramPage.modified = true;
+            }
 
             currentPage.machine = currentMachine.idMachine;
             currentPage.volume = currentVolume.idVolume;
@@ -966,10 +1055,6 @@ namespace IBM1410SMS
                     message + "\n";
                 changePageComboBox = true;
             }
-            else {
-                //  Rather than check for changes, we will just force the update...
-                currentPage.modified = true;
-            }
 
             //  Next, if we are adding a Diagram Page, take care of that.
 
@@ -985,13 +1070,9 @@ namespace IBM1410SMS
                     (doUpdate ? " Database ID=" + currentDiagramPage.idDiagramPage : "") +
                     "\n";
             }
-            else {
-                //  Rather than check for changes, we will just force the update...
-                currentDiagramPage.modified = true;
-            }
 
-            //  If there are any modified flags, then we need to do updates.
-            //  The data has already been filled in.
+            //  If there are any modified flags for pages that are not new,
+            //  then we need to do updates.  The data has already been filled in.
 
             if (currentDiagramPage.modified) {
                 if (doUpdate) {
@@ -1137,6 +1218,8 @@ namespace IBM1410SMS
 
                 saveParams(true);
             }
+
+            return (true);
         }
 
         private void newPageButton_Click(object sender, EventArgs e) {
@@ -1299,6 +1382,10 @@ namespace IBM1410SMS
             if (setPage) {
                 Parms.setParmValue("page", currentPage.idPage.ToString());
             }
+        }
+
+        private void EditDiagramPageForm_Shown(object sender, EventArgs e) {
+            volumeSetComboBox.SelectedItem = currentVolumeSet;
         }
     }
 }

@@ -415,6 +415,7 @@
             this.Controls.Add(this.label1);
             this.Name = "EditDiagramPageForm";
             this.Text = "Edit ALD Diagram";
+            this.Shown += new System.EventHandler(this.EditDiagramPageForm_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.ecosDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.sheetEdgeDataGridView)).EndInit();
             this.ResumeLayout(false);
