@@ -82,7 +82,9 @@ namespace IBM1410SMS
 
         bool populatingDialog = true;
         bool applySuccessful = false;
+        bool notApplyButton = false;
         bool modifiedMachineGatePanelFrame = false;
+        bool modifiedColumn = false;
 
         public EditDiagramLogicBlockForm(
             Diagramblock diagramBlock,
@@ -730,6 +732,9 @@ namespace IBM1410SMS
                 cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
             }
             drawLogicbox();
+            if(!populatingDialog) {
+                modifiedColumn = true;
+            }
         }
 
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
@@ -752,7 +757,30 @@ namespace IBM1410SMS
             string message = "";
             applySuccessful = false;
 
-            if(cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
+            if (!isModified()) {
+                if (!notApplyButton) {
+                    //  Only show this if the actual Apply button caused this udpate.
+                    MessageBox.Show(
+                        "There were no updates to this logic block." + message,
+                        "No updates to apply",
+                        MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+                    return;
+                }
+                else {
+                    //  If we came here via a path other than the Apply Button,
+                    //  and no updates are required, just reset the flag and return.
+                    applySuccessful = true;
+                    notApplyButton = false;
+                    return;
+                }
+            }
+
+            //  Reset the info on the button that got us here.  It no longer matters,
+            //  because the update is failed.
+
+            notApplyButton = false;
+
+            if (cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
                 !int.TryParse(cardColumnTextBox.Text, out column) || 
                 column < 1 || column > 99) {
                 MessageBox.Show("Card " + columnLabel + " must be present, and be 1-99",
@@ -828,6 +856,8 @@ namespace IBM1410SMS
                 MessageBox.Show(message,"Adds/Updates applied.",
                     MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
                 applySuccessful = true;
+                modifiedColumn = false;
+                modifiedMachineGatePanelFrame = false;
                 this.Close();
             }
         }
@@ -1023,6 +1053,7 @@ namespace IBM1410SMS
             int.TryParse(cardColumnTextBox.Text, out column);
 
             return (modifiedMachineGatePanelFrame ||
+                modifiedColumn ||
                 currentDiagramBlock.idDiagramBlock == 0 ||
                 currentCardSlotInfo.machineName != ((Machine)machineComboBox.SelectedItem).name ||
                 currentCardSlotInfo.frameName != ((Frame)frameComboBox.SelectedItem).name ||
@@ -1030,8 +1061,7 @@ namespace IBM1410SMS
                 currentCardSlotInfo.panelName != ((Panel)panelComboBox.SelectedItem).panel ||
                 currentCardSlotInfo.row != (string)cardRowComboBox.SelectedItem ||
                 currentCardSlotInfo.column != column ||
-                (currentDiagramBlock.extendedTo != 0 && !extendedCheckBox.Checked) ||
-                (currentDiagramBlock.extendedTo == 0 && extendedCheckBox.Checked) ||
+                ((currentDiagramBlock.extendedTo == 1) != extendedCheckBox.Checked) ||
                 currentDiagramBlock.title != diagramBlockTitleTextBox.Text ||
                 currentDiagramBlock.symbol != symbolTextBox.Text ||
                 currentDiagramBlock.feature != ((Feature)featureComboBox.SelectedItem).idFeature ||
@@ -1041,7 +1071,9 @@ namespace IBM1410SMS
                 currentDiagramBlock.cardType != ((Cardtype)cardTypeComboBox.SelectedItem).idCardType ||
                 currentDiagramBlock.cardGate != cardGateList[cardGateComboBox.SelectedIndex].idcardGate ||
                 currentDiagramBlock.blockConfiguration != blockConfigurationTextBox.Text ||
-                currentDiagramBlock.notes != notesTextBox.Text
+                currentDiagramBlock.notes != notesTextBox.Text ||
+                (currentDiagramBlock.noHDLGeneration == 1) != noHDLGen.Checked ||
+                (currentDiagramBlock.flipped == 1) != flippedCheckBox.Checked
                 );
         }
 
