@@ -36,12 +36,14 @@ namespace IBM1410SMS
     static class IdCounter
     {
 
+        /*
         public static int getCounter() {
 
             //  Call the internal routine - no increment.
 
             return doCounter(false);
         }
+        */
 
         public static int incrementCounter() {
 

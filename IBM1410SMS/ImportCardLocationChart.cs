@@ -632,10 +632,10 @@ namespace IBM1410SMS
                         }
                         else {
                             newDiagramPage = new Diagrampage();
-                            newDiagramPage.idDiagramPage = IdCounter.getCounter();
+                            newDiagramPage.idDiagramPage = IdCounter.incrementCounter();
                             newDiagramPage.noHDLGeneration = 0;
                             newDiagramPage.page = pageList[0].idPage;
-                            diagramPageTable.insert(newDiagramPage);
+                            diagramPageTable.insert(newDiagramPage);0
                             logMessage("Input Line " + lineNumber + 
                                 " Added Diagram Page " +
                                 " Database ID=" + newDiagramPage.idDiagramPage +

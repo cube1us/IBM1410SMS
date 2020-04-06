@@ -173,7 +173,7 @@ namespace IBM1410SMS
             }
             else {
                 volumeSet = new Volumeset();
-                volumeSet.idVolumeSet = IdCounter.getCounter();
+                volumeSet.idVolumeSet = IdCounter.incrementCounter();
                 volumeSet.machineType = volumeSetName;
                 volumeSet.machineSerial = machineSerial;
                 volumeSetTable.insert(volumeSet);
