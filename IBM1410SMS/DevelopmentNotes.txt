@@ -1115,9 +1115,9 @@ OR.  If it is fed from DTL (NOR or NAND, depending on the diodes) gates (B Level
 it is an AND !!!!!   [NEED TO RETHINK THIS.  B Level?  Y Level?  It looks like for
 Y level it would still be an OR.]
 
-ENTERED #6 DONE:  EditDiagramLogicBlock:  Keep an eye on it sent a change when there is
+CLOSED #6 DONE:  EditDiagramLogicBlock:  Keep an eye on it sent a change when there is
    none - it is probably a null vs. blank compare on the new block notes field?
-   YES - That is almost certainly what was going on.
+   YES - That is almost certainly what was going on.  Actually, no it wasn't.  ;)
 
 CLOSED  #7 WATCH:  BUG:  EditDiagramPageForm:  cannot pre-select volume because it
    causes an index out of range condition puzzle, and messes up ECOs.  diagnose.
@@ -1229,9 +1229,11 @@ ENTERED TODO: #44  Need reports showing logic block usage by
    3.  Card Location (where a particular card is used - essentially like the card location 
        chart would have been generated)
 
-ENTERED TODO: #46  EditCardLocationPageForm, EditDiagramPageForm and EditCableEdgeConnectionForm 
+CLOSED TODO: #46  EditCardLocationPageForm, EditDiagramPageForm and EditCableEdgeConnectionForm 
    all have a variable "pageModified" that is supposed to be set when a field value changes, 
-   but none of them are actually doing that.
+   but none of them are actually doing that.  (Note:  Did NOT bother fixing 
+   EditCardLocationPage - it just isn't used all that often.)  Also fixed 
+   EditCableEdgeConnctionBlockForm and EditDiagramLogicBLockForm.  See also #6.
 
 ERRATA:
 
