@@ -778,6 +778,19 @@ namespace IBM1410SMS
                         addApplyButton.Text);
                 }
 
+                //  If the page is new, but not in range for this volume, warn the user.
+
+                if (nameTextBox.Text.CompareTo(currentVolume.firstPage) < 0 ||
+                    nameTextBox.Text.CompareTo(currentVolume.lastPage) > 0) {
+                    DialogResult result = MessageBox.Show(
+                        "Warning:  New page name is not in range for this volume.",
+                        "Page name range warning", MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Warning);
+                    if (result == DialogResult.Cancel) {
+                        return;
+                    }
+                }
+
                 if (currentPage == null) {
                     currentPage = new Page();
 

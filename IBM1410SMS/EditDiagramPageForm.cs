@@ -863,6 +863,19 @@ namespace IBM1410SMS
 
                 }
 
+                //  If the page is new, but not in range for this volume, warn the user.
+
+                if (nameTextBox.Text.CompareTo(currentVolume.firstPage) < 0 ||
+                    nameTextBox.Text.CompareTo(currentVolume.lastPage) > 0) {
+                    DialogResult result = MessageBox.Show(
+                        "Warning:  New page name is not in range for this volume.",
+                        "Page name range warning", MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Warning);
+                    if (result == DialogResult.Cancel) {
+                        return;
+                    }
+                }
+
                 if (currentPage == null) {
                     currentPage = new Page();
                     //  Set name to not-null, but will also not compare to text box.
@@ -1090,8 +1103,9 @@ namespace IBM1410SMS
                     pageTable.update(currentPage);
                     currentPage.modified = false;
                 }
-                message = updateAction + " Page " + currentPage.name + " (Database ID " +
-                    currentPage.idPage + " )\n" + message;
+                message = updateAction + " Page " + currentPage.name + 
+                    (doUpdate ? " (Database ID " +  currentPage.idPage + " )"  : "") + 
+                    "\n" + message;
             }
 
             //  Now we are ready to process any ECO Tag changes.  First,
