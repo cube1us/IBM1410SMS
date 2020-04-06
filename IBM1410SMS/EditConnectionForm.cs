@@ -770,7 +770,7 @@ namespace IBM1410SMS
 
             //  If this is an output, see what pins are already selected.  If there are more
             //  than one (including this pin) [or two if this is for a TOG toggle switch] issue
-            //  a warning.
+            //  a warning.  Also issue a warning if the polarities vary.
 
             if(isInput && ((Gatepin)pinComboBox.SelectedItem).pin != "--") {
                 List<Connection> existingConnections = connectionTable.getWhere(
@@ -794,15 +794,42 @@ namespace IBM1410SMS
             else if(!isInput) {
 
                 List<string> pins = new List<string>();
+                bool positivePolarity = false;
+                bool negativePolarity = false;
+
+                if(positiveRadioButton.Checked) {
+                    positivePolarity = true;
+                }
+                else {
+                    negativePolarity = true;
+                }
 
                 pins.Add(((Gatepin)pinComboBox.SelectedItem).pin);
 
                 List<Connection> existingConnections = connectionTable.getWhere(
                     "WHERE fromDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'");
 
+
                 foreach (Connection connection in existingConnections) {
                     if (pins.IndexOf(connection.fromPin) < 0) {
                         pins.Add(connection.fromPin);
+                    }
+
+                    //  Don't look at the "old" polarity for this connection itself, 
+                    //  as we already accounted for the new polarity, dnd it might be 
+                    //  changing.
+
+                    if (connection.idConnection == currentConnection.idConnection) {
+                        continue;
+                    }
+
+                    if (connection.fromPin.Equals(((Gatepin)pinComboBox.SelectedItem).pin)) {
+                        if (connection.fromPhasePolarity == "+") {
+                            positivePolarity = true;
+                        }
+                        else {
+                            negativePolarity = true;
+                        }
                     }
                 }
 
@@ -817,6 +844,17 @@ namespace IBM1410SMS
                         return;
                     }
                 }
+
+                if (positivePolarity && negativePolarity) {
+                    DialogResult status = MessageBox.Show(
+                        "WARNING: This diagram block would have + and - from the same pin",
+                        "WARNING: Multiple conflicting polarities",
+                        MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                    if (status == DialogResult.Cancel) {
+                        return;
+                    }
+                }
+
             }
 
             db.BeginTransaction();
