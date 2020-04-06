@@ -249,19 +249,29 @@ namespace IBM1410SMS
                 "WHERE volume.set='" + volumeSet.idVolumeSet + "'");
 
             foreach(Volume v in volumeList) {
-                
-                //  While we are at it, capture the key associated with the
-                //  default volume name.
 
-                if(v.name == defaultVolumeName) {
+                //  See if this volume comprises the (possibly new) page number
+                //  If so, preferentially remember this volume.
+                //  Otherwise, While we are at it, capture the key associated with the
+                //  default volume name. 
+
+                if (pageName.CompareTo(v.firstPage) >= 0 &&
+                   pageName.CompareTo(v.lastPage) <= 0) {
                     volumeKey = v.idVolume;
                 }
+                else if (volumeKey == 0 && v.name == defaultVolumeName) {
+                    volumeKey = v.idVolume;
+                }
+
+                //  Look to see if the page already exists.  If so, use it.
+
                 List<Page> pageList = pageTable.getWhere(
                     "WHERE machine='" + machine.idMachine + "'" +
                     " AND volume='" + v.idVolume + "'" +
                     " AND page.name='" + pageName + "'");
                 if(pageList.Count > 0) {
                     pageKey = pageList[0].idPage;
+                    break;
                 }
             }
 
@@ -285,7 +295,8 @@ namespace IBM1410SMS
                     message += "\n";
                 }
                 else {
-                    volumeKey = volumeList[0].idVolume;
+                    //   We have a volume key, so use its name.
+                    defaultVolumeName = volumeList.Find(x => x.idVolume == volumeKey).name;
                 }
 
                 //  Then add the page...
