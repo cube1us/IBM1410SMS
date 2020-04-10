@@ -29,6 +29,13 @@ import getopt
 def main():
 
     #
+    #   Globals
+    #
+
+    global cnx
+    global debug
+
+    #
     #   A list of tables, their keys and their foreign keys 
     #
 
@@ -108,6 +115,8 @@ def main():
         'cableimplieddestinations' : {'key' : 'cablesource', 'fk' : {}}
     }
 
+    exemptFromOrphanTest = ['cardslot', 'gatepin']
+
     database = "ibm1410sms"
     dbuser = "collection"
     dbpw = "twiddle"
@@ -178,6 +187,7 @@ def main():
 
     cursor = cnx.cursor()
     cursor2 = cnx.cursor()
+    sys.stdout.flush()
 
     #
     #   Run through all of the tables, capturing the keys
@@ -186,11 +196,11 @@ def main():
     for tableName in tableDict.keys():
         table = tableDict[tableName]
         keyName = table['key']
-        if(debug or verbose > 0):
+        if(debug or verbose):
             print("Processing dups for table " + tableName + " with key " + keyName + ", ",end=' ')
         query = "SELECT " + keyName + " FROM " + tableName
         cursor.execute(query)
-        if(debug or verbose > 0):
+        if(debug or verbose):
             print(" [" + str(cursor.rowcount) + " rows.]")
         keys[tableName] = []
 
@@ -219,25 +229,114 @@ def main():
             #
             allkeys[idvalue].append(tableName)
 
+    sys.stdout.flush()
 
 #
-#   Next, we check for *missing* id numbers
+#   Build a dictionaries
+#   
+#       fklist[table][foreign table] - contains foreign key in other table that refers to table
+#
+#       refs[table][key value] - holds a count of other rows that refer to a given row in table
+#
+#   This is useful in two ways.  Firstly, if refs is 0, that row is an "orphan" - nothing
+#   actually refers to it.  Secondly, if that orphan row has a foreign key that points off
+#   to a nonexisting row in a foreign table, that is OK - it could simply be removed.
+#
+
+    refs = {}
+    fklist = {}
+
+    for tableName in tableDict.keys():
+
+        refs[tableName] = {}
+        fklist[tableName] = {}
+        table = tableDict[tableName]
+        if(debug or verbose):
+            print("Processing table " + tableName + " to look for unreferenced orphans")
+
+        #
+        #   Some tables are exempt from orphan error messages
+        #
+
+        if(tableName in exemptFromOrphanTest):
+            continue
+
+        #   Build a list of other tables and their fields that refer to this table
+
+        for otherTableName in tableDict.keys():
+            otherTable = tableDict[otherTableName]
+            otherKeyName = otherTable['key']
+            for otherFK in otherTable['fk'].keys():
+                if(otherTable['fk'][otherFK] == tableName):
+                    if(debug or verbose):
+                        print("   Table " + otherTableName + " references table " +
+                                tableName + " via field " + otherFK)
+                    fklist[tableName][otherTableName] = otherFK
+
+        #   If there are not any, then this is a "leaf" table - ignore it.
+
+        if(len(fklist[tableName]) == 0):
+            print("NOTE:  Table " + str(tableName) + " is a LEAF table.")
+            continue
+
+        #   Get a list of this table's keys
+
+        query = "SELECT " + table['key'] + " FROM " + tableName
+        if(debug > 1):
+            print("   " + query,end=' ')
+        cursor.execute(query)
+        if(debug > 1):
+            print(" [" + str(cursor.rowcount) + " rows.]")
+
+        #   Count references from other tables to this key
+
+        for tuple in cursor:
+            keyvalue = tuple[0]
+            refs[tableName][keyvalue] = 0
+            if(debug > 2):
+                print("Tuple: " + str(tuple) + ", Key: " +  str(keyvalue))
+
+            for otherTableName in fklist[tableName].keys():
+                otherFK = fklist[tableName][otherTableName]                        
+                otherKeyName = tableDict[otherTableName]['key']
+                query = ("SELECT " + otherKeyName + " FROM " + otherTableName +
+                    " WHERE `" + otherFK + "` = '" + str(keyvalue) + "'")
+                if(debug > 1 or str(keyvalue) == "268892"):
+                    print("   " + query,end='')                                
+                cursor2.execute(query)
+                if(debug > 1 or str(keyvalue) == "268892"):
+                    print(" [" + str(cursor2.rowcount) + " rows.]")
+                refs[tableName][keyvalue] += cursor2.rowcount
+
+            if(debug > 1 or refs[tableName][keyvalue] == 0):
+                print("   There are " + str(refs[tableName][keyvalue]) + 
+                    " references to row with key " + str(keyvalue) + " in table " + tableName)
+
+            if(refs[tableName][keyvalue] == 0):
+                funcName = "show_" + tableName
+                if(funcName in globals()):
+                    globals()[funcName](keyvalue)
+
+        sys.stdout.flush()
+
+#
+#   Next, we check for *missing* id numbers (eventually, using the refs dictionary from above.
 #
 
     for tableName in tableDict.keys():
         table = tableDict[tableName]
-        if(debug or verbose > 0):
+        if(debug or verbose):
             print("Processing missing fk entries for table " + tableName)
         for fk in table['fk'].keys():
             ftable = table['fk'][fk]
-            if(debug or verbose > 0):
+            if(debug or verbose):
                 print("   Processing fk named " + fk + " into table " + ftable,end=' ')
-            query = "SELECT " + table['key'] + ", `" + fk + "`" + " FROM " + tableName
-            if(debug or verbose > 0):
-                print()
-                print("   " + query,end=' ')
-            cursor.execute(query)
-            if(debug or verbose > 0):
+            # query = "SELECT " + table['key'] + ", `" + fk + "`" + " FROM " + tableName
+            # if(debug or verbose):
+            #    print()
+            #    print("   " + query,end=' ')
+            # cursor.execute(query)
+            # if(debug or verbose):
                 print(" [" + str(cursor.rowcount) + " rows.]")
 
             #
@@ -268,34 +367,206 @@ def main():
                     #   references to THIS row's key value.
                     #
 
-                    refCount = 0
+                    # refCount = 0
+                    #
+                    # for otherTableName in tableDict.keys():
+                    #    otherTable = tableDict[otherTableName]
+                    #    otherKeyName = otherTable['key']
+                    #    for otherFK in otherTable['fk'].keys():
+                    #        if(otherTable['fk'][otherFK] == tableName):
+                    #            if(verbose or debug > 0):
+                    #                print("   Table " + otherTableName + " references table " +
+                    #                      tableName + " via field " + otherFK)
+                    #            query = ("SELECT " + otherKeyName + " FROM " + otherTableName +
+                    #                " WHERE `" + otherFK + "` = '" + str(keyvalue) + "'")
+                    #            if(verbose or debug > 0):
+                    #                print("      " + query,end='')                                
+                    #            cursor2.execute(query)
+                    #            if(verbose or debug > 0):
+                    #               print(" [" + str(cursor2.rowcount) + " rows.]")
+                    #            refCount += cursor2.rowcount
 
-                    for otherTableName in tableDict.keys():
-                        otherTable = tableDict[otherTableName]
-                        otherKeyName = otherTable['key']
-                        for otherFK in otherTable['fk'].keys():
-                            if(otherTable['fk'][otherFK] == tableName):
-                                if(verbose or debug > 0):
-                                    print("   Table " + otherTableName + " references table " +
-                                          tableName + " via field " + otherFK)
-                                query = ("SELECT " + otherKeyName + " FROM " + otherTableName +
-                                    " WHERE " + otherFK + " = '" + str(keyvalue) + "'")
-                                if(verbose or debug > 0):
-                                    print("      " + query,end='')                                
-                                cursor2.execute(query)
-                                if(verbose or debug > 0):
-                                   print(" [" + str(cursor2.rowcount) + " rows.]")
-                                refCount += cursor2.rowcount
-                    print("   There are " + str(refCount) + " references to THIS row in table " +
-                          tableName)
+                    if(not tableName in exemptFromOrphanTest):
+                        print("   There are " + str(refs[tableName][keyvalue]) + 
+                              " references to THIS row in table " + tableName)
 # 
 #   All done
 #
 
     cnx.close()
 
+#
+#   Routine to display an ECO name
+#
+
+def show_eco(idECO):
+    cursor = cnx.cursor()
+    query = ("SELECT eco, machine FROM eco WHERE ideco = '" + str(idECO) + "'")
+    cursor.execute(query)
+    (ecoName, idmachine) = cursor.fetchone()
+    cursor.close()
+    machineName = getMachineName(idmachine)
+    print("      ECO: " + str(ecoName) + ", Machine: " + machineName)
+
+#
+#   Routine to display a feature name
+#
+
+def show_feature(idFeature):
+    cursor = cnx.cursor()
+    query = ("SELECT code, feature, machine FROM feature WHERE idfeature = '" + str(idFeature) + "'")
+    cursor.execute(query)
+    (featureName, featureDesc, idmachine) = cursor.fetchone()
+    cursor.close()
+    machineName = getMachineName(idmachine)
+    print ("      Feature: " + featureName + ", Machine: " + machineName + 
+           ", Desc: " + featureDesc)
+
+#
+#   Routine to display important information related to a card location
+#   for tracing orphans.
+#
+
+def show_cardlocation(idCardlocation):
+    cursor = cnx.cursor()
+    
+    query = ("SELECT page, cardslot, type FROM cardlocation WHERE idcardlocation = '" + 
+        str(idCardlocation) + "'")
+    cursor.execute(query)
+    (clpage, cardslot, type) = cursor.fetchone()
+    if(debug > 1):
+        print("      show_cardlocation:  clpage=" + str(clpage) + ", cardslot=" + str(cardslot) +
+            ", type=" + str(type))
+    
+    query = ("SELECT page from cardlocationpage WHERE idcardlocationpage = '" + 
+         str(clpage) + "'")
+    cursor.execute(query)
+    page = cursor.fetchone()[0]
+    (pageName, volumeName, machineName, part) = getPageInfo(page)
+    slotName = getCardSlot(cardslot)
+    cardType = getCardTypeName(type)
+
+    print("      Page: " + str(pageName) + ", Slot: " + str(slotName) + 
+          ", Type: " + str(cardType))
+    cursor.close()
+    return
+
+#
+#   Routine to display information about an orphan SheetEdgeInformation row
+#
+
+def show_sheetedgeinformation(idSheetEdgeInformation):
+    cursor = cnx.cursor()
+    query = ("SELECT diagrampage, `row`, signalname, leftside, rightside " +
+        "FROM sheetedgeinformation WHERE idsheetedgeinformation = '" + 
+        str(idSheetEdgeInformation) + "'")
+    cursor.execute(query)
+    (idDiagrampage, row, signalName, left, right) = cursor.fetchone()
+    cursor.close()
+    (diagramPageName, volumeName, machineName, part) = getDiagramPageInfo(idDiagrampage)
+    side = ""
+    if(left > 0):
+        side = "L"
+    if(right > 0):
+        side = "/R"
+    print("      Diagram Page: " + str(diagramPageName) + ", Page row: " + 
+        str(row) + ", Side: " + side + ", Signal Name: " + str(signalName))
+    return
+
+#
+#   Routine to retrieve info on a page, given its key
+#
+#   Returns a tuple (page name, volume name, machine name, part)
+#
+
+def getPageInfo(idPage):
+    cursor = cnx.cursor()
+    query = ("SELECT name, machine, volume, part FROM page WHERE idpage = '" + str(idPage) + "'")
+    cursor.execute(query)
+    (pageName, idMachine, idVolume, part) = cursor.fetchone()
+    cursor.close()
+    machineName = getMachineName(idMachine)
+    volumeName = getVolumeName(idVolume)
+    return (pageName, volumeName, machineName, part)
+
+#
+#   Routine to retreive the page name of a diagram page given its key
+#
+def getDiagramPageInfo(idDiagrampage):
+    cursor = cnx.cursor()
+    query = ("SELECT page FROM diagrampage WHERE iddiagrampage='" + 
+         str(idDiagrampage) + "'")
+    cursor.execute(query)
+    page = cursor.fetchone()[0]
+    cursor.close()
+    return(getPageInfo(page))
+
+#
+#   Routine to retrieve the long form of a card slot (4 character machine)
+#
+
+def getCardSlot(idCardSlot):
+    cursor = cnx.cursor()
+    
+    query = ("SELECT panel, cardrow, cardcolumn FROM cardslot WHERE idcardslot = '" + 
+        str(idCardSlot) + "'")
+    cursor.execute(query)
+    (idpanel,row,column) = cursor.fetchone()
+
+    query = ("SELECT panel, gate FROM panel WHERE idpanel = '" + str(idpanel) + "'")
+    cursor.execute(query)
+    (panel, idgate) = cursor.fetchone()
+
+    query = ("SELECT name, frame FROM machinegate WHERE idgate = '" + str(idgate) + "'")
+    cursor.execute(query)
+    (gate, idframe) = cursor.fetchone()
+
+    query = ("SELECT name, machine FROM frame WHERE idframe = '" + str(idframe) + "'")
+    cursor.execute(query)
+    (frame, idmachine) = cursor.fetchone()
+    machine = getMachineName(idmachine)
+
+    cursor.close()
+    return(str(machine) + str(frame) + str(gate) + str(panel) + str(row) + str(column))
+
+#
+#   Routine to return the name of a card type
+#
+
+def getCardTypeName(idCardType):
+    cursor = cnx.cursor()
+    query = "SELECT type FROM cardtype WHERE idcardtype='" + str(idCardType) + "'"
+    cursor.execute(query)
+    type = cursor.fetchone()[0]
+    cursor.close()
+    return(type)
+
+#
+#   Routine to return the name of a machine
+#
+
+def getMachineName(idMachine):    
+    cursor = cnx.cursor()
+    query = ("SELECT name FROM machine WHERE idmachine = '" + str(idMachine) + "'")
+    cursor.execute(query)
+    machine = cursor.fetchone()[0]
+    cursor.close()
+    return(machine)
+
+#
+#   Routine to return the name of a volume
+#
+
+def getVolumeName(idVolume):
+    cursor = cnx.cursor()
+    query = ("SELECT name FROM volume WHERE idvolume = '" + str(idVolume) + "'")
+    cursor.execute(query)
+    volume = cursor.fetchone()[0]
+    return(volume)
+
 def usage():
     print("Usage: " + sys.argv[0] + " [-v] [-d] [-u | --user <user>] [-p | --password <password>] ")
+    return
 
 if __name__ ==  "__main__":
     main()
