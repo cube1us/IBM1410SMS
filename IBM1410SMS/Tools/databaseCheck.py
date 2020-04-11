@@ -190,11 +190,18 @@ def main():
     sys.stdout.flush()
 
     #
-    #   Run through all of the tables, capturing the keys
+    #   Run through all of the tables, capturing the keys.
+    #
+    #   Also prepare refs[<table name>][<counter>] with 0 counts for use later
     #
 
+    refs = {}
+
     for tableName in tableDict.keys():
+
         table = tableDict[tableName]
+        refs[tableName] = {}
+
         keyName = table['key']
         if(debug or verbose):
             print("Processing dups for table " + tableName + " with key " + keyName + ", ",end=' ')
@@ -216,6 +223,7 @@ def main():
             #
 
             keys[tableName].append(idvalue)
+            refs[tableName][str(idvalue)] = 0
             if idvalue in allkeys:
                 print("Duplicate ID value " + str(idvalue) + " in tables: " + tableName,end='')
                 for othertable in allkeys[idvalue]:
@@ -231,167 +239,90 @@ def main():
 
     sys.stdout.flush()
 
-#
-#   Build a dictionaries
-#   
-#       fklist[table][foreign table] - contains foreign key in other table that refers to table
-#
-#       refs[table][key value] - holds a count of other rows that refer to a given row in table
-#
-#   This is useful in two ways.  Firstly, if refs is 0, that row is an "orphan" - nothing
-#   actually refers to it.  Secondly, if that orphan row has a foreign key that points off
-#   to a nonexisting row in a foreign table, that is OK - it could simply be removed.
-#
-
-    refs = {}
-    fklist = {}
+    #
+    #   Next, for each table, add references to a refernce count in other
+    #   tables.
+    #
+    #   refs is a dictionary that counts references TO each row FROM other
+    #   tables as refs[<table name][<key value>].
+    #
+    #   While we are at it, we report any cases where the foreign key refers
+    #   to a row in the foreign table that does not actually exist.
+    #
 
     for tableName in tableDict.keys():
-
-        refs[tableName] = {}
-        fklist[tableName] = {}
+        
         table = tableDict[tableName]
-        if(debug or verbose):
-            print("Processing table " + tableName + " to look for unreferenced orphans")
-
-        #
-        #   Some tables are exempt from orphan error messages
-        #
-
-        if(tableName in exemptFromOrphanTest):
-            continue
-
-        #   Build a list of other tables and their fields that refer to this table
-
-        for otherTableName in tableDict.keys():
-            otherTable = tableDict[otherTableName]
-            otherKeyName = otherTable['key']
-            for otherFK in otherTable['fk'].keys():
-                if(otherTable['fk'][otherFK] == tableName):
-                    if(debug or verbose):
-                        print("   Table " + otherTableName + " references table " +
-                                tableName + " via field " + otherFK)
-                    fklist[tableName][otherTableName] = otherFK
-
-        #   If there are not any, then this is a "leaf" table - ignore it.
-
-        if(len(fklist[tableName]) == 0):
-            print("NOTE:  Table " + str(tableName) + " is a LEAF table.")
-            continue
-
-        #   Get a list of this table's keys
-
-        query = "SELECT " + table['key'] + " FROM " + tableName
-        if(debug > 1):
-            print("   " + query,end=' ')
-        cursor.execute(query)
-        if(debug > 1):
-            print(" [" + str(cursor.rowcount) + " rows.]")
-
-        #   Count references from other tables to this key
-
-        for tuple in cursor:
-            keyvalue = tuple[0]
-            refs[tableName][keyvalue] = 0
-            if(debug > 2):
-                print("Tuple: " + str(tuple) + ", Key: " +  str(keyvalue))
-
-            for otherTableName in fklist[tableName].keys():
-                otherFK = fklist[tableName][otherTableName]                        
-                otherKeyName = tableDict[otherTableName]['key']
-                query = ("SELECT " + otherKeyName + " FROM " + otherTableName +
-                    " WHERE `" + otherFK + "` = '" + str(keyvalue) + "'")
-                if(debug > 1 or str(keyvalue) == "268892"):
-                    print("   " + query,end='')                                
-                cursor2.execute(query)
-                if(debug > 1 or str(keyvalue) == "268892"):
-                    print(" [" + str(cursor2.rowcount) + " rows.]")
-                refs[tableName][keyvalue] += cursor2.rowcount
-
-            if(debug > 1 or refs[tableName][keyvalue] == 0):
-                print("   There are " + str(refs[tableName][keyvalue]) + 
-                    " references to row with key " + str(keyvalue) + " in table " + tableName)
-
-            if(refs[tableName][keyvalue] == 0):
-                funcName = "show_" + tableName
-                if(funcName in globals()):
-                    globals()[funcName](keyvalue)
+        for fk in table['fk'].keys():
+            otherTable = table['fk'][fk]
+            if(verbose or debug):
+                print("Table " + tableName + ", column " + fk +
+                    ", refers to table " + otherTable)
+            query = "SELECT " + table['key'] + ", `" + fk + "` FROM " + tableName
+            if(debug):
+                print("   " + query,end='')
+            cursor.execute(query)
+            if(debug):
+                print(" [" + str(cursor.rowcount) + " rows]")
+            for idtuple in cursor:
+                (keyvalue, fkeyvalue) = idtuple
+                keyvalue = str(keyvalue)
+                fkeyvalue = str(fkeyvalue)
+                if(fkeyvalue == "0" or fkeyvalue == str(None)):
+                    continue
+                if(fkeyvalue in refs[otherTable]):
+                    refs[otherTable][fkeyvalue] += 1;
+                else:
+                    print("   Dangling reference from table " + tableName +
+                          ", key " + keyvalue + ", column " + fk + 
+                          ", value " + fkeyvalue + " to table " + otherTable)
 
         sys.stdout.flush()
 
-#
-#   Next, we check for *missing* id numbers (eventually, using the refs dictionary from above.
-#
+    print("TEST: " + str(refs['sheetedgeinformation']['268892']))
+
+    #
+    #   Next, report any key values that have no references to them,
+    #   exluding those tables that have nothing that refers to them
+    #
 
     for tableName in tableDict.keys():
+        
         table = tableDict[tableName]
-        if(debug or verbose):
-            print("Processing missing fk entries for table " + tableName)
-        for fk in table['fk'].keys():
-            ftable = table['fk'][fk]
-            if(debug or verbose):
-                print("   Processing fk named " + fk + " into table " + ftable,end=' ')
-            # query = "SELECT " + table['key'] + ", `" + fk + "`" + " FROM " + tableName
-            # if(debug or verbose):
-            #    print()
-            #    print("   " + query,end=' ')
-            # cursor.execute(query)
-            # if(debug or verbose):
-                print(" [" + str(cursor.rowcount) + " rows.]")
+        print("Processing Table " + tableName + " looking for orphans")
 
-            #
-            #   Now, check that each of these id values actually exists in the foreign table
-            #
+        if(tableName in exemptFromOrphanTest):
+            print("   This table is exempt from the orphan test.")
+            continue
 
-            for fktuple in cursor:
-                keyvalue = fktuple[0]
-                fkvalue = fktuple[1]
-                if(debug > 1):
-                    print("Tuple: " + str(fktuple) + ", Key: " + 
-                          str(keyvalue) + ", fk: " + str(fkvalue))
-                if(fkvalue == None or fkvalue == 0):
-                    continue
-                if(fkvalue not in keys[ftable]):
+        #
+        #   Do any other tables refer to this table?
+        #
 
-                    #
-                    #   Uh oh.  Found a key value that doesn't actually exist.
-                    #
+        leafTable = True
 
-                    print("Error: Table: " + tableName + ", ID: " + str(keyvalue) + 
-                          ", fk: " + fk + ", into f. table " + ftable + 
-                          ", MISSING FK value " + str(fkvalue))
+        for otherTableName in tableDict.keys():
+            otherTable = tableDict[otherTableName]
+            for fk in otherTable['fk'].keys():
+                if(otherTable['fk'][fk] == tableName):
+                    leafTable = False
+                    break
 
-                    #   
-                    #   Most often these are "orphans" where something got deleted
-                    #   but the thing that pointed to it didn't.  So, check for
-                    #   references to THIS row's key value.
-                    #
+        if(leafTable):
+            print("   This table is a LEAF table -- skipping")
 
-                    # refCount = 0
-                    #
-                    # for otherTableName in tableDict.keys():
-                    #    otherTable = tableDict[otherTableName]
-                    #    otherKeyName = otherTable['key']
-                    #    for otherFK in otherTable['fk'].keys():
-                    #        if(otherTable['fk'][otherFK] == tableName):
-                    #            if(verbose or debug > 0):
-                    #                print("   Table " + otherTableName + " references table " +
-                    #                      tableName + " via field " + otherFK)
-                    #            query = ("SELECT " + otherKeyName + " FROM " + otherTableName +
-                    #                " WHERE `" + otherFK + "` = '" + str(keyvalue) + "'")
-                    #            if(verbose or debug > 0):
-                    #                print("      " + query,end='')                                
-                    #            cursor2.execute(query)
-                    #            if(verbose or debug > 0):
-                    #               print(" [" + str(cursor2.rowcount) + " rows.]")
-                    #            refCount += cursor2.rowcount
+        #
+        #   Not a leaf.  Report any id values with a 0 count
+        #
 
-                    if(not tableName in exemptFromOrphanTest):
-                        print("   There are " + str(refs[tableName][keyvalue]) + 
-                              " references to THIS row in table " + tableName)
-# 
-#   All done
-#
+        for keyvalue in refs[tableName].keys():
+            if(refs[tableName][keyvalue] == 0):
+                print("Table " + tableName + ", key value " + keyvalue +
+                      " has nothing referring to it (orphaned)")
+
+    # 
+    #   All done
+    #
 
     cnx.close()
 
