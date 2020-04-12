@@ -360,10 +360,40 @@ def main():
                 if(funcName in globals()):
                      globals()[funcName](keyvalue)
 
+        sys.stdout.flush()
+
+    #
+    #   Special - check for references to BLANK ecos
+
+    query = "SELECT idECO, machine, description FROM eco WHERE eco = ''"
+    cursor.execute(query)
+    for idecotuple in cursor:
+        (ideco, idmachine, description) = idecotuple
+        print("Checking blank ECO " + str(ideco) + ", Machine " +
+             str(getMachineName(idmachine)) + ", Description: " + str(description))
+        for table in tableDict.keys():
+            key = tableDict[table]['key']
+            for fk in tableDict[table]['fk'].keys():
+                if(tableDict[table]['fk'][fk] == "eco"):
+                    query2 = ("SELECT " + key + " FROM " + table +
+                        " WHERE " + "`" + fk + "` = '" + str(ideco) + "'")
+                    cursor2.execute(query2)
+                    if(cursor2.rowcount > 0):
+                        for idfktuple in cursor2:
+                            fkeyvalue = idfktuple[0]
+                            print("   Reference to Blank ECO from table " +
+                                  table + " key " + str(fkeyvalue))
+                            funcName = "show_" + table
+                            if(funcName in globals()):
+                                globals()[funcName](fkeyvalue)
+            sys.stdout.flush()
+
     # 
     #   All done
     #
 
+    cursor.close()
+    cursor2.close()
     cnx.close()
 
 #
@@ -581,24 +611,27 @@ def show_cardlocationpage(idCardLocationPage):
     query = ("SELECT page, eco, panel FROM cardlocationpage " +
              "WHERE idcardlocationpage ='" + str(idCardLocationPage) + "'")
     cursor.execute(query)
-    (page, ideco, idpanel) = cursor.fetchone()
-    (pageName, volumeName, pageMachineName, part) = getPageInfo(page)
-
-    query = ("SELECT panel, gate FROM panel WHERE idpanel = '" + str(idpanel) + "'")
-    cursor.execute(query)
     if(cursor.rowcount > 0):
-        (panel, idgate) = cursor.fetchone()
-        query = ("SELECT name, frame FROM machinegate WHERE idgate = '" + str(idgate) + "'")
-        cursor.execute(query)
-        (gate, idframe) = cursor.fetchone()
-        query = ("SELECT name, machine FROM frame WHERE idframe = '" + str(idframe) + "'")
-        cursor.execute(query)
-        (frame, idmachine) = cursor.fetchone()
-        machineName = getMachineName(idmachine)
-    else:
-        panel = gate = frame = machineName = "(N/A)"
+        (page, ideco, idpanel) = cursor.fetchone()
+        (pageName, volumeName, pageMachineName, part) = getPageInfo(page)
 
-    (ecoName, junk) = getECOInfo(ideco)     # Ignore the ECO machine
+        query = ("SELECT panel, gate FROM panel WHERE idpanel = '" + str(idpanel) + "'")
+        cursor.execute(query)
+        if(cursor.rowcount > 0):
+            (panel, idgate) = cursor.fetchone()
+            query = ("SELECT name, frame FROM machinegate WHERE idgate = '" + str(idgate) + "'")
+            cursor.execute(query)
+            (gate, idframe) = cursor.fetchone()
+            query = ("SELECT name, machine FROM frame WHERE idframe = '" + str(idframe) + "'")
+            cursor.execute(query)
+            (frame, idmachine) = cursor.fetchone()
+            machineName = getMachineName(idmachine)
+        else:
+            panel = gate = frame = machineName = "(N/A)"
+        (ecoName, junk) = getECOInfo(ideco)     # Ignore the ECO machine
+    else:
+        pageName = panel = gate = frame = machineName = volumeName = "(N/A)"
+        part = pageMachineName = ecoName = "(N/A)"
 
     print("      Card Location Page: " + pageName + ", Volume: " + volumeName +
           ", Part# " + str(part) + ", Page Machine: " + pageMachineName +
