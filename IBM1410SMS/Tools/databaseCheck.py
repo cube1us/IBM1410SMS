@@ -160,7 +160,7 @@ def main():
             print('')
 
     #
-    #   Create the empty keys dictonary:    table : {'keys' : []}
+    #   Create the empty keys dictonary: table : {'keys' : []}
     #
     #   This holds the list of valid keys for each table.
     #
@@ -174,6 +174,12 @@ def main():
     #
 
     allkeys = {}
+
+    #
+    #   The "dangling" dictionary tracks rows that HAVE dangling references
+    #
+
+    dangling = {}
     
     #
     #   Connect to the database
@@ -192,7 +198,7 @@ def main():
     #
     #   Run through all of the tables, capturing the keys.
     #
-    #   Also prepare refs[<table name>][<counter>] with 0 counts for use later
+    #   Also prepare refs[<table name>][<key value>] with 0 counts for use later
     #
 
     refs = {}
@@ -201,6 +207,7 @@ def main():
 
         table = tableDict[tableName]
         refs[tableName] = {}
+        dangling[tableName] = {}
 
         keyName = table['key']
         if(debug or verbose):
@@ -237,17 +244,21 @@ def main():
             #
             allkeys[idvalue].append(tableName)
 
+
+    print("*** END OF DUPLICATE PROCESSING ***")
+    print()
     sys.stdout.flush()
 
     #
-    #   Next, for each table, add references to a refernce count in other
+    #   Next, for each table, add references to a reference count in other
     #   tables.
     #
     #   refs is a dictionary that counts references TO each row FROM other
-    #   tables as refs[<table name][<key value>].
+    #   tables as refs[<table name>][<key value>].
     #
-    #   While we are at it, we report any cases where the foreign key refers
-    #   to a row in the foreign table that does not actually exist.
+    #   While we are at it, we report any cases where a foreign key refers
+    #   to a row in the foreign table that does not actually exist (in which
+    #   case refs[<foreign table>][<foreign key value>] will not exist.
     #
 
     for tableName in tableDict.keys():
@@ -276,10 +287,23 @@ def main():
                     print("   Dangling reference from table " + tableName +
                           ", key " + keyvalue + ", column " + fk + 
                           ", value " + fkeyvalue + " to table " + otherTable)
+                    dangling[tableName][keyvalue] = True
+
+                    #
+                    #   If there is a display function for this table, display
+                    #   information about this row, to the extent possible
+                    #
+
+                    funcName = "show_" + tableName
+                    if(funcName in globals()):
+                        globals()[funcName](keyvalue)
+
 
         sys.stdout.flush()
 
-    print("TEST: " + str(refs['sheetedgeinformation']['268892']))
+    print("*** END OF DANGLING REFERENCE PROCESSING ***")
+    print()
+    sys.stdout.flush()
 
     #
     #   Next, report any key values that have no references to them,
@@ -310,6 +334,7 @@ def main():
 
         if(leafTable):
             print("   This table is a LEAF table -- skipping")
+            continue
 
         #
         #   Not a leaf.  Report any id values with a 0 count
@@ -317,8 +342,23 @@ def main():
 
         for keyvalue in refs[tableName].keys():
             if(refs[tableName][keyvalue] == 0):
-                print("Table " + tableName + ", key value " + keyvalue +
-                      " has nothing referring to it (orphaned)")
+                print("   Table " + tableName + ", key value " + keyvalue +
+                      " has nothing referring to it (orphaned)",end='')
+
+                #
+                #   Note if this orphan also sources one or more dangling refs.
+                #
+
+                if(keyvalue in dangling[tableName].keys()):
+                    print(" *** Also has one or more dangling references")
+                else:
+                    print()
+
+                #   Display information about this row, if possible.
+
+                funcName = "show_" + tableName
+                if(funcName in globals()):
+                     globals()[funcName](keyvalue)
 
     # 
     #   All done
@@ -327,17 +367,33 @@ def main():
     cnx.close()
 
 #
+#   Routine to display a volume Name
+#
+def show_volume(idVolume):
+    (volumeName, machineSerial) = getVolumeInfo(idVolume)
+    print("      Volume: " + str(volumeName) + ", Machine S/N: " + machineSerial)
+    return
+#
 #   Routine to display an ECO name
 #
 
 def show_eco(idECO):
-    cursor = cnx.cursor()
-    query = ("SELECT eco, machine FROM eco WHERE ideco = '" + str(idECO) + "'")
-    cursor.execute(query)
-    (ecoName, idmachine) = cursor.fetchone()
-    cursor.close()
-    machineName = getMachineName(idmachine)
+    (ecoName, machineName) = getECOInfo(idECO)
     print("      ECO: " + str(ecoName) + ", Machine: " + machineName)
+    return
+
+#
+#   Routine to diplsay a Logic Function Table entry
+#
+def show_logicfunction(idLogicFunction):
+    cursor = cnx.cursor()
+    query = ("SELECT name FROM logicfunction WHERE idlogicfunction = '" +
+        str(idLogicFunction) + "'")
+    cursor.execute(query)
+    logicFunctionName = cursor.fetchone()[0]
+    cursor.close()
+    print("      Logic Function: " + logicFunctionName)
+    return
 
 #
 #   Routine to display a feature name
@@ -352,7 +408,115 @@ def show_feature(idFeature):
     machineName = getMachineName(idmachine)
     print ("      Feature: " + featureName + ", Machine: " + machineName + 
            ", Desc: " + featureDesc)
+    return
 
+def show_machinegate(idMachineGate):
+    cursor = cnx.cursor()
+    query = ("SELECT name, frame FROM machinegate WHERE idgate = '" +
+        str(idMachineGate) + "'")
+    cursor.execute(query)
+    (gateName, idFrame) = cursor.fetchone()
+    query = ("SELECT name, machine FROM frame WHERE idframe = '" + str(idFrame) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (frameName, idMachine) = cursor.fetchone()  
+        machineName = getMachineName(idMachine)
+    else:
+        frameName = machineName = "(N/A)"
+    cursor.close()
+    print("      Machine Gate: " + str(machineName) + str(frameName) + str(gateName))
+
+#
+#   Display information about a diagram page
+#
+def show_diagrampage(idDiagrampage):
+    cursor = cnx.cursor()
+    query = ("SELECT page FROM diagrampage WHERE iddiagrampage = '" + 
+        str(idDiagrampage) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        page = cursor.fetchone()[0]
+        cursor.close()
+        (pageName, volumeName, pageMachineName, part) = getPageInfo(page)
+    else:
+        pageName = "(N/A)"
+
+    #   Special case here:  if there is no page name, this is a dangling
+    #   reference with no useful information available.
+
+    if(pageName != "(N/A)"):
+        print("      Diagram Page: " + pageName + ", Volume: " + volumeName +
+            ", Part# " + str(part) + ", Page Machine: " + pageMachineName)
+
+#
+#   Display information about a Diagram ECO Tag
+#
+
+def show_diagramecotag(idDiagramECOTag):
+    cursor = cnx.cursor()
+    query = ("SELECT name, date, diagrampage, eco FROM diagramecotag " +
+             "WHERE iddiagramecotag = '" + str(idDiagramECOTag) + "'")
+    cursor.execute(query)
+    (tagName, tagDate, idDiagramPage, idECO) = cursor.fetchone()
+    cursor.close()
+    print("      ECO Tag: " + tagName + ", Date: " + str(tagDate),end=' ')
+    show_diagrampage(idDiagramPage)
+    show_eco(idECO)
+    return
+
+#
+#   Display information about a diagram block
+#
+def show_diagramblock(idDiagramBlock):
+    cursor = cnx.cursor()
+    query = ("SELECT diagrampage, diagramrow, diagramcolumn, cardslot, cardtype, eco "+
+             " FROM diagramblock where iddiagramblock = '" + str(idDiagramBlock) + "'")
+    cursor.execute(query)
+    (idDiagramPage, diagramRow, diagramColumn, idCardSlot, idCardType, 
+        idECOTag) = cursor.fetchone()
+    print("      Diagram Block: Row: " + diagramRow + ", Col: " + str(diagramColumn) +
+          ", Type: " + getCardTypeName(idCardType) + ", Slot: " + 
+          getCardSlot(idCardSlot),end='')
+    show_diagrampage(idDiagramPage)
+
+#
+#   Display information about a Card Note
+#
+
+def show_cardnote(idCardNote):
+    cursor = cnx.cursor()
+    query = ("SELECT notename, note, cardtype FROM cardnote WHERE idcardnote = '" +
+        str(idCardNote) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (noteName, note, idCardType) = cursor.fetchone()
+        cardTypeName = getCardTypeName(idCardType)
+    else:
+        noteName = note = cardTypeName = "(N/A)"
+    cursor.close()
+    print("      Card Note: Type: " + cardTypeName + ", Name: " + noteName +
+        ", Note: " + note)
+    return
+
+#
+#   Display information about a card's gate
+#
+
+def show_cardgate(idCardGate):
+    cursor = cnx.cursor()
+    query = ("SELECT number, cardtype FROM cardgate WHERE idcardgate = '" +
+        str(idCardGate) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (gateNumber, idCardType) = cursor.fetchone()
+        cardTypeName = getCardTypeName(idCardType)
+    else:
+        gateNumber = cardTypeName = "(N/A)"
+    cursor.close()
+    print("      Card Gate: Type: " + cardTypeName + ", Number: " + 
+        str(gateNumber))
+    return
+                   
 #
 #   Routine to display important information related to a card location
 #   for tracing orphans.
@@ -364,23 +528,121 @@ def show_cardlocation(idCardlocation):
     query = ("SELECT page, cardslot, type FROM cardlocation WHERE idcardlocation = '" + 
         str(idCardlocation) + "'")
     cursor.execute(query)
-    (clpage, cardslot, type) = cursor.fetchone()
-    if(debug > 1):
-        print("      show_cardlocation:  clpage=" + str(clpage) + ", cardslot=" + str(cardslot) +
-            ", type=" + str(type))
+    if(cursor.rowcount > 0):
+        (clpage, cardslot, type) = cursor.fetchone()
+        if(debug > 1):
+            print("      show_cardlocation:  clpage=" + str(clpage) + ", cardslot=" + str(cardslot) +
+                ", type=" + str(type))
     
-    query = ("SELECT page from cardlocationpage WHERE idcardlocationpage = '" + 
-         str(clpage) + "'")
-    cursor.execute(query)
-    page = cursor.fetchone()[0]
-    (pageName, volumeName, machineName, part) = getPageInfo(page)
-    slotName = getCardSlot(cardslot)
-    cardType = getCardTypeName(type)
+        query = ("SELECT page from cardlocationpage WHERE idcardlocationpage = '" + 
+             str(clpage) + "'")
+        cursor.execute(query)
+        page = cursor.fetchone()[0]
+        cursor.close()
+        (pageName, volumeName, machineName, part) = getPageInfo(page)
+        slotName = getCardSlot(cardslot)
+        cardType = getCardTypeName(type)
+    else:
+        pageName = slotName = cardType = "(N/A)"
 
     print("      Page: " + str(pageName) + ", Slot: " + str(slotName) + 
           ", Type: " + str(cardType))
     cursor.close()
     return
+
+#
+#   Display informatino about a card location block
+#
+def show_cardlocationblock(idCardLocationBlock):
+    cursor = cnx.cursor()
+    query = ("SELECT cardlocation, diagrampage, cableedgeconnectionpage, " +
+        " diagramrow, diagramcolumn FROM cardlocationblock " +
+        " WHERE idcardlocationblock = '" + str(idCardLocationBlock) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (idCardLocation, idDiagramPage, idCableEdgeConnectionPage, diagramRow,
+            diagramColumn) = cursor.fetchone()
+        print("      Card Location Page: Row " + str(diagramRow) + ", Col: " +
+              str(diagramColumn) + ", ",end='')
+        show_cardlocation(idCardLocation)
+        if(idDiagramPage is not None):
+            show_diagrampage(idDiagramPage)
+        if(idCableEdgeConnectionPage is not None):
+            show_cableedgeconnectinpage(idCableEdgeConnectionPage)
+    cursor.close()
+    return
+
+#
+#   Display information about a card location page
+#   
+
+def show_cardlocationpage(idCardLocationPage):
+    cursor = cnx.cursor()
+    query = ("SELECT page, eco, panel FROM cardlocationpage " +
+             "WHERE idcardlocationpage ='" + str(idCardLocationPage) + "'")
+    cursor.execute(query)
+    (page, ideco, idpanel) = cursor.fetchone()
+    (pageName, volumeName, pageMachineName, part) = getPageInfo(page)
+
+    query = ("SELECT panel, gate FROM panel WHERE idpanel = '" + str(idpanel) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (panel, idgate) = cursor.fetchone()
+        query = ("SELECT name, frame FROM machinegate WHERE idgate = '" + str(idgate) + "'")
+        cursor.execute(query)
+        (gate, idframe) = cursor.fetchone()
+        query = ("SELECT name, machine FROM frame WHERE idframe = '" + str(idframe) + "'")
+        cursor.execute(query)
+        (frame, idmachine) = cursor.fetchone()
+        machineName = getMachineName(idmachine)
+    else:
+        panel = gate = frame = machineName = "(N/A)"
+
+    (ecoName, junk) = getECOInfo(ideco)     # Ignore the ECO machine
+
+    print("      Card Location Page: " + pageName + ", Volume: " + volumeName +
+          ", Part# " + str(part) + ", Page Machine: " + pageMachineName +
+         ", Machine/Frame/Gate/Panel: " + str(machineName) + str(frame) + str(gate) + 
+         str(panel) + ", ECO: " + ecoName)
+
+    cursor.close()
+    return
+
+#
+#   Routine to display info about a cable/edge connection page
+#
+def show_cableedgeconnectionpage(idCableEdgeConnectionPage):
+    cursor = cnx.cursor()
+    query = ("SELECT page FROM cableedgeconnectionpage " +
+        "WHERE idcableedgeconnectionpage ='" + str(idCableEdgeConnectionPage) + "'")
+    cursor.execute(query)
+    page = cursor.fetchone()[0]
+    cursor.close()
+    (pageName, volumeName, pageMachineName, part) = getPageInfo(page)
+
+    #   Special case here:  if there is no page name, this is a dangling
+    #   reference with no useful information available.
+
+    if(pageName != "(N/A)"):
+        print("      Cable/Edge Page: " + pageName + ", Volume: " + volumeName +
+            ", Part# " + str(part) + ", Page Machine: " + pageMachineName)
+
+#
+#   Routine to display info about a cable/edge connection ECO tag
+#
+def show_cableedgeconnectionecotag(idCableEdgeConnectionECOTag):
+    cursor = cnx.cursor()
+    query = ("SELECT name, eco, date, cableedgeconnectionpage " +
+             "FROM cableedgeconnectionecotag " +
+             "WHERE idcableedgeconnectionecotag = '" + 
+             str(idCableEdgeConnectionECOTag) + "'")
+    cursor.execute(query)
+    (ecoTag, idECO, ecoDate, idCecPage) = cursor.fetchone()
+    cursor.close()
+    
+    print("      Cable/Edge ECO Tag: " + ecoTag + ", TagDate: " + str(ecoDate) + ", ")
+    show_eco(idECO)
+    show_cableedgeconnectionpage(idCecPage)
 
 #
 #   Routine to display information about an orphan SheetEdgeInformation row
@@ -414,10 +676,13 @@ def getPageInfo(idPage):
     cursor = cnx.cursor()
     query = ("SELECT name, machine, volume, part FROM page WHERE idpage = '" + str(idPage) + "'")
     cursor.execute(query)
-    (pageName, idMachine, idVolume, part) = cursor.fetchone()
+    if(cursor.rowcount > 0):
+        (pageName, idMachine, idVolume, part) = cursor.fetchone()
+        machineName = getMachineName(idMachine)
+        (volumeName, junk) = getVolumeInfo(idVolume)
+    else:
+        pageName = volumeName = machineName = part = "(N/A)"
     cursor.close()
-    machineName = getMachineName(idMachine)
-    volumeName = getVolumeName(idVolume)
     return (pageName, volumeName, machineName, part)
 
 #
@@ -428,9 +693,27 @@ def getDiagramPageInfo(idDiagrampage):
     query = ("SELECT page FROM diagrampage WHERE iddiagrampage='" + 
          str(idDiagrampage) + "'")
     cursor.execute(query)
-    page = cursor.fetchone()[0]
+    if(cursor.rowcount > 0):
+        page = cursor.fetchone()[0]
+    else:
+        page = "(N/A)"
     cursor.close()
     return(getPageInfo(page))
+
+#
+#   Routine to get ECO Info
+#
+def getECOInfo(idECO):
+    cursor = cnx.cursor()
+    query = ("SELECT eco, machine FROM eco WHERE ideco = '" + str(idECO) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (ecoName, idmachine) = cursor.fetchone()
+        machineName = getMachineName(idmachine)
+    else:   
+        ecoName = machineName = "(N/A)"
+    cursor.close()
+    return(ecoName, machineName)
 
 #
 #   Routine to retrieve the long form of a card slot (4 character machine)
@@ -468,7 +751,10 @@ def getCardTypeName(idCardType):
     cursor = cnx.cursor()
     query = "SELECT type FROM cardtype WHERE idcardtype='" + str(idCardType) + "'"
     cursor.execute(query)
-    type = cursor.fetchone()[0]
+    if(cursor.rowcount > 0):
+        type = cursor.fetchone()[0]
+    else:
+        type = "(N/A)"
     cursor.close()
     return(type)
 
@@ -480,7 +766,10 @@ def getMachineName(idMachine):
     cursor = cnx.cursor()
     query = ("SELECT name FROM machine WHERE idmachine = '" + str(idMachine) + "'")
     cursor.execute(query)
-    machine = cursor.fetchone()[0]
+    if(cursor.rowcount > 0):
+        machine = cursor.fetchone()[0]
+    else:
+        machine = "(N/A)"
     cursor.close()
     return(machine)
 
@@ -488,12 +777,17 @@ def getMachineName(idMachine):
 #   Routine to return the name of a volume
 #
 
-def getVolumeName(idVolume):
+def getVolumeInfo(idVolume):
     cursor = cnx.cursor()
-    query = ("SELECT name FROM volume WHERE idvolume = '" + str(idVolume) + "'")
+    query = ("SELECT name, machineSerial FROM volume WHERE idvolume = '" + 
+        str(idVolume) + "'")
     cursor.execute(query)
-    volume = cursor.fetchone()[0]
-    return(volume)
+    if(cursor.rowcount > 0):
+        (volumeName, machineSerial) = cursor.fetchone()
+    else:
+        volumeName = machineSerial = "(N/A)"
+    cursor.close()
+    return(volumeName, machineSerial)
 
 def usage():
     print("Usage: " + sys.argv[0] + " [-v] [-d] [-u | --user <user>] [-p | --password <password>] ")
