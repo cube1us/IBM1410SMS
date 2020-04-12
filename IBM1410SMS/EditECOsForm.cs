@@ -81,13 +81,6 @@ namespace IBM1410SMS
             if (currentMachine == null || currentMachine.idMachine == 0) {
                 currentMachine = machineList[0];
             }
-
-            machineComboBox.SelectedItem = currentMachine;
-
-            //  Then fill in the ECO table with entries for that machine.
-
-            populateEcoTable(currentMachine);
-
         }
 
 
@@ -130,6 +123,7 @@ namespace IBM1410SMS
             //  Set the name column to a reasonable length, too.
 
             ecosDataGridView.Columns["eco"].Width = 10 * 8;
+            ecosDataGridView.Columns["eco"].Width = 40 * 8;
 
             //  Finally, throw away any entries we may have been saving for deletion...
 
@@ -348,6 +342,15 @@ namespace IBM1410SMS
             //  On cancel, just close the form and return...
 
             this.Close();
+        }
+
+        private void EditECOsForm_Shown(object sender, EventArgs e) {
+            machineComboBox.SelectedItem = currentMachine;
+
+            //  Then fill in the ECO table with entries for that machine.
+
+            populateEcoTable(currentMachine);
+
         }
     }
 }

@@ -106,6 +106,7 @@
             this.Controls.Add(this.label1);
             this.Name = "EditECOsForm";
             this.Text = "EditECOsForm";
+            this.Shown += new System.EventHandler(this.EditECOsForm_Shown);
             ((System.ComponentModel.ISupportInitialize)(this.ecosDataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
