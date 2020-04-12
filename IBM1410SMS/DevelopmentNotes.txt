@@ -1095,7 +1095,7 @@ EditDiagramBlock(s))
 3/30/2020:  Issue #31:  Fixed EditCardLocationForm and EditCardLocationPageForm so that if
    one changes the page, the panel combo box follows suit, and vice versa.
 
-ENTERED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
+CLOSED #1 TODO:  BUG  during the page fixup, I found lots of instances where the database ID for
 the diagram page was the same as the database ID for the first card location entry.   I
 suspect IMPORT did not increment the ID number after getting the ID for the page.
 
@@ -1103,7 +1103,7 @@ CLOSED  #2 TODO:  When adding a new Edge Connector page, the first page gets sel
 If possible it would be better to select the new page, instead.  (Same issue probably
 exists for diagram pages and card location pages -- and indeed that was the case)
 
-ENTERED #3 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
+CLOSED #3 TODO:  Investigate "Blank" ECO in machine 1411.  Is it used?  Where?  Can we delete it?
 How might it have gotten there?
 
 ENTERED #4 TODO:  Performance:  Indexes for queries?
@@ -1176,7 +1176,7 @@ machine "SMS".
 ENTERED TODO: #20  MISSING KNOWN SHEETS:  12.30.04.1, 13.64.03.1, 13.72.06.1 
 14.18.04.1, 15.41.06.1 ++ (see spreadsheet)
 
-ENTERED TODO: #21 It seems as though editDiagramLogicBlock is using the input level to populate both
+CLOSED TODO: #21 It seems as though editDiagramLogicBlock is using the input level to populate both
        the input *and* output levels for a gate.
 
 ENTERED TODO: #22 Warn if a given output pin is both - and +

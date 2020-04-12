@@ -115,7 +115,8 @@ def main():
         'cableimplieddestinations' : {'key' : 'cablesource', 'fk' : {}}
     }
 
-    exemptFromOrphanTest = ['cardslot', 'gatepin']
+    exemptFromOrphanTest = ['cardslot', 'gatepin', 'diagramecotag', 'cardnote',
+                            'cableedgeconnectionecotag']
 
     database = "ibm1410sms"
     dbuser = "collection"
@@ -697,6 +698,25 @@ def show_sheetedgeinformation(idSheetEdgeInformation):
         side = "/R"
     print("      Diagram Page: " + str(diagramPageName) + ", Page row: " + 
         str(row) + ", Side: " + side + ", Signal Name: " + str(signalName))
+    return
+
+#
+#   Routine to display information on a DOT function
+#
+def show_dotfunction(idDotFunction):
+    cursor = cnx.cursor()
+    query = ("SELECT diagrampage, diagramrowtop, diagramcolumntoleft, logicfunction FROM dotfunction " +
+             "WHERE iddotfunction= '" + str(idDotFunction) + "'")
+    cursor.execute(query)
+    if(cursor.rowcount > 0):
+        (idDiagrampage, row, column, logic) = cursor.fetchone()
+        (diagramPageName, volumeName, machineName, part) = getDiagramPageInfo(idDiagrampage)
+    else:
+        row = column = logic = diagramPageName = volumeName = machineName = part = "(N/A)"
+    cursor.close()
+    print("      Diagram Page: " + str(diagramPageName) + ", Row: " + str(row) + 
+          ", Col: " + str(column) + ", Volume: " + volumeName + 
+          ", Machine: " + machineName)
     return
 
 #
