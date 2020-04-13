@@ -1061,7 +1061,7 @@ namespace IBM1410SMS
                 currentCardSlotInfo.panelName != ((Panel)panelComboBox.SelectedItem).panel ||
                 currentCardSlotInfo.row != (string)cardRowComboBox.SelectedItem ||
                 currentCardSlotInfo.column != column ||
-                ((currentDiagramBlock.extendedTo == 1) != extendedCheckBox.Checked) ||
+                ((currentDiagramBlock.extendedTo != 0) != extendedCheckBox.Checked) ||
                 currentDiagramBlock.title != diagramBlockTitleTextBox.Text ||
                 currentDiagramBlock.symbol != symbolTextBox.Text ||
                 currentDiagramBlock.feature != ((Feature)featureComboBox.SelectedItem).idFeature ||
