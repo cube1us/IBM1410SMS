@@ -1130,7 +1130,7 @@ ENTERED #8 PENDING:  BUG:  Edit Connection.  Editing a gate to gate connection t
    support two references, just like sheet signal edge connections.
    (Wish I had provided an example - not sure what this was about)
 
-ENTERED TODO: #9 Logic Synth: Add a check box for do not generate, add flag to database, check in
+CLOSED TODO: #9 Logic Synth: Add a check box for do not generate, add flag to database, check in
    logic synth.
 
 ENTERED TODO: #10 Logic Synth:  WARN if a sheet edge to a DOT function is an input to
@@ -1179,7 +1179,7 @@ ENTERED TODO: #20  MISSING KNOWN SHEETS:  12.30.04.1, 13.64.03.1, 13.72.06.1
 CLOSED TODO: #21 It seems as though editDiagramLogicBlock is using the input level to populate both
        the input *and* output levels for a gate.
 
-ENTERED TODO: #22 Warn if a given output pin is both - and +
+CLOSED TODO: #22 Warn if a given output pin is both - and +
  (Don't remember if this was referring to the SMS card pin editing process or while editing logic block connections)
 
 ENTERED TODO: #23  Report on inconsistent cable/edge connections

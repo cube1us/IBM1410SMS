@@ -110,7 +110,6 @@ namespace IBM1410SMS
             generator.outFile = outFile;
             generator.logFile = logFile;
             
-
             int errors = 0;
 
             logMessage("Generating HDL for page " + page.name +
@@ -125,8 +124,17 @@ namespace IBM1410SMS
                     page.name + " (Database ID " + page.idPage + ")");
                 ++errors;
                 if (diagramList.Count < 1) {
+                    logFile.Close();
+                    outFile.Close();
                     return (errors);
                 }
+            }
+
+            if(diagramList[0].noHDLGeneration == 1) {
+                logMessage("Note:  page is marked for no HDL generation - skipped");
+                logFile.Close();
+                outFile.Close();
+                return (errors);
             }
 
             sheetInputsList = sheetEdgeInformationTable.getWhere(
@@ -167,6 +175,8 @@ namespace IBM1410SMS
             //  If there were any messages so far, return with them.
 
             if (errors > 0) {
+                logFile.Close();
+                outFile.Close();
                 return (errors);
             }
 
@@ -189,7 +199,15 @@ namespace IBM1410SMS
                 newBlock.logicFunction = "Unknown";
                 newBlock.HDLname = "";
                 newBlock.pins = new List<Gatepin>();
-                
+
+                //  Skip blocks marked for no HDL generation
+
+                if (block.noHDLGeneration == 1) {
+                    logMessage("Block at coordinate " + newBlock.getCoordinate() +
+                        " is marked for No HDL Generation -- skipped.");
+                    continue;
+                }
+
                 if (block.cardGate == 0) {
                     logMessage("Error: Zero cardGate Key found for logic block " +
                         newBlock.getCoordinate() + " logic function set to Unknown");

@@ -144,6 +144,7 @@ namespace IBM1410SMS
 
                 foreach (Page page in pages) {
 
+                    ++generated;
                     GenerateHDL gen = new GenerateHDL(page, directoryTextBox.Text);
                     int errors = gen.generateHDL();
 
@@ -151,7 +152,13 @@ namespace IBM1410SMS
                         new ImporterLogDisplayForm(gen.getLogfileName());
 
                     if (errors > 0) {
-                        ImporterLogDisplayDialog.Show();
+
+                        //  Still thinking about this.  If this is just Show()
+                        //  then if user clicks OK, it gets closed with no
+                        //  chance to scroll because MessageBox takes over.
+
+                        ImporterLogDisplayDialog.ShowDialog();
+
                         DialogResult status = MessageBox.Show(
                             "One or more errors occured on the page " +
                             page.name + Environment.NewLine +
@@ -162,14 +169,11 @@ namespace IBM1410SMS
                             break;
                         }
 
-                        ImporterLogDisplayDialog.Close();
+                        // ImporterLogDisplayDialog.Close();
                     }
-                    else {
+                    else {                        
                         ImporterLogDisplayDialog.ShowDialog();
                     }
-
-                    ++generated;
-
                 }
             }
 
