@@ -61,8 +61,8 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cardTypeReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.CONNectorCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -357,6 +357,13 @@
             this.cardTypeReportToolStripMenuItem.Text = "Card Type Report";
             this.cardTypeReportToolStripMenuItem.Click += new System.EventHandler(this.cardTypeReportToolStripMenuItem_Click);
             // 
+            // CONNectorCheckToolStripMenuItem
+            // 
+            this.CONNectorCheckToolStripMenuItem.Name = "CONNectorCheckToolStripMenuItem";
+            this.CONNectorCheckToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.CONNectorCheckToolStripMenuItem.Text = "Connector Check";
+            this.CONNectorCheckToolStripMenuItem.Click += new System.EventHandler(this.CONNectorCheckToolStripMenuItem_Click);
+            // 
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "csv";
@@ -364,13 +371,6 @@
             this.openFileDialog1.Filter = "CSV Files|*.csv";
             this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
             this.openFileDialog1.Title = "Specify File To Import";
-            // 
-            // CONNectorCheckToolStripMenuItem
-            // 
-            this.CONNectorCheckToolStripMenuItem.Name = "CONNectorCheckToolStripMenuItem";
-            this.CONNectorCheckToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.CONNectorCheckToolStripMenuItem.Text = "CONNector Check";
-            this.CONNectorCheckToolStripMenuItem.Click += new System.EventHandler(this.CONNectorCheckToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 

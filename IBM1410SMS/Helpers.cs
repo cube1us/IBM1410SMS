@@ -369,6 +369,35 @@ namespace IBM1410SMS
             return page.name;
         }
 
+        //  Routine to return the name of an existing cable/edge connection page.
+
+        public static string getCableEdgeConnectionPageName(
+            int cableEdgeConnectionPageKey) {
+
+            DBSetup db = DBSetup.Instance;
+            Table<Cableedgeconnectionpage> cableEdgeConnectionPageTable = 
+                db.getCableEdgeConnectionPageTable();
+            Table<Page> pageTable = db.getPageTable();
+
+            if (cableEdgeConnectionPageKey == 0) {
+                return "";
+            }
+
+            Cableedgeconnectionpage cableEdgeConnectionPage = 
+                cableEdgeConnectionPageTable.getByKey(cableEdgeConnectionPageKey);
+            if (cableEdgeConnectionPage.idCableEdgeConnectionPage == 0) {
+                return "";
+            }
+
+            Page page = pageTable.getByKey(cableEdgeConnectionPage.page);
+            if (page.idPage == 0) {
+                return "";
+            }
+
+            return page.name;
+        }
+
+
         //  Routine to get the machine name, given a page.
 
         public static string getMachineFromPage(Page page) {

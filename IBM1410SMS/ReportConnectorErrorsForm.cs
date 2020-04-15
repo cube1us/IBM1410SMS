@@ -91,6 +91,15 @@ namespace IBM1410SMS
                     continue;
                 }
 
+                //  Get the diagram's page name, for use in messages.
+
+                string diagramPageName = Helpers.getCableEdgeConnectionPageName(
+                    cecb.cableEdgeConnectionPage);
+                string diagramLoc = "Page:" + diagramPageName + ":" +
+                    cecb.diagramColumn.ToString() +
+                    cecb.diagramRow +                    
+                    ", Slot:" + cardSlotInfo.ToSmallString();
+
                 //  Check for matching destination(s)
 
                 matchingCableEdgeConnectionBlockList =
@@ -100,7 +109,7 @@ namespace IBM1410SMS
                 if(matchingCableEdgeConnectionBlockList.Count == 0) {
                     //  No matches found -- error, unless this is a CABL
                     if (!cecbType.Equals("CABL")) {
-                        messages.Add(cardSlotInfo.ToSmallString() +
+                        messages.Add(diagramLoc + 
                             ": No Matching Destination Connector Found, " +
                             "Expected to be " +
                             Helpers.getCardSlotInfo(cecb.Destination).ToSmallString());
@@ -116,7 +125,12 @@ namespace IBM1410SMS
                         if(destinationBlocks.Length > 0) {
                             destinationBlocks += ", ";
                         }
-                        destinationBlocks += matchingConnectorInfo.ToSmallString();
+                        destinationBlocks += "(Page:" + 
+                            Helpers.getCableEdgeConnectionPageName(
+                            matchingCecb.cableEdgeConnectionPage) + ":" +
+                            matchingCecb.diagramColumn.ToString() +
+                            matchingCecb.diagramRow +  ", Slot:" +
+                            matchingConnectorInfo.ToSmallString() + ")";
                     }
                     messages.Add(cardSlotInfo.ToSmallString() +
                         ": Multiple Matching Destination Connectors Found: " +
@@ -131,23 +145,30 @@ namespace IBM1410SMS
                     if (!Helpers.getCardTypeType(
                         matchingCecb.connectionType).Equals(cecbType)) {
                         //  But match is of wrong card type
-                        messages.Add(cardSlotInfo.ToSmallString() +
-                            ": Matching destination block at " +
-                            matchingConnectorInfo.ToSmallString() +
-                            " is of type " + 
+                        messages.Add(diagramLoc +
+                            ": Matching dest. block " +
+                            "(Page:" + Helpers.getCableEdgeConnectionPageName(
+                            matchingCecb.cableEdgeConnectionPage) + ":" +
+                            matchingCecb.diagramColumn.ToString() +
+                            matchingCecb.diagramRow + ", Slot:" +
+                            matchingConnectorInfo.ToSmallString() + ")" +
+                            " is " + 
                             Helpers.getCardTypeType(matchingCecb.connectionType) +
-                            " but should be " + cecbType);
+                            " should be " + cecbType);
                     }
                     if(matchingCecb.Destination != cecb.cardSlot) {
                         //  Match's destination doesn't point back to me.
                         //  (Easier to get just one from DB)
-
                         CardSlotInfo otherConnectorInfo = Helpers.getCardSlotInfo(
                             matchingCecb.Destination);
-                        messages.Add(cardSlotInfo.ToSmallString() +
-                            ": Matching destination block at " +
-                            matchingConnectorInfo.ToSmallString() +
-                            " destination mismatch: " +
+                        messages.Add(diagramLoc +
+                            ": Matching dest. block at " +
+                            "(Page:" + Helpers.getCableEdgeConnectionPageName(
+                            matchingCecb.cableEdgeConnectionPage) + ":" +
+                            matchingCecb.diagramColumn.ToString() +
+                            matchingCecb.diagramRow + ", Slot:" +
+                            matchingConnectorInfo.ToSmallString() + ")" +
+                            " dest. mismatch: " +
                             otherConnectorInfo.ToSmallString());
                     }
                 }
