@@ -222,5 +222,11 @@ namespace IBM1410SMS
             EditCableEdgeConnectionPageForm.ShowDialog();
 
         }
+
+        private void CONNectorCheckToolStripMenuItem_Click(object sender, EventArgs e) {
+            ReportConnectorErrorsForm ReportConnectorErrorsForm =
+                new ReportConnectorErrorsForm();
+            ReportConnectorErrorsForm.ShowDialog();
+        }
     }
 }

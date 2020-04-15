@@ -354,6 +354,12 @@
     <Compile Include="ReportCardTypeUsageForm.Designer.cs">
       <DependentUpon>ReportCardTypeUsageForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReportConnectorErrorsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportConnectorErrorsForm.Designer.cs">
+      <DependentUpon>ReportConnectorErrorsForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -478,6 +484,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ReportCardTypeUsageForm.resx">
       <DependentUpon>ReportCardTypeUsageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportConnectorErrorsForm.resx">
+      <DependentUpon>ReportConnectorErrorsForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="COPYING" />
     <None Include="Documentation.docx" />

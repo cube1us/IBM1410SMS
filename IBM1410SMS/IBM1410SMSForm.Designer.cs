@@ -39,6 +39,7 @@
             this.cardLocationShartsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tieDownsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aldDiagramPagesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cableEdgeConnectionPagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editDataMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.IBMLogicFunctionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.standardLogicFunctionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,7 +62,7 @@
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cardTypeReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.cableEdgeConnectionPagesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.CONNectorCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -184,6 +185,13 @@
             this.aldDiagramPagesMenuItem.Size = new System.Drawing.Size(234, 22);
             this.aldDiagramPagesMenuItem.Text = "ALD Diagram Pages";
             this.aldDiagramPagesMenuItem.Click += new System.EventHandler(this.aldDiagramPagesMenuItem_Click);
+            // 
+            // cableEdgeConnectionPagesToolStripMenuItem
+            // 
+            this.cableEdgeConnectionPagesToolStripMenuItem.Name = "cableEdgeConnectionPagesToolStripMenuItem";
+            this.cableEdgeConnectionPagesToolStripMenuItem.Size = new System.Drawing.Size(234, 22);
+            this.cableEdgeConnectionPagesToolStripMenuItem.Text = "Cable/Edge Connection Pages";
+            this.cableEdgeConnectionPagesToolStripMenuItem.Click += new System.EventHandler(this.cableEdgeConnectionPagesToolStripMenuItem_Click);
             // 
             // editDataMenuItem
             // 
@@ -336,7 +344,8 @@
             // reportsToolStripMenuItem
             // 
             this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.cardTypeReportToolStripMenuItem});
+            this.cardTypeReportToolStripMenuItem,
+            this.CONNectorCheckToolStripMenuItem});
             this.reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
             this.reportsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.reportsToolStripMenuItem.Text = "Reports";
@@ -344,7 +353,7 @@
             // cardTypeReportToolStripMenuItem
             // 
             this.cardTypeReportToolStripMenuItem.Name = "cardTypeReportToolStripMenuItem";
-            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.cardTypeReportToolStripMenuItem.Text = "Card Type Report";
             this.cardTypeReportToolStripMenuItem.Click += new System.EventHandler(this.cardTypeReportToolStripMenuItem_Click);
             // 
@@ -356,12 +365,12 @@
             this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
             this.openFileDialog1.Title = "Specify File To Import";
             // 
-            // cableEdgeConnectionPagesToolStripMenuItem
+            // CONNectorCheckToolStripMenuItem
             // 
-            this.cableEdgeConnectionPagesToolStripMenuItem.Name = "cableEdgeConnectionPagesToolStripMenuItem";
-            this.cableEdgeConnectionPagesToolStripMenuItem.Size = new System.Drawing.Size(234, 22);
-            this.cableEdgeConnectionPagesToolStripMenuItem.Text = "Cable/Edge Connection Pages";
-            this.cableEdgeConnectionPagesToolStripMenuItem.Click += new System.EventHandler(this.cableEdgeConnectionPagesToolStripMenuItem_Click);
+            this.CONNectorCheckToolStripMenuItem.Name = "CONNectorCheckToolStripMenuItem";
+            this.CONNectorCheckToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.CONNectorCheckToolStripMenuItem.Text = "CONNector Check";
+            this.CONNectorCheckToolStripMenuItem.Click += new System.EventHandler(this.CONNectorCheckToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 
@@ -418,6 +427,7 @@
         private System.Windows.Forms.ToolStripMenuItem reportsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cardTypeReportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cableEdgeConnectionPagesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem CONNectorCheckToolStripMenuItem;
     }
 }
 
