@@ -62,6 +62,7 @@
             this.reportsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.cardTypeReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CONNectorCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.edgeConnectionCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
@@ -345,7 +346,8 @@
             // 
             this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cardTypeReportToolStripMenuItem,
-            this.CONNectorCheckToolStripMenuItem});
+            this.CONNectorCheckToolStripMenuItem,
+            this.edgeConnectionCheckToolStripMenuItem});
             this.reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
             this.reportsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.reportsToolStripMenuItem.Text = "Reports";
@@ -353,16 +355,23 @@
             // cardTypeReportToolStripMenuItem
             // 
             this.cardTypeReportToolStripMenuItem.Name = "cardTypeReportToolStripMenuItem";
-            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.cardTypeReportToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
             this.cardTypeReportToolStripMenuItem.Text = "Card Type Report";
             this.cardTypeReportToolStripMenuItem.Click += new System.EventHandler(this.cardTypeReportToolStripMenuItem_Click);
             // 
             // CONNectorCheckToolStripMenuItem
             // 
             this.CONNectorCheckToolStripMenuItem.Name = "CONNectorCheckToolStripMenuItem";
-            this.CONNectorCheckToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.CONNectorCheckToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
             this.CONNectorCheckToolStripMenuItem.Text = "Connector Check";
             this.CONNectorCheckToolStripMenuItem.Click += new System.EventHandler(this.CONNectorCheckToolStripMenuItem_Click);
+            // 
+            // edgeConnectionCheckToolStripMenuItem
+            // 
+            this.edgeConnectionCheckToolStripMenuItem.Name = "edgeConnectionCheckToolStripMenuItem";
+            this.edgeConnectionCheckToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.edgeConnectionCheckToolStripMenuItem.Text = "Edge Connection Check";
+            this.edgeConnectionCheckToolStripMenuItem.Click += new System.EventHandler(this.edgeConnectionCheckToolStripMenuItem_Click);
             // 
             // openFileDialog1
             // 
@@ -428,6 +437,7 @@
         private System.Windows.Forms.ToolStripMenuItem cardTypeReportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem cableEdgeConnectionPagesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem CONNectorCheckToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem edgeConnectionCheckToolStripMenuItem;
     }
 }
 

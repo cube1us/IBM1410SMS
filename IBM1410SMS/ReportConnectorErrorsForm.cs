@@ -100,6 +100,11 @@ namespace IBM1410SMS
                     cecb.diagramRow +                    
                     ", Slot:" + cardSlotInfo.ToSmallString();
 
+                if(cecb.doNotCrossCheckConnection > 0) {
+                    messages.Add(diagramLoc + " is marked do not cross check.");
+                    continue;
+                }
+                
                 //  Check for matching destination(s)
 
                 matchingCableEdgeConnectionBlockList =

@@ -228,5 +228,11 @@ namespace IBM1410SMS
                 new ReportConnectorErrorsForm();
             ReportConnectorErrorsForm.ShowDialog();
         }
+
+        private void edgeConnectionCheckToolStripMenuItem_Click(object sender, EventArgs e) {
+            ReportEdgeConnectionsForm ReportEdgeConnectionsForm =
+                new ReportEdgeConnectionsForm();
+            ReportEdgeConnectionsForm.ShowDialog();
+        }
     }
 }

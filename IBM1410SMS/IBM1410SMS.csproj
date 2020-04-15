@@ -360,6 +360,12 @@
     <Compile Include="ReportConnectorErrorsForm.Designer.cs">
       <DependentUpon>ReportConnectorErrorsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReportEdgeConnectionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportEdgeConnectionsForm.Designer.cs">
+      <DependentUpon>ReportEdgeConnectionsForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
     </EmbeddedResource>
@@ -487,6 +493,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ReportConnectorErrorsForm.resx">
       <DependentUpon>ReportConnectorErrorsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportEdgeConnectionsForm.resx">
+      <DependentUpon>ReportEdgeConnectionsForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="COPYING" />
     <None Include="Documentation.docx" />
