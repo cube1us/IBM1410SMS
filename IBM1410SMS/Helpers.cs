@@ -24,6 +24,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using MySQLFramework;
+using System.Collections;
 
 namespace IBM1410SMS
 {
@@ -61,6 +62,17 @@ namespace IBM1410SMS
 
         internal static string[] cableEdgeConnectionCardTypes = new string[]
             {"CABL", "CONN", "RPQ", "SAVE", "STRL", "TIE"};
+
+        //  List of panel adjacencies (will probably need updates for other machines,
+        //  or, eventually, a database column.
+
+        internal static Hashtable panelAdjacencies = new Hashtable()
+        {
+            {"1", "2" },
+            {"2", "1" },
+            {"3", "4" },
+            {"4", "3" }
+        };
 
         private static readonly Helpers instance = new Helpers();
 
@@ -688,6 +700,12 @@ namespace IBM1410SMS
             //  And return it.
 
             return (gatePinsList);
+        }
+
+        //  Test to see if two panels are adjacent
+
+        public static bool isPanelAdjacent(string fromPanel, string toPanel) {
+            return (string)panelAdjacencies[fromPanel] == toPanel;
         }
 
     }

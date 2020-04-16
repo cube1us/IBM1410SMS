@@ -10,6 +10,7 @@ using System.Windows.Forms;
 
 using MySQLFramework;
 using System.IO;
+using System.Collections;
 
 namespace IBM1410SMS
 {
@@ -23,8 +24,14 @@ namespace IBM1410SMS
         class edgeConnectorEntry : IComparable<edgeConnectorEntry>
         {
             public Edgeconnector edgeConnector { get; set; }
+            public int cardSlot { get; set; }
             public CardSlotInfo cardSlotInfo { get; set; }
             public string pageName { get; set; }
+
+            public string entryName() {
+                return (pageName + "*" + edgeConnector.reference + ":" + 
+                    cardSlotInfo.ToSmallString() + edgeConnector.pin);
+            }
 
             public int CompareTo(edgeConnectorEntry other) {
 
@@ -86,17 +93,33 @@ namespace IBM1410SMS
             }
         }
 
+        //  Class to hold tracking information for From/To connections
+
+        class connectionTracker
+        {
+            int counter { get; set; } = 0;     // Number of times this was encountered
+
+            //  Only warn once for no matching cable/Edge Connector
+
+            bool connWarning { get; set; } = false;
+
+            List<string> destinationList { get; set; } = new List<string>();
+        }
+
         DBSetup db = DBSetup.Instance;
 
         Table<Machine> machineTable;
         List<Machine> machineList;
+        Hashtable pageNameCache = new Hashtable();
+        Hashtable cardSlotCache = new Hashtable();
+
 
         Machine currentMachine = null;
 
         string logFileName = "";
         StreamWriter logFile = null;
 
-        bool debug = true;
+        int debug = 0;
 
         public ReportEdgeConnectionsForm() {
             InitializeComponent();
@@ -162,6 +185,8 @@ namespace IBM1410SMS
 
         }
 
+        //  doEdgeConnectionReport actually generates the report.
+
         private void doEdgeConnectionReport() {
 
             Table<Edgeconnector> edgeConnectorTable = db.getEdgeConnectorTable();
@@ -176,19 +201,22 @@ namespace IBM1410SMS
             List<Cableedgeconnectionblock> cableEdgeConnectionBlockList =
                 new List<Cableedgeconnectionblock>();
 
+            Hashtable slotHash = new Hashtable();
+            Hashtable pinHash = new Hashtable();
+
             reportButton.Enabled = false;
 
             //  Build a list of cable/edge connectors that are relevant
 
             allCableEdgeConnectionBlockList = cableEdgeConnectionBlockTable.getAll();
             foreach (Cableedgeconnectionblock cecb in allCableEdgeConnectionBlockList) {
-                if(Helpers.getCardSlotInfo(cecb.cardSlot).machineName ==
+                if(getCachedCardSlotInfo(cecb.cardSlot).machineName ==
                     currentMachine.name) {
                     cableEdgeConnectionBlockList.Add(cecb);
                 }
             }
 
-            if(debug) {
+            if(debug > 0) {
                 logMessage("Cable/Edge Connections: " +
                     cableEdgeConnectionBlockList.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
@@ -201,24 +229,25 @@ namespace IBM1410SMS
 
             allEdgeConnectorList = edgeConnectorTable.getAll();
             foreach(Edgeconnector edgeConnector in allEdgeConnectorList) {
-                if(Helpers.getCardSlotInfo(edgeConnector.cardSlot).machineName ==
+                if(getCachedCardSlotInfo(edgeConnector.cardSlot).machineName ==
                     currentMachine.name) {
                     edgeConnectorEntry ece = new edgeConnectorEntry();
                     ece.edgeConnector = edgeConnector;
-                    ece.cardSlotInfo = Helpers.getCardSlotInfo(edgeConnector.cardSlot);
-                    ece.pageName = Helpers.getDiagramPageName(edgeConnector.diagramPage);
+                    ece.cardSlot = edgeConnector.cardSlot;
+                    ece.cardSlotInfo = getCachedCardSlotInfo(edgeConnector.cardSlot);
+                    ece.pageName = getCachedPageName(edgeConnector.diagramPage);
                     edgeConnectors.Add(ece);
                 }
             }
 
-            if(debug) {
+            if(debug > 0) {
                 logMessage("Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
             }
 
             edgeConnectors.Sort();
 
-            if (debug) {
+            if (debug > 0) {
                 logMessage("Sorted Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
                 for (int i = 0; i < 100; ++i) {
@@ -231,6 +260,72 @@ namespace IBM1410SMS
                 }
             }
 
+            //  Run through all but the last of the edge connectors in order
+            //  Note that we stop one BEFORE the last one.
+
+            for(int index = 0; index < edgeConnectors.Count() -1; ++index) {
+
+                edgeConnectorEntry entry = edgeConnectors[index];
+                edgeConnectorEntry nextOne = edgeConnectors[index + 1];
+                bool warning = false;
+
+                //  If the page, machine or the reference changes, we are at the end
+                //  of a particuar list, so skip it.
+
+                if(entry.pageName != nextOne.pageName ||
+                    entry.edgeConnector.reference != nextOne.edgeConnector.reference ||
+                    entry.cardSlotInfo.machineName != nextOne.cardSlotInfo.machineName) { 
+                    if(debug > 1) {
+                        logMessage("Info: Skipping: " + entry.entryName() + ", Next: " +
+                            nextOne.entryName());
+                    }
+                    continue;
+                }
+
+                if (debug > 0) {
+                    logMessage("Processing " + entry.entryName() + " -> " +
+                        nextOne.entryName());
+                }
+
+                //  Look for a from/to match by card slot among cable/edge connectors
+                //  If none found, issue a warning (but only once for a given from/to
+
+                //  Do NOT warn in some obvious cases:
+                //      Same Panel  *OR*
+                //      Same Gate and is NOT an adjacent panel
+                //  Applying DeMorgan's Theorem, we get CHECK IF
+                //      NOT the same Panel  *AND*
+                //      (different gate OR adjacent panel)
+                //  HOWEVER, if it is the same panel, it cannot be adjacent,
+                //  So adjacent panel is a superset of not the same panel
+                //  So, we check if the gate name does NOT match, or, if it is
+                //  the same gate, the panel is adjacent.
+
+                if (entry.cardSlotInfo.gateName != nextOne.cardSlotInfo.gateName ||
+                    Helpers.isPanelAdjacent(entry.cardSlotInfo.panelName,
+                        nextOne.cardSlotInfo.panelName)) {
+
+                    Cableedgeconnectionblock cableMatch = cableEdgeConnectionBlockList.Find(
+                        x => x.cardSlot == entry.cardSlot && x.Destination == nextOne.cardSlot);
+
+                    if (cableMatch == null || cableMatch.cardSlot == 0) {
+                        if (debug == 0) {
+                            logMessage("Processing " + entry.entryName() + " -> " +
+                                nextOne.entryName());
+                        }
+                        logMessage("   Warning:  No Cable/Edge Connector Found");
+                        warning = true;
+                    }
+
+                }
+
+
+
+                // if (index > 100) {
+                //    break;      // Testing
+                // }
+
+            }
 
 
 
@@ -238,6 +333,20 @@ namespace IBM1410SMS
 
             logMessage("End of Report");
 
+        }
+
+        private CardSlotInfo getCachedCardSlotInfo(int cardSlot) {
+            if(!cardSlotCache.ContainsKey(cardSlot)) {
+                cardSlotCache[cardSlot] = Helpers.getCardSlotInfo(cardSlot);
+            }
+            return ((CardSlotInfo)cardSlotCache[cardSlot]);
+        }
+
+        private string getCachedPageName(int diagramPage) {
+            if(!pageNameCache.ContainsKey(diagramPage)) {
+                pageNameCache.Add(diagramPage, Helpers.getDiagramPageName(diagramPage));
+            }
+            return ((string)pageNameCache[diagramPage]);
         }
 
         private void logMessage(string message) {
