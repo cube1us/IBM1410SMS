@@ -97,13 +97,15 @@ namespace IBM1410SMS
 
         class connectionTracker
         {
-            int counter { get; set; } = 0;     // Number of times this was encountered
+            public string fromKey { get; set; } = "";
+
+            public int counter { get; set; } = 0;     // Number of times this was encountered
 
             //  Only warn once for no matching cable/Edge Connector
 
-            bool connWarning { get; set; } = false;
+            public bool connWarning { get; set; } = false;
 
-            List<string> destinationList { get; set; } = new List<string>();
+            public List<string> destinationList { get; set; } = new List<string>();
         }
 
         DBSetup db = DBSetup.Instance;
@@ -201,8 +203,8 @@ namespace IBM1410SMS
             List<Cableedgeconnectionblock> cableEdgeConnectionBlockList =
                 new List<Cableedgeconnectionblock>();
 
-            Hashtable slotHash = new Hashtable();
-            Hashtable pinHash = new Hashtable();
+            List<connectionTracker> slotList = new List<connectionTracker>();
+            List<connectionTracker> pinList = new List<connectionTracker>();
 
             reportButton.Enabled = false;
 
@@ -287,19 +289,30 @@ namespace IBM1410SMS
                         nextOne.entryName());
                 }
 
+                //  Construct the keys we will use to search
+
+                string slotFromKey = entry.cardSlotInfo.ToString();
+                string slotToKey = nextOne.cardSlotInfo.ToString();
+
+                //  See if we already have an entry for this FROM (first slot)
+
+                connectionTracker fromSlot = slotList.Find(x => x.fromKey == slotFromKey);
+
                 //  Look for a from/to match by card slot among cable/edge connectors
                 //  If none found, issue a warning (but only once for a given from/to
 
                 //  Do NOT warn in some obvious cases:
+                //      We have already warned *OR* 
                 //      Same Panel  *OR*
                 //      Same Gate and is NOT an adjacent panel
                 //  Applying DeMorgan's Theorem, we get CHECK IF
+                //      We have NOT already warned *AND*
                 //      NOT the same Panel  *AND*
                 //      (different gate OR adjacent panel)
                 //  HOWEVER, if it is the same panel, it cannot be adjacent,
                 //  So adjacent panel is a superset of not the same panel
                 //  So, we check if the gate name does NOT match, or, if it is
-                //  the same gate, the panel is adjacent.
+                //  the same gate, the panel is adjacent.  Othewise, the check is skipped.
 
                 if (entry.cardSlotInfo.gateName != nextOne.cardSlotInfo.gateName ||
                     Helpers.isPanelAdjacent(entry.cardSlotInfo.panelName,
@@ -308,7 +321,8 @@ namespace IBM1410SMS
                     Cableedgeconnectionblock cableMatch = cableEdgeConnectionBlockList.Find(
                         x => x.cardSlot == entry.cardSlot && x.Destination == nextOne.cardSlot);
 
-                    if (cableMatch == null || cableMatch.cardSlot == 0) {
+                    if ((fromSlot == null || !fromSlot.connWarning) &&
+                        (cableMatch == null || cableMatch.cardSlot == 0)) {
                         if (debug == 0) {
                             logMessage("Processing " + entry.entryName() + " -> " +
                                 nextOne.entryName());
@@ -316,14 +330,85 @@ namespace IBM1410SMS
                         logMessage("   Warning:  No Cable/Edge Connector Found");
                         warning = true;
                     }
-
                 }
 
+                //  Look for a matching entry card slot -> card slot
 
 
-                // if (index > 100) {
-                //    break;      // Testing
-                // }
+                if(fromSlot == null) {
+
+                    //  No Matching FROM entry
+
+                    if (debug > 0) {
+                        logMessage("   Adding new slotList entry for " + slotFromKey +
+                            " with destination " + slotToKey);
+                    }
+
+                    fromSlot = new connectionTracker();
+                    fromSlot.fromKey = slotFromKey;
+                    fromSlot.counter = 1;
+                    fromSlot.connWarning = warning;
+                    fromSlot.destinationList.Add(slotToKey);
+
+                    //  Look to see if this destination is already in use somewhere else
+
+                    connectionTracker destTracker = slotList.Find(
+                        x => x.destinationList.Contains(slotToKey));
+
+                    if(destTracker != null && destTracker.counter != 0) {
+                        if (!warning && debug > 0) {
+                            logMessage("Processing " + entry.entryName() + " -> " +
+                                nextOne.entryName());
+                        }
+                        logMessage("   WARNING:  This destination already exists for " +
+                            "slotList FROM " + destTracker.fromKey);
+                    }
+
+                    //  Finally, add the new entry
+
+                    slotList.Add(fromSlot);
+                }
+
+                else {
+
+                    //  Matching FROM entry
+
+                    if (debug > 0) {
+                        logMessage("   Found matching slotList entry for " + slotFromKey);
+                    }
+
+                    //  Does this entry already contain the same destination?
+                    //  If so, bump the counter
+
+                    if(fromSlot.destinationList.Contains(slotToKey)) {
+                        ++fromSlot.counter;
+                    }
+                    else {
+                        //  This "TO" is new.  Is this "TO" referenced somewhere else?
+
+                        connectionTracker destTracker = slotList.Find(
+                            x => x.destinationList.Contains(slotToKey));
+
+                        if (destTracker != null && destTracker.counter != 0) {
+                            if (!warning && debug > 0) {
+                                logMessage("Processing " + entry.entryName() + " -> " +
+                                    nextOne.entryName());
+                            }
+                            logMessage("   WARNING:  This destination already exists for " +
+                                "slotList FROM " + destTracker.fromKey);
+                        }
+
+                        if(debug > 0) {
+                            logMessage("   Adding new Destination " + slotToKey +
+                                " to slotList entry " + slotFromKey);
+                        }
+                        fromSlot.destinationList.Add(slotToKey);
+                    }
+                }
+
+                if (debug > 0 && index > 100) {
+                   break;      // Testing
+                }
 
             }
 
