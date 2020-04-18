@@ -30,7 +30,7 @@ namespace IBM1410SMS
 
             public string entryName() {
                 return (pageName + "*" + edgeConnector.reference + ":" + 
-                    cardSlotInfo.ToSmallString() + edgeConnector.pin);
+                    cardSlotInfo.ToSmallString().ToUpper() + edgeConnector.pin);
             }
 
             public int CompareTo(edgeConnectorEntry other) {
@@ -98,6 +98,7 @@ namespace IBM1410SMS
         class connectionTracker
         {
             public string fromKey { get; set; } = "";
+            public string fromPageName { get; set; } = "";
 
             public int counter { get; set; } = 0;     // Number of times this was encountered
 
@@ -106,6 +107,7 @@ namespace IBM1410SMS
             public bool connWarning { get; set; } = false;
 
             public List<string> destinationList { get; set; } = new List<string>();
+            public List<string> destinationPageList { get; set; } = new List<string>();
         }
 
         DBSetup db = DBSetup.Instance;
@@ -121,7 +123,7 @@ namespace IBM1410SMS
         string logFileName = "";
         StreamWriter logFile = null;
 
-        int debug = 0;
+        int debug = 1;
 
         public ReportEdgeConnectionsForm() {
             InitializeComponent();
@@ -242,14 +244,14 @@ namespace IBM1410SMS
                 }
             }
 
-            if(debug > 0) {
+            if(debug > 1) {
                 logMessage("Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
             }
 
             edgeConnectors.Sort();
 
-            if (debug > 0) {
+            if (debug > 1) {
                 logMessage("Sorted Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
                 for (int i = 0; i < 100; ++i) {
@@ -257,7 +259,7 @@ namespace IBM1410SMS
                     logMessage(e.pageName + ":" +
                         e.edgeConnector.reference + ":" +
                         e.edgeConnector.order + ":"+
-                        e.cardSlotInfo.ToSmallString() +
+                        e.cardSlotInfo.ToSmallString().ToUpper() +
                         e.edgeConnector.pin);                        
                 }
             }
@@ -285,14 +287,14 @@ namespace IBM1410SMS
                 }
 
                 if (debug > 0) {
-                    logMessage("Processing " + entry.entryName() + " -> " +
-                        nextOne.entryName());
+                    logMessage("Processing " + entry.entryName() + 
+                        " -> " + nextOne.entryName());
                 }
 
                 //  Construct the keys we will use to search
 
-                string slotFromKey = entry.cardSlotInfo.ToString();
-                string slotToKey = nextOne.cardSlotInfo.ToString();
+                string slotFromKey = entry.cardSlotInfo.ToString().ToUpper();
+                string slotToKey = nextOne.cardSlotInfo.ToString().ToUpper();
 
                 //  See if we already have an entry for this FROM (first slot)
 
@@ -324,8 +326,8 @@ namespace IBM1410SMS
                     if ((fromSlot == null || !fromSlot.connWarning) &&
                         (cableMatch == null || cableMatch.cardSlot == 0)) {
                         if (debug == 0) {
-                            logMessage("Processing " + entry.entryName() + " -> " +
-                                nextOne.entryName());
+                            logMessage("Processing " + 
+                                entry.entryName() + " -> " +  nextOne.entryName());
                         }
                         logMessage("   Warning:  No Cable/Edge Connector Found");
                         warning = true;
@@ -349,6 +351,8 @@ namespace IBM1410SMS
                     fromSlot.counter = 1;
                     fromSlot.connWarning = warning;
                     fromSlot.destinationList.Add(slotToKey);
+                    fromSlot.destinationPageList.Add(nextOne.pageName);
+                    fromSlot.fromPageName = entry.pageName;
 
                     //  Look to see if this destination is already in use somewhere else
 
@@ -356,12 +360,20 @@ namespace IBM1410SMS
                         x => x.destinationList.Contains(slotToKey));
 
                     if(destTracker != null && destTracker.counter != 0) {
-                        if (!warning && debug > 0) {
-                            logMessage("Processing " + entry.entryName() + " -> " +
-                                nextOne.entryName());
+                        if (!warning && debug == 0) {
+                            logMessage("Processing " +
+                                entry.entryName() + " -> " + nextOne.entryName());
                         }
+
+                        int destTrackerIndex = destTracker.destinationList.IndexOf(
+                            slotToKey);
+
                         logMessage("   WARNING:  This destination already exists for " +
                             "slotList FROM " + destTracker.fromKey);
+                        logMessage("   FROM first found on page " +
+                            fromSlot.fromPageName + ", TO first found on page " +
+                            destTracker.destinationPageList[destTrackerIndex]);
+
                     }
 
                     //  Finally, add the new entry
@@ -374,7 +386,8 @@ namespace IBM1410SMS
                     //  Matching FROM entry
 
                     if (debug > 0) {
-                        logMessage("   Found matching slotList entry for " + slotFromKey);
+                        logMessage("   Found matching slotList entry for " + slotFromKey +
+                            " first found on page " + fromSlot.fromPageName);
                     }
 
                     //  Does this entry already contain the same destination?
@@ -390,12 +403,18 @@ namespace IBM1410SMS
                             x => x.destinationList.Contains(slotToKey));
 
                         if (destTracker != null && destTracker.counter != 0) {
-                            if (!warning && debug > 0) {
-                                logMessage("Processing " + entry.entryName() + " -> " +
-                                    nextOne.entryName());
+                            if (!warning && debug == 0) {
+                                logMessage("Processing " +
+                                    entry.entryName() + " -> " + nextOne.entryName());
                             }
+
+                            int destTrackerIndex = destTracker.destinationList.IndexOf(
+                                slotToKey);
                             logMessage("   WARNING:  This destination already exists for " +
                                 "slotList FROM " + destTracker.fromKey);
+                            logMessage("   FROM first found on page " +
+                                fromSlot.fromPageName + ", TO first found on page " +
+                                destTracker.destinationPageList[destTrackerIndex]);
                         }
 
                         if(debug > 0) {
@@ -403,21 +422,18 @@ namespace IBM1410SMS
                                 " to slotList entry " + slotFromKey);
                         }
                         fromSlot.destinationList.Add(slotToKey);
+                        fromSlot.destinationPageList.Add(nextOne.pageName);
                     }
                 }
 
                 if (debug > 0 && index > 100) {
                    break;      // Testing
                 }
-
             }
-
-
 
             reportButton.Enabled = true;
 
             logMessage("End of Report");
-
         }
 
         private CardSlotInfo getCachedCardSlotInfo(int cardSlot) {
