@@ -108,6 +108,7 @@ namespace IBM1410SMS
 
             public List<string> destinationList { get; set; } = new List<string>();
             public List<string> destinationPageList { get; set; } = new List<string>();
+            public List<int> destinationCounter { get; set; } = new List<int>();
         }
 
         DBSetup db = DBSetup.Instance;
@@ -117,18 +118,24 @@ namespace IBM1410SMS
         Hashtable pageNameCache = new Hashtable();
         Hashtable cardSlotCache = new Hashtable();
 
-
         Machine currentMachine = null;
 
         string logFileName = "";
         StreamWriter logFile = null;
 
-        int debug = 1;
+        int logLevel = 1;
+        const int MAXLOGLEVEL = 3;      //  Level 3 logging stops at 100 rows
 
         public ReportEdgeConnectionsForm() {
             InitializeComponent();
             machineTable = db.getMachineTable();
             machineList = machineTable.getAll();
+
+            //  Fill in the log level combo box
+
+            for (int i = 0; i <= MAXLOGLEVEL; ++i) {
+                logLevelComboBox.Items.Add(i);
+            }
 
             //  Fill in the machine combo box, and remember which machine
             //  we started out with.
@@ -152,6 +159,31 @@ namespace IBM1410SMS
 
             directoryTextBox.Text = Parms.getParmValue("report output directory");
 
+            //  Pre-select the last log level used.
+
+            try {
+                logLevel = Int32.Parse(Parms.getParmValue("edge report log level"));
+            }
+            catch(FormatException) {
+                logLevel = 1;
+            }
+
+            logLevel = Math.Min(MAXLOGLEVEL, Math.Max(0, logLevel));
+            logLevelComboBox.SelectedItem = logLevel;
+
+            //  Pre-select the use pins check box
+
+            int includePins = 0;
+
+            try {
+                includePins = Int32.Parse(Parms.getParmValue("edge include pins"));
+            }
+            catch (FormatException) {
+                includePins = 0;
+            }
+
+            includePinCheckBox.Checked = (includePins > 0);
+
             //  Disable the report button for now.
 
             reportButton.Enabled = directoryTextBox.Text.Length > 0;
@@ -162,8 +194,13 @@ namespace IBM1410SMS
             logFileName = Path.Combine(directoryTextBox.Text,
                 currentMachine.name + "-EdgeConnectionReport.txt");
             logFile = new StreamWriter(logFileName, false);
+            logLevel = (int) logLevelComboBox.SelectedItem;
 
             Parms.setParmValue("report output directory", directoryTextBox.Text);
+            Parms.setParmValue("edge report log level", logLevel.ToString());
+            Parms.setParmValue("edge include pins",
+                includePinCheckBox.Checked ? "1" : "0");
+
             logMessage("Sheet Edge Connection Report for Machine: " +
                 currentMachine.name);
 
@@ -220,7 +257,7 @@ namespace IBM1410SMS
                 }
             }
 
-            if(debug > 0) {
+            if(logLevel > 0) {
                 logMessage("Cable/Edge Connections: " +
                     cableEdgeConnectionBlockList.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
@@ -244,14 +281,14 @@ namespace IBM1410SMS
                 }
             }
 
-            if(debug > 1) {
+            if(logLevel > 1) {
                 logMessage("Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
             }
 
             edgeConnectors.Sort();
 
-            if (debug > 1) {
+            if (logLevel > 1) {
                 logMessage("Sorted Edge Connectors: " + edgeConnectors.Count.ToString());
                 logMessage(DateTime.Now.ToLocalTime().ToString());
                 for (int i = 0; i < 100; ++i) {
@@ -279,22 +316,26 @@ namespace IBM1410SMS
                 if(entry.pageName != nextOne.pageName ||
                     entry.edgeConnector.reference != nextOne.edgeConnector.reference ||
                     entry.cardSlotInfo.machineName != nextOne.cardSlotInfo.machineName) { 
-                    if(debug > 1) {
+                    if(logLevel > 1) {
                         logMessage("Info: Skipping: " + entry.entryName() + ", Next: " +
                             nextOne.entryName());
                     }
                     continue;
                 }
 
-                if (debug > 0) {
+                if (logLevel > 0) {
                     logMessage("Processing " + entry.entryName() + 
                         " -> " + nextOne.entryName());
                 }
 
-                //  Construct the keys we will use to search
+                //  Construct the keys we will use to search.  Include the pin name
+                //  if that check box is checked.
 
-                string slotFromKey = entry.cardSlotInfo.ToString().ToUpper();
-                string slotToKey = nextOne.cardSlotInfo.ToString().ToUpper();
+                string slotFromKey = entry.cardSlotInfo.ToString().ToUpper() +
+                    (includePinCheckBox.Checked ? entry.edgeConnector.pin : "");
+
+                string slotToKey = nextOne.cardSlotInfo.ToString().ToUpper() +
+                    (includePinCheckBox.Checked ? nextOne.edgeConnector.pin : "");
 
                 //  See if we already have an entry for this FROM (first slot)
 
@@ -325,7 +366,7 @@ namespace IBM1410SMS
 
                     if ((fromSlot == null || !fromSlot.connWarning) &&
                         (cableMatch == null || cableMatch.cardSlot == 0)) {
-                        if (debug == 0) {
+                        if (logLevel == 0) {
                             logMessage("Processing " + 
                                 entry.entryName() + " -> " +  nextOne.entryName());
                         }
@@ -336,12 +377,11 @@ namespace IBM1410SMS
 
                 //  Look for a matching entry card slot -> card slot
 
-
                 if(fromSlot == null) {
 
                     //  No Matching FROM entry
 
-                    if (debug > 0) {
+                    if (logLevel > 0) {
                         logMessage("   Adding new slotList entry for " + slotFromKey +
                             " with destination " + slotToKey);
                     }
@@ -352,6 +392,7 @@ namespace IBM1410SMS
                     fromSlot.connWarning = warning;
                     fromSlot.destinationList.Add(slotToKey);
                     fromSlot.destinationPageList.Add(nextOne.pageName);
+                    fromSlot.destinationCounter.Add(1);
                     fromSlot.fromPageName = entry.pageName;
 
                     //  Look to see if this destination is already in use somewhere else
@@ -360,7 +401,7 @@ namespace IBM1410SMS
                         x => x.destinationList.Contains(slotToKey));
 
                     if(destTracker != null && destTracker.counter != 0) {
-                        if (!warning && debug == 0) {
+                        if (!warning && logLevel == 0) {
                             logMessage("Processing " +
                                 entry.entryName() + " -> " + nextOne.entryName());
                         }
@@ -371,9 +412,10 @@ namespace IBM1410SMS
                         logMessage("   WARNING:  This destination already exists for " +
                             "slotList FROM " + destTracker.fromKey);
                         logMessage("   FROM first found on page " +
-                            fromSlot.fromPageName + ", TO first found on page " +
-                            destTracker.destinationPageList[destTrackerIndex]);
-
+                            fromSlot.fromPageName + ", Count: " + fromSlot.counter +
+                            ", TO first found on page " +
+                            destTracker.destinationPageList[destTrackerIndex] +
+                            ", Count: " + destTracker.destinationCounter[destTrackerIndex]);
                     }
 
                     //  Finally, add the new entry
@@ -385,16 +427,20 @@ namespace IBM1410SMS
 
                     //  Matching FROM entry
 
-                    if (debug > 0) {
+                    ++fromSlot.counter;
+
+                    if (logLevel > 0) {
                         logMessage("   Found matching slotList entry for " + slotFromKey +
-                            " first found on page " + fromSlot.fromPageName);
+                            " first found on page " + fromSlot.fromPageName +
+                            " Count: " + fromSlot.counter.ToString());
                     }
 
                     //  Does this entry already contain the same destination?
                     //  If so, bump the counter
 
-                    if(fromSlot.destinationList.Contains(slotToKey)) {
-                        ++fromSlot.counter;
+                    int destIndex = fromSlot.destinationList.IndexOf(slotToKey);
+                    if(destIndex >= 0) {
+                        ++fromSlot.destinationCounter[destIndex];
                     }
                     else {
                         //  This "TO" is new.  Is this "TO" referenced somewhere else?
@@ -403,7 +449,7 @@ namespace IBM1410SMS
                             x => x.destinationList.Contains(slotToKey));
 
                         if (destTracker != null && destTracker.counter != 0) {
-                            if (!warning && debug == 0) {
+                            if (!warning && logLevel == 0) {
                                 logMessage("Processing " +
                                     entry.entryName() + " -> " + nextOne.entryName());
                             }
@@ -413,20 +459,24 @@ namespace IBM1410SMS
                             logMessage("   WARNING:  This destination already exists for " +
                                 "slotList FROM " + destTracker.fromKey);
                             logMessage("   FROM first found on page " +
-                                fromSlot.fromPageName + ", TO first found on page " +
-                                destTracker.destinationPageList[destTrackerIndex]);
+                                fromSlot.fromPageName + ", Count: " + fromSlot.counter +
+                                ", TO first found on page " +
+                                destTracker.destinationPageList[destTrackerIndex] +
+                                ", Count: " + destTracker.destinationCounter[destTrackerIndex]);
+
                         }
 
-                        if(debug > 0) {
+                        if (logLevel > 0) {
                             logMessage("   Adding new Destination " + slotToKey +
                                 " to slotList entry " + slotFromKey);
                         }
                         fromSlot.destinationList.Add(slotToKey);
                         fromSlot.destinationPageList.Add(nextOne.pageName);
+                        fromSlot.destinationCounter.Add(1);
                     }
                 }
 
-                if (debug > 0 && index > 100) {
+                if (logLevel > 2 && index > 100) {
                    break;      // Testing
                 }
             }
