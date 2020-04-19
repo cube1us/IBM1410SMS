@@ -63,8 +63,9 @@ namespace IBM1410SMS
         internal static string[] cableEdgeConnectionCardTypes = new string[]
             {"CABL", "CONN", "RPQ", "SAVE", "STRL", "TIE"};
 
-        //  List of panel adjacencies (will probably need updates for other machines,
-        //  or, eventually, a database column.
+        //  List of panel adjacencies and special panels.
+        //  (will probably need to be qualfied by machine, or, eventually, 
+        //  something in the database).
 
         internal static Hashtable panelAdjacencies = new Hashtable()
         {
@@ -72,6 +73,11 @@ namespace IBM1410SMS
             {"2", "1" },
             {"3", "4" },
             {"4", "3" }
+        };
+
+        internal static List<string> specialPanels = new List<string>()
+        {
+            "7"
         };
 
         private static readonly Helpers instance = new Helpers();
@@ -704,10 +710,24 @@ namespace IBM1410SMS
 
         //  Test to see if two panels are adjacent
 
-        public static bool isPanelAdjacent(string fromPanel, string toPanel) {
+        public static bool isPanelAdjacent(string machineName, 
+            string fromPanel, string toPanel) {
+
+            //  Note:  machine is NOT currently used, but this way at least
+            //  The code that calls this will work once machine IS used
+
             return (string)panelAdjacencies[fromPanel] == toPanel;
         }
 
+        //  Test to see if a panel is special
+
+        public static bool isSpecialPanel(string machineName, string panelName) {
+
+            //  Note:  machine is NOT currently used, but this way at least
+            //  The code that calls this will work once machine IS used
+
+            return (specialPanels.Contains(panelName));
+        }        
     }
 
     internal class CardSlotInfo  {

@@ -126,6 +126,8 @@ namespace IBM1410SMS
         int logLevel = 1;
         const int MAXLOGLEVEL = 3;      //  Level 3 logging stops at 100 rows
 
+        List<connectionTracker> slotList = new List<connectionTracker>();
+
         public ReportEdgeConnectionsForm() {
             InitializeComponent();
             machineTable = db.getMachineTable();
@@ -242,9 +244,6 @@ namespace IBM1410SMS
             List<Cableedgeconnectionblock> cableEdgeConnectionBlockList =
                 new List<Cableedgeconnectionblock>();
 
-            List<connectionTracker> slotList = new List<connectionTracker>();
-            List<connectionTracker> pinList = new List<connectionTracker>();
-
             reportButton.Enabled = false;
 
             //  Build a list of cable/edge connectors that are relevant
@@ -352,13 +351,15 @@ namespace IBM1410SMS
                 //      We have NOT already warned *AND*
                 //      NOT the same Panel  *AND*
                 //      (different gate OR adjacent panel)
+                //
                 //  HOWEVER, if it is the same panel, it cannot be adjacent,
                 //  So adjacent panel is a superset of not the same panel
                 //  So, we check if the gate name does NOT match, or, if it is
                 //  the same gate, the panel is adjacent.  Othewise, the check is skipped.
 
                 if (entry.cardSlotInfo.gateName != nextOne.cardSlotInfo.gateName ||
-                    Helpers.isPanelAdjacent(entry.cardSlotInfo.panelName,
+                    Helpers.isPanelAdjacent(entry.cardSlotInfo.machineName,
+                        entry.cardSlotInfo.panelName,
                         nextOne.cardSlotInfo.panelName)) {
 
                     Cableedgeconnectionblock cableMatch = cableEdgeConnectionBlockList.Find(
@@ -397,10 +398,25 @@ namespace IBM1410SMS
 
                     //  Look to see if this destination is already in use somewhere else
 
+                    //  NOTE:  (If the panel is the same OR it is a Special panel), 
+                    //  AND we are only checking slots, not pins, do NOT issue this warning.
+                    //  Applying DemMorgan's again, that is the same as warn if (the panel
+                    //  is NOT the same and NEITHER is special) OR we ARE checking pins 
+                    //  (as well as being already in use.)
+                    //  It is also possible that this already exists in reversed form, which
+                    //  would override this conflict, so check for that.
+
                     connectionTracker destTracker = slotList.Find(
                         x => x.destinationList.Contains(slotToKey));
 
-                    if(destTracker != null && destTracker.counter != 0) {
+                    if(!isReversedConnection(slotToKey, slotFromKey) &&
+                        destTracker != null && destTracker.counter != 0  &&
+                          ((!isSamePanel(entry.cardSlotInfo, nextOne.cardSlotInfo) &&
+                            !Helpers.isSpecialPanel(entry.cardSlotInfo.machineName,
+                                entry.cardSlotInfo.panelName) &&
+                            !Helpers.isSpecialPanel(nextOne.cardSlotInfo.machineName,
+                                nextOne.cardSlotInfo.panelName)) ||
+                          includePinCheckBox.Checked)) {
                         if (!warning && logLevel == 0) {
                             logMessage("Processing " +
                                 entry.entryName() + " -> " + nextOne.entryName());
@@ -443,12 +459,22 @@ namespace IBM1410SMS
                         ++fromSlot.destinationCounter[destIndex];
                     }
                     else {
+
                         //  This "TO" is new.  Is this "TO" referenced somewhere else?
+                        //  As before, do NOT warn if this is the same panel or either
+                        //  one is a special panel unless we are checking at the pin level.
 
                         connectionTracker destTracker = slotList.Find(
                             x => x.destinationList.Contains(slotToKey));
 
-                        if (destTracker != null && destTracker.counter != 0) {
+                        if (!isReversedConnection(slotToKey, slotFromKey) &&
+                            destTracker != null && destTracker.counter != 0 &&
+                             ((!isSamePanel(entry.cardSlotInfo, nextOne.cardSlotInfo) &&
+                               !Helpers.isSpecialPanel(entry.cardSlotInfo.machineName,
+                                   entry.cardSlotInfo.panelName) &&
+                               !Helpers.isSpecialPanel(nextOne.cardSlotInfo.machineName,
+                                   nextOne.cardSlotInfo.panelName)) ||
+                               includePinCheckBox.Checked)) {
                             if (!warning && logLevel == 0) {
                                 logMessage("Processing " +
                                     entry.entryName() + " -> " + nextOne.entryName());
@@ -484,6 +510,22 @@ namespace IBM1410SMS
             reportButton.Enabled = true;
 
             logMessage("End of Report");
+        }
+
+        private bool isReversedConnection(string slotToKey, string slotFromKey) {
+            connectionTracker connectionTracker = slotList.Find(
+                x => x.fromKey == slotToKey && x.destinationList.Contains(slotFromKey));
+            if(connectionTracker != null && connectionTracker.counter != 0) {
+                return true;
+            }
+            return false;
+        }
+
+        private bool isSamePanel(CardSlotInfo from, CardSlotInfo to) {
+            return (from.machineName == to.machineName &&
+                from.frameName == to.frameName &&
+                from.gateName == to.gateName &&
+                from.panelName == to.panelName);
         }
 
         private CardSlotInfo getCachedCardSlotInfo(int cardSlot) {
