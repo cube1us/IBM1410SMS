@@ -19,8 +19,9 @@ namespace IBM1410SMS
         {
             public string panelName { get; set; } = "";
             public bool specialPanel = false;
-            public List<string> validRows { get; set; } = null;
-            public List<string> adjacencies { get; set; } = null;
+            public List<string> validRows { get; set; } = new List<string>();
+            public List<string> interconnectRows { get; set; } = new List<string>();
+            public List<string> adjacencies { get; set; } = new List<string>();
             public int maxColumn = 0;
         }
 
@@ -28,10 +29,10 @@ namespace IBM1410SMS
             {"A", "B", "C", "D", "E", "F", "G", "H", "J", "K"};
 
         private static List<string> RowsAtoKPlusY = new List<string>
-            {"A", "B", "C", "D", "E", "F", "G", "H", "J", "K"};
+            {"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "Y"};
 
         private static List<string> RowsAtoKPlusZ = new List<string>
-            {"A", "B", "C", "D", "E", "F", "G", "H", "J", "K"};
+            {"A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "Z"};
 
         private static List<string> RowsAtoF = new List<string>
             { "A", "B", "C", "D", "E", "F"};
@@ -47,26 +48,30 @@ namespace IBM1410SMS
         private static List<IBMSMSPanel> rackAndPanel4Panels = new List<IBMSMSPanel>
         {
             new IBMSMSPanel {panelName = "1", specialPanel = false,
-                validRows = RowsAtoKPlusZ, adjacencies = {"2"}, maxColumn = 28 },
+                validRows = RowsAtoKPlusZ, interconnectRows = {"Z"},
+                adjacencies = {"2"}, maxColumn = 28 },
 
             new IBMSMSPanel {panelName = "2", specialPanel = false,
-                validRows = RowsAtoKPlusZ, adjacencies = {"1"}, maxColumn = 28 },
+                validRows = RowsAtoKPlusZ, interconnectRows = {"Z"},
+                adjacencies = {"1"}, maxColumn = 28 },
 
             new IBMSMSPanel {panelName = "3", specialPanel = false,
-                validRows = RowsAtoKPlusY, adjacencies = {"4"}, maxColumn = 28 },
+                validRows = RowsAtoKPlusY, interconnectRows = {"Y"},
+                adjacencies = {"4"}, maxColumn = 28 },
 
             new IBMSMSPanel {panelName = "4", specialPanel = false,
-                validRows = RowsAtoKPlusY, adjacencies = {"3"}, maxColumn = 28 },
+                validRows = RowsAtoKPlusY, interconnectRows = {"Y"},
+                adjacencies = {"3"}, maxColumn = 28 },
 
             new IBMSMSPanel {panelName = "7", specialPanel = true,
-                validRows = RowsLU, adjacencies = { }, maxColumn = 52 }
+                validRows = RowsLU, adjacencies = {}, interconnectRows = {},
+                maxColumn = 52 }
         };
 
         private static Hashtable machines = new Hashtable()
         {
             {"1411", rackAndPanel4Panels }
         };
-
 
         //  Determine whether or not two panels are adjacent
 
@@ -91,7 +96,7 @@ namespace IBM1410SMS
 
         //  Determine if a panel is special (i.e., does not actually contain cards)
 
-        public static bool isPanelSpecial(string machineName, string panelName) {
+        public static bool isSpecialPanel(string machineName, string panelName) {
             if (machines.ContainsKey(machineName)) {
                 List<IBMSMSPanel> panels = (List<IBMSMSPanel>)machines[machineName];
                 IBMSMSPanel panel = panels.Find(x => x.panelName == panelName);

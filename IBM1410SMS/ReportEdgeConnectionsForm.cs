@@ -358,7 +358,7 @@ namespace IBM1410SMS
                 //  the same gate, the panel is adjacent.  Othewise, the check is skipped.
 
                 if (entry.cardSlotInfo.gateName != nextOne.cardSlotInfo.gateName ||
-                    Helpers.isPanelAdjacent(entry.cardSlotInfo.machineName,
+                    IBMSMSPackaging.isPanelAdjacent(entry.cardSlotInfo.machineName,
                         entry.cardSlotInfo.panelName,
                         nextOne.cardSlotInfo.panelName)) {
 
@@ -412,9 +412,9 @@ namespace IBM1410SMS
                     if(!isReversedConnection(slotToKey, slotFromKey) &&
                         destTracker != null && destTracker.counter != 0  &&
                           ((!isSamePanel(entry.cardSlotInfo, nextOne.cardSlotInfo) &&
-                            !Helpers.isSpecialPanel(entry.cardSlotInfo.machineName,
+                            !IBMSMSPackaging.isSpecialPanel(entry.cardSlotInfo.machineName,
                                 entry.cardSlotInfo.panelName) &&
-                            !Helpers.isSpecialPanel(nextOne.cardSlotInfo.machineName,
+                            !IBMSMSPackaging.isSpecialPanel(nextOne.cardSlotInfo.machineName,
                                 nextOne.cardSlotInfo.panelName)) ||
                           includePinCheckBox.Checked)) {
                         if (!warning && logLevel == 0) {
@@ -470,9 +470,9 @@ namespace IBM1410SMS
                         if (!isReversedConnection(slotToKey, slotFromKey) &&
                             destTracker != null && destTracker.counter != 0 &&
                              ((!isSamePanel(entry.cardSlotInfo, nextOne.cardSlotInfo) &&
-                               !Helpers.isSpecialPanel(entry.cardSlotInfo.machineName,
+                               !IBMSMSPackaging.isSpecialPanel(entry.cardSlotInfo.machineName,
                                    entry.cardSlotInfo.panelName) &&
-                               !Helpers.isSpecialPanel(nextOne.cardSlotInfo.machineName,
+                               !IBMSMSPackaging.isSpecialPanel(nextOne.cardSlotInfo.machineName,
                                    nextOne.cardSlotInfo.panelName)) ||
                                includePinCheckBox.Checked)) {
                             if (!warning && logLevel == 0) {

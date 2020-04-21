@@ -707,27 +707,6 @@ namespace IBM1410SMS
 
             return (gatePinsList);
         }
-
-        //  Test to see if two panels are adjacent
-
-        public static bool isPanelAdjacent(string machineName, 
-            string fromPanel, string toPanel) {
-
-            //  Note:  machine is NOT currently used, but this way at least
-            //  The code that calls this will work once machine IS used
-
-            return (string)panelAdjacencies[fromPanel] == toPanel;
-        }
-
-        //  Test to see if a panel is special
-
-        public static bool isSpecialPanel(string machineName, string panelName) {
-
-            //  Note:  machine is NOT currently used, but this way at least
-            //  The code that calls this will work once machine IS used
-
-            return (specialPanels.Contains(panelName));
-        }        
     }
 
     internal class CardSlotInfo  {
