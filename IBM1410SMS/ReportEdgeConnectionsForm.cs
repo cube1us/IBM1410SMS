@@ -307,18 +307,44 @@ namespace IBM1410SMS
 
                 edgeConnectorEntry entry = edgeConnectors[index];
                 edgeConnectorEntry nextOne = edgeConnectors[index + 1];
+
                 bool warning = false;
 
                 //  If the page, machine or the reference changes, we are at the end
-                //  of a particuar list, so skip it.
+                //  of a particuar list, so skip it, except for checking its row,
+                //  column and pin.
 
-                if(entry.pageName != nextOne.pageName ||
+                if (entry.pageName != nextOne.pageName ||
                     entry.edgeConnector.reference != nextOne.edgeConnector.reference ||
                     entry.cardSlotInfo.machineName != nextOne.cardSlotInfo.machineName) { 
                     if(logLevel > 1) {
                         logMessage("Info: Skipping: " + entry.entryName() + ", Next: " +
                             nextOne.entryName());
                     }
+
+                    if (!IBMSMSPackaging.isValidRowColumn(entry.cardSlotInfo.machineName,
+                        entry.cardSlotInfo.panelName, entry.cardSlotInfo.row.ToUpper(),
+                        entry.cardSlotInfo.column)) {
+                        if (logLevel == 0) {
+                            logMessage("Checking: " + entry.entryName() +
+                                " Next(" + nextOne.entryName() + ")");
+                        }
+
+                        warning = true;
+                        logMessage("   " + entry.entryName() +
+                            ": Row or Column in entry invalid for panel.");
+                    }
+
+                    //  Warn if this is not a valid pin name
+
+                    if (!Helpers.validPins.Contains(entry.edgeConnector.pin[0])) {
+                        if (!warning && logLevel == 0) {
+                            logMessage("Checking: " + entry.entryName() +
+                                " Next(" + nextOne.entryName() + ")");
+                        }
+                        logMessage("   " +  entry.entryName() + ": Pin is invalid.");
+                    }
+
                     continue;
                 }
 
@@ -327,14 +353,86 @@ namespace IBM1410SMS
                         " -> " + nextOne.entryName());
                 }
 
+                //  Warn if entry is not a valid row/column for this panel
+
+                if (!IBMSMSPackaging.isValidRowColumn(entry.cardSlotInfo.machineName,
+                    entry.cardSlotInfo.panelName, entry.cardSlotInfo.row.ToUpper(),
+                    entry.cardSlotInfo.column)) {
+                    if (logLevel == 0) {
+                        logMessage("Processing " + entry.entryName() +
+                            " -> " + nextOne.entryName());
+                    }
+                    warning = true;
+                    logMessage("   " + entry.entryName() + 
+                        ": Row or Column in entry invalid for panel.");
+                }
+
+                //  Warn if this is not a valid pin name
+
+                if (!Helpers.validPins.Contains(entry.edgeConnector.pin[0])) {
+                    if (!warning && logLevel == 0) {
+                        logMessage("Processing " + entry.entryName() +
+                            " -> " + nextOne.entryName());
+                    }
+                    warning = true;
+                    logMessage("   " + entry.entryName() + ": Pin is invalid.");
+                }
+
+                //  The last time through, also check the row/column and pin of
+                //  the last entry, so we don't leave it unchecked.
+
+                if(index == edgeConnectors.Count()-2) {
+                    if (!IBMSMSPackaging.isValidRowColumn(nextOne.cardSlotInfo.machineName,
+                        nextOne.cardSlotInfo.panelName, nextOne.cardSlotInfo.row.ToUpper(),
+                        nextOne.cardSlotInfo.column)) {
+                        if (!warning && logLevel == 0) {
+                            logMessage("Checking Last " + entry.entryName() +
+                                " -> " + nextOne.entryName());
+                        }
+                        logMessage("   " + nextOne.entryName() +
+                            ": Row or Column in entry invalid for panel.");
+                    }
+
+                    //  Warn if this is not a valid pin name
+
+                    if (!Helpers.validPins.Contains(entry.edgeConnector.pin[0])) {
+                        if (!warning && logLevel == 0) {
+                            logMessage("Processing " + entry.entryName() +
+                                " -> " + nextOne.entryName());
+                        }
+                        logMessage("   " + nextOne.entryName() + ": Pin is invalid.");
+                    }
+                }
+
+                //  We avoid checks, and always include pins in the keys of
+                //  special panels and interconnect rows.
+
+                bool entryIsSpecialOrInterconnect =
+                    IBMSMSPackaging.isSpecialPanel(entry.cardSlotInfo.machineName,
+                        entry.cardSlotInfo.panelName) ||
+                    IBMSMSPackaging.isInterconnectRow(entry.cardSlotInfo.machineName,
+                        entry.cardSlotInfo.panelName, entry.cardSlotInfo.row);
+
+                bool nextOneIsSpecialOrInterconnect =
+                    IBMSMSPackaging.isSpecialPanel(nextOne.cardSlotInfo.machineName,
+                        nextOne.cardSlotInfo.panelName) ||
+                    IBMSMSPackaging.isInterconnectRow(nextOne.cardSlotInfo.machineName,
+                        nextOne.cardSlotInfo.panelName, nextOne.cardSlotInfo.row);
+
+                bool specialPanelOrInterconnect = entryIsSpecialOrInterconnect ||
+                    nextOneIsSpecialOrInterconnect;
+
                 //  Construct the keys we will use to search.  Include the pin name
-                //  if that check box is checked.
+                //  if that check box is checked or if either end of the connection
+                //  involves a special panel or interconnect row.
 
                 string slotFromKey = entry.cardSlotInfo.ToString().ToUpper() +
-                    (includePinCheckBox.Checked ? entry.edgeConnector.pin : "");
+                    (includePinCheckBox.Checked || specialPanelOrInterconnect ? 
+                        entry.edgeConnector.pin : "");
 
                 string slotToKey = nextOne.cardSlotInfo.ToString().ToUpper() +
-                    (includePinCheckBox.Checked ? nextOne.edgeConnector.pin : "");
+                    (includePinCheckBox.Checked || specialPanelOrInterconnect ? 
+                        nextOne.edgeConnector.pin : "");
 
                 //  See if we already have an entry for this FROM (first slot)
 
@@ -357,6 +455,9 @@ namespace IBM1410SMS
                 //  So, we check if the gate name does NOT match, or, if it is
                 //  the same gate, the panel is adjacent.  Othewise, the check is skipped.
 
+                //  TODO:  Keep a list, so we don't warn on same 
+                //  machine/frame/gate/panel/row/column pair more than once.
+
                 if (entry.cardSlotInfo.gateName != nextOne.cardSlotInfo.gateName ||
                     IBMSMSPackaging.isPanelAdjacent(entry.cardSlotInfo.machineName,
                         entry.cardSlotInfo.panelName,
@@ -365,8 +466,14 @@ namespace IBM1410SMS
                     Cableedgeconnectionblock cableMatch = cableEdgeConnectionBlockList.Find(
                         x => x.cardSlot == entry.cardSlot && x.Destination == nextOne.cardSlot);
 
-                    if ((fromSlot == null || !fromSlot.connWarning) &&
-                        (cableMatch == null || cableMatch.cardSlot == 0)) {
+                    //  We also do not warn if a special panel or an interconnect row is
+                    //  involved.
+
+                    if (!specialPanelOrInterconnect &&
+                        (fromSlot == null || !fromSlot.connWarning) &&
+                        (cableMatch == null || cableMatch.cardSlot == 0)) 
+                        {
+
                         if (logLevel == 0) {
                             logMessage("Processing " + 
                                 entry.entryName() + " -> " +  nextOne.entryName());
