@@ -102,10 +102,6 @@ namespace IBM1410SMS
 
             public int counter { get; set; } = 0;     // Number of times this was encountered
 
-            //  Only warn once for no matching cable/Edge Connector
-
-            public bool connWarning { get; set; } = false;
-
             public List<string> destinationList { get; set; } = new List<string>();
             public List<string> destinationPageList { get; set; } = new List<string>();
             public List<int> destinationCounter { get; set; } = new List<int>();
@@ -243,6 +239,8 @@ namespace IBM1410SMS
             List<Cableedgeconnectionblock> allCableEdgeConnectionBlockList = null;
             List<Cableedgeconnectionblock> cableEdgeConnectionBlockList =
                 new List<Cableedgeconnectionblock>();
+
+            List<string> noConnectorFoundWarned = new List<string>();
 
             reportButton.Enabled = false;
 
@@ -411,13 +409,13 @@ namespace IBM1410SMS
                     IBMSMSPackaging.isSpecialPanel(entry.cardSlotInfo.machineName,
                         entry.cardSlotInfo.panelName) ||
                     IBMSMSPackaging.isInterconnectRow(entry.cardSlotInfo.machineName,
-                        entry.cardSlotInfo.panelName, entry.cardSlotInfo.row);
+                        entry.cardSlotInfo.panelName, entry.cardSlotInfo.row.ToUpper());
 
                 bool nextOneIsSpecialOrInterconnect =
                     IBMSMSPackaging.isSpecialPanel(nextOne.cardSlotInfo.machineName,
                         nextOne.cardSlotInfo.panelName) ||
                     IBMSMSPackaging.isInterconnectRow(nextOne.cardSlotInfo.machineName,
-                        nextOne.cardSlotInfo.panelName, nextOne.cardSlotInfo.row);
+                        nextOne.cardSlotInfo.panelName, nextOne.cardSlotInfo.row.ToUpper());
 
                 bool specialPanelOrInterconnect = entryIsSpecialOrInterconnect ||
                     nextOneIsSpecialOrInterconnect;
@@ -466,20 +464,22 @@ namespace IBM1410SMS
                     Cableedgeconnectionblock cableMatch = cableEdgeConnectionBlockList.Find(
                         x => x.cardSlot == entry.cardSlot && x.Destination == nextOne.cardSlot);
 
+                    string fromToString = entry.cardSlotInfo.ToString() +
+                        ":" + nextOne.cardSlotInfo.ToString();
+
                     //  We also do not warn if a special panel or an interconnect row is
                     //  involved.
 
                     if (!specialPanelOrInterconnect &&
-                        (fromSlot == null || !fromSlot.connWarning) &&
-                        (cableMatch == null || cableMatch.cardSlot == 0)) 
-                        {
-
-                        if (logLevel == 0) {
-                            logMessage("Processing " + 
-                                entry.entryName() + " -> " +  nextOne.entryName());
-                        }
-                        logMessage("   Warning:  No Cable/Edge Connector Found");
-                        warning = true;
+                        !noConnectorFoundWarned.Contains(fromToString) &&
+                        (cableMatch == null || cableMatch.cardSlot == 0)) {
+                            if (logLevel == 0) {
+                                logMessage("Processing " + 
+                                    entry.entryName() + " -> " +  nextOne.entryName());
+                            }
+                            logMessage("   Warning:  No Cable/Edge Connector Found");
+                            noConnectorFoundWarned.Add(fromToString);
+                            warning = true;
                     }
                 }
 
@@ -497,7 +497,6 @@ namespace IBM1410SMS
                     fromSlot = new connectionTracker();
                     fromSlot.fromKey = slotFromKey;
                     fromSlot.counter = 1;
-                    fromSlot.connWarning = warning;
                     fromSlot.destinationList.Add(slotToKey);
                     fromSlot.destinationPageList.Add(nextOne.pageName);
                     fromSlot.destinationCounter.Add(1);
