@@ -81,7 +81,6 @@ namespace IBM1410SMS
             volumeTextBox.Text = currentVolumeSet.machineType + "/" +
                 currentVolumeSet.machineSerial + " Volume: " +
                 currentVolume.name;
-            pageTextBox.ReadOnly = true;
             pageTextBox.Text = currentPage.name;
 
             rowLabel = currentMachine.rowLabel;
@@ -89,7 +88,6 @@ namespace IBM1410SMS
             //  Populate the data grid view..
 
             populateDialog();
-
         }
 
         public void populateDialog() {

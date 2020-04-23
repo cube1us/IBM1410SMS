@@ -50,8 +50,9 @@
             // 
             this.machineTextBox.Location = new System.Drawing.Point(69, 22);
             this.machineTextBox.Name = "machineTextBox";
+            this.machineTextBox.ReadOnly = true;
             this.machineTextBox.Size = new System.Drawing.Size(69, 20);
-            this.machineTextBox.TabIndex = 1;
+            this.machineTextBox.TabIndex = 99;
             this.machineTextBox.TabStop = false;
             // 
             // label2
@@ -67,8 +68,9 @@
             // 
             this.volumeTextBox.Location = new System.Drawing.Point(203, 22);
             this.volumeTextBox.Name = "volumeTextBox";
+            this.volumeTextBox.ReadOnly = true;
             this.volumeTextBox.Size = new System.Drawing.Size(302, 20);
-            this.volumeTextBox.TabIndex = 3;
+            this.volumeTextBox.TabIndex = 99;
             this.volumeTextBox.TabStop = false;
             // 
             // label3
@@ -84,8 +86,10 @@
             // 
             this.pageTextBox.Location = new System.Drawing.Point(571, 22);
             this.pageTextBox.Name = "pageTextBox";
+            this.pageTextBox.ReadOnly = true;
             this.pageTextBox.Size = new System.Drawing.Size(118, 20);
-            this.pageTextBox.TabIndex = 5;
+            this.pageTextBox.TabIndex = 99;
+            this.pageTextBox.TabStop = false;
             // 
             // edgeConnectorDataGridView
             // 
