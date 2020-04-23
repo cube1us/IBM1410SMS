@@ -75,8 +75,10 @@ namespace IBM1410SMS
 
         private static List<IBMSMSPanel> ibm1415Panel = new List<IBMSMSPanel>
         {
-            new IBMSMSPanel {panelName = "A", specialPanel = true,
-                validRows = RowsAB, adjacencies = { }, interconnectRows = { } }
+            new IBMSMSPanel {panelName = "4", specialPanel = true,
+                validRows = RowsAB, adjacencies = { }, interconnectRows = { },
+                maxColumn = 32
+            }
         };
 
 
