@@ -238,7 +238,8 @@ namespace IBM1410SMS
                     string machineSuffix = match.Groups[1].Value;
                     //  No try needed below - already validated in RegEx
                     int columnNumber = Int32.Parse(match.Groups[5].Value);
-                    if(!IBMSMSPackaging.isValidRowColumn(machinePrefix + machineSuffix,
+                    if(disableChecksCheckBox.Checked == false &&
+                        !IBMSMSPackaging.isValidRowColumn(machinePrefix + machineSuffix,
                         panelName,rowName,columnNumber)) {
                         message = "Entry " + entryNumber + ": Invalid Row/Col. for this Panel " + 
                             rowLabel + " name. " + 

@@ -25,6 +25,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.machineTextBox = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -34,6 +35,8 @@
             this.edgeConnectorDataGridView = new System.Windows.Forms.DataGridView();
             this.applyButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
+            this.disableChecksCheckBox = new System.Windows.Forms.CheckBox();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.edgeConnectorDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -125,11 +128,23 @@
             this.cancelButton.UseVisualStyleBackColor = true;
             this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
+            // disableChecksCheckBox
+            // 
+            this.disableChecksCheckBox.AutoSize = true;
+            this.disableChecksCheckBox.Location = new System.Drawing.Point(15, 60);
+            this.disableChecksCheckBox.Name = "disableChecksCheckBox";
+            this.disableChecksCheckBox.Size = new System.Drawing.Size(142, 17);
+            this.disableChecksCheckBox.TabIndex = 100;
+            this.disableChecksCheckBox.Text = "Disable card slot checks";
+            this.toolTip1.SetToolTip(this.disableChecksCheckBox, "Checking this box disables panel row/column checks for unusual circumstances");
+            this.disableChecksCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditEdgeConnectorsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(756, 332);
+            this.Controls.Add(this.disableChecksCheckBox);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.edgeConnectorDataGridView);
@@ -158,5 +173,7 @@
         private System.Windows.Forms.DataGridView edgeConnectorDataGridView;
         private System.Windows.Forms.Button applyButton;
         private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.CheckBox disableChecksCheckBox;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
