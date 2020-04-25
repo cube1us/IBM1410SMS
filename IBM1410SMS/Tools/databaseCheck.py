@@ -197,6 +197,63 @@ def main():
     sys.stdout.flush()
 
     #
+    #   Generate a report of panels with lower case rows, and check for 
+    #   conflicts independent of case
+    #
+
+    query = ("SELECT idCardSlot, panel, cardRow, cardColumn FROM cardslot ORDER BY " +
+             "panel, cardColumn, UPPER(cardRow)")
+    cursor.execute(query)
+    lastPanel = ''
+    panelDictionary = {}
+    rowFixesDictionary = {}
+    rowLetterFixesDictionary = {}
+    for rowTuple in cursor:
+        (idCardSlot, panel, row, column) = rowTuple;
+        if(panel != lastPanel):
+            panelDictionary[panel] = {}
+            rowFixesDictionary[panel] = {}
+        if(column not in panelDictionary[panel].keys()):
+            panelDictionary[panel][column] = {}
+            panelDictionary[panel][column][row.upper()] = idCardSlot
+            rowFixesDictionary[panel][column] = {}
+            if(row != row.upper()):
+                rowFixesDictionary[panel][column][row.upper()] = 1
+                print("Lower Case Row: Panel Key: " + str(panel) +
+                      ", Column: " + str(column) + ", Row: " + row)
+                if(row not in rowLetterFixesDictionary.keys()):
+                    rowLetterFixesDictionary[row] = 1
+                else:
+                    rowLetterFixesDictionary[row] +=1 
+            else:
+                rowFixesDictionary[panel][column][row.upper()] = 0
+        elif(row.upper() not in panelDictionary[panel][column].keys()):
+            panelDictionary[panel][column][row.upper()] = idCardSlot
+            rowFixesDictionary[panel][column][row.upper()] = 0
+            if(row != row.upper()):  # note lower case row names
+                rowFixesDictionary[panel][column][row.upper()] = 1
+                print("Lower Case Row: Panel Key: " + str(panel) +
+                      ", Column: " + str(column) + ", Row: " + row)
+                if(row not in rowLetterFixesDictionary.keys()):
+                    rowLetterFixesDictionary[row] = 1
+                else:
+                    rowLetterFixesDictionary[row] +=1 
+        else:   #   A given panel / column / row combination is expected to be unique.
+            print("ROW/CASE CONFLICT:  Panel Key: " + str(panel) +
+                  ", Column: " + str(column) + ", Card Slots " +
+                  getCardSlot(str(panelDictionary[panel][column][row.upper()])) +
+                  " (" + str(panelDictionary[panel][column][row.upper()]) + ") and " + 
+                  getCardSlot(idCardSlot) + " (" + str(idCardSlot) + ")")
+            show_cardslot_references(panelDictionary[panel][column][row.upper()])
+            show_cardslot_references(idCardSlot)
+
+        lastPanel = panel
+
+    print("*** END OF ROW Upper/Lower Case Check ***")
+    print()
+    sys.stdout.flush()
+
+    #
     #   Run through all of the tables, capturing the keys.
     #
     #   Also prepare refs[<table name>][<key value>] with 0 counts for use later
@@ -363,6 +420,10 @@ def main():
 
         sys.stdout.flush()
 
+    print("*** END Orphan Check ***")
+    print()
+    sys.stdout.flush()
+
     #
     #   Special - check for references to BLANK ecos
 
@@ -388,6 +449,11 @@ def main():
                             if(funcName in globals()):
                                 globals()[funcName](fkeyvalue)
             sys.stdout.flush()
+
+    print("*** END Blank ECO Check ***")
+    print()
+    sys.stdout.flush()
+
 
     # 
     #   All done
@@ -841,6 +907,60 @@ def getVolumeInfo(idVolume):
         volumeName = machineSerial = "(N/A)"
     cursor.close()
     return(volumeName, machineSerial)
+
+#
+#   Routine to print references to a cardslot
+#
+def show_cardslot_references(idCardSlot):
+    cursor = cnx.cursor()
+
+    query = ("SELECT idCardLocation, cardSlot from cardlocation WHERE cardSlot = '" 
+             + str(idCardSlot) + "'")
+    cursor.execute(query)
+    for tuple in cursor:
+        (id, cardslot) = tuple
+        print("   CardLocation (" + str(id) +
+              ") refers to cardSlot " + getCardSlot(idCardSlot) + "(" + str(idCardSlot) + ")" )
+        show_cardlocation(id)
+
+    query = ("SELECT idDiagramBlock, cardSlot from diagramBlock WHERE cardSlot = '" 
+             + str(idCardSlot) + "'")
+    cursor.execute(query)
+    for tuple in cursor:
+        (id, cardslot) = tuple
+        print("   Diagram Block (" + str(id) +
+              ") refers to cardSlot " + getCardSlot(idCardSlot) + "(" + str(idCardSlot) + ")" )
+        show_diagramblock(id)
+
+    query = ("SELECT idTieDown, diagramPage, cardSlot from tieDown WHERE cardSlot = '" 
+             + str(idCardSlot) + "'")
+    cursor.execute(query)
+    for tuple in cursor:
+        (id, diagramPage, cardslot) = tuple
+        print("   Tie Down (" + str(id) +
+              ") refers to cardSlot " + getCardSlot(idCardSlot) + "(" + str(idCardSlot) + ")" )
+        show_diagrampage(diagramPage)
+
+    query = ("SELECT idEdgeConnector, diagramPage, cardSlot from edgeConnector WHERE cardSlot = '" 
+             + str(idCardSlot) + "'")
+    cursor.execute(query)
+    for tuple in cursor:
+        (id, diagramPage, cardslot) = tuple
+        print("   Edge Connector (" + str(id) +
+              ") refers to cardSlot " + getCardSlot(idCardSlot) + "(" + str(idCardSlot) + ")" )
+        show_diagrampage(diagramPage)
+
+    query = ("SELECT idCableEdgeConnectionBlock, cableEdgeConnectionPage, cardSlot " +
+             "FROM cableEdgeConnectionBlock WHERE cardSlot = '" + str(idCardSlot) + "'")
+    cursor.execute(query)
+    for tuple in cursor:
+        (id, cecp, cardslot) = tuple
+        print("   Cable Edge Connection Block (" + str(id) +
+              ") refers to cardSlot " + getCardSlot(idCardSlot) + "(" + str(idCardSlot) + ")" )
+        show_cableedgeconnectionpage(cecp)
+
+
+    cursor.close()
 
 def usage():
     print("Usage: " + sys.argv[0] + " [-v] [-d] [-u | --user <user>] [-p | --password <password>] ")
