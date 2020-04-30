@@ -30,11 +30,11 @@
             this.machineComboBox = new System.Windows.Forms.ComboBox();
             this.directoryTextBox = new System.Windows.Forms.TextBox();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.reportButton = new System.Windows.Forms.Button();
-            this.directoryButton = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.logLevelComboBox = new System.Windows.Forms.ComboBox();
             this.includePinCheckBox = new System.Windows.Forms.CheckBox();
+            this.reportButton = new System.Windows.Forms.Button();
+            this.directoryButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -56,6 +56,7 @@
             this.machineComboBox.Size = new System.Drawing.Size(121, 21);
             this.machineComboBox.TabIndex = 1;
             this.toolTip1.SetToolTip(this.machineComboBox, "Select the base machine to check connections for");
+            this.machineComboBox.SelectedIndexChanged += new System.EventHandler(this.machineComboBox_SelectedIndexChanged);
             // 
             // directoryTextBox
             // 
@@ -65,26 +66,6 @@
             this.directoryTextBox.Size = new System.Drawing.Size(406, 20);
             this.directoryTextBox.TabIndex = 3;
             this.toolTip1.SetToolTip(this.directoryTextBox, "Enter the directory for the report output log");
-            // 
-            // reportButton
-            // 
-            this.reportButton.Location = new System.Drawing.Point(287, 140);
-            this.reportButton.Name = "reportButton";
-            this.reportButton.Size = new System.Drawing.Size(75, 23);
-            this.reportButton.TabIndex = 4;
-            this.reportButton.Text = "Report";
-            this.reportButton.UseVisualStyleBackColor = true;
-            this.reportButton.Click += new System.EventHandler(this.reportButton_Click);
-            // 
-            // directoryButton
-            // 
-            this.directoryButton.Location = new System.Drawing.Point(45, 82);
-            this.directoryButton.Name = "directoryButton";
-            this.directoryButton.Size = new System.Drawing.Size(98, 23);
-            this.directoryButton.TabIndex = 5;
-            this.directoryButton.Text = "Output Directory";
-            this.directoryButton.UseVisualStyleBackColor = true;
-            this.directoryButton.Click += new System.EventHandler(this.directoryButton_Click);
             // 
             // label2
             // 
@@ -115,6 +96,26 @@
             this.includePinCheckBox.Text = "Include Pin Name in Checks";
             this.toolTip1.SetToolTip(this.includePinCheckBox, "Select to include pin in checks - results in FEWER warnings");
             this.includePinCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // reportButton
+            // 
+            this.reportButton.Location = new System.Drawing.Point(287, 140);
+            this.reportButton.Name = "reportButton";
+            this.reportButton.Size = new System.Drawing.Size(75, 23);
+            this.reportButton.TabIndex = 4;
+            this.reportButton.Text = "Report";
+            this.reportButton.UseVisualStyleBackColor = true;
+            this.reportButton.Click += new System.EventHandler(this.reportButton_Click);
+            // 
+            // directoryButton
+            // 
+            this.directoryButton.Location = new System.Drawing.Point(45, 82);
+            this.directoryButton.Name = "directoryButton";
+            this.directoryButton.Size = new System.Drawing.Size(98, 23);
+            this.directoryButton.TabIndex = 5;
+            this.directoryButton.Text = "Output Directory";
+            this.directoryButton.UseVisualStyleBackColor = true;
+            this.directoryButton.Click += new System.EventHandler(this.directoryButton_Click);
             // 
             // ReportEdgeConnectionsForm
             // 

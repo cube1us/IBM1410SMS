@@ -653,5 +653,8 @@ namespace IBM1410SMS
             logFile.Flush();
         }
 
+        private void machineComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            currentMachine = (Machine) machineComboBox.SelectedItem;
+        }
     }
 }
