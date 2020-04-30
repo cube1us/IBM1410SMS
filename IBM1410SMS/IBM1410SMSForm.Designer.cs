@@ -64,6 +64,7 @@
             this.CONNectorCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.edgeConnectionCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.signalReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -347,7 +348,8 @@
             this.reportsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.cardTypeReportToolStripMenuItem,
             this.CONNectorCheckToolStripMenuItem,
-            this.edgeConnectionCheckToolStripMenuItem});
+            this.edgeConnectionCheckToolStripMenuItem,
+            this.signalReportToolStripMenuItem});
             this.reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
             this.reportsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.reportsToolStripMenuItem.Text = "Reports";
@@ -380,6 +382,13 @@
             this.openFileDialog1.Filter = "CSV Files|*.csv";
             this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
             this.openFileDialog1.Title = "Specify File To Import";
+            // 
+            // signalReportToolStripMenuItem
+            // 
+            this.signalReportToolStripMenuItem.Name = "signalReportToolStripMenuItem";
+            this.signalReportToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.signalReportToolStripMenuItem.Text = "Signal Report";
+            this.signalReportToolStripMenuItem.Click += new System.EventHandler(this.signalReportToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 
@@ -438,6 +447,7 @@
         private System.Windows.Forms.ToolStripMenuItem cableEdgeConnectionPagesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem CONNectorCheckToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem edgeConnectionCheckToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem signalReportToolStripMenuItem;
     }
 }
 

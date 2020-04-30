@@ -234,5 +234,11 @@ namespace IBM1410SMS
                 new ReportEdgeConnectionsForm();
             ReportEdgeConnectionsForm.ShowDialog();
         }
+
+        private void signalReportToolStripMenuItem_Click(object sender, EventArgs e) {
+            ReportSignalsForm ReportSignalsForm =
+                new ReportSignalsForm();
+            ReportSignalsForm.ShowDialog();
+        }
     }
 }
