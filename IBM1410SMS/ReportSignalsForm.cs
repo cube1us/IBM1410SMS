@@ -59,6 +59,9 @@ namespace IBM1410SMS
         List<Machine> machineList;
         List<Diagrampage> diagramPageList;
 
+        Hashtable signalHash = new Hashtable();
+        Hashtable signalNameHash = new Hashtable();
+
         Machine currentMachine = null;
 
         string logFileName = "";
@@ -168,9 +171,6 @@ namespace IBM1410SMS
 
             reportButton.Enabled = false;
             diagramPageList = new List<Diagrampage>();
-
-            Hashtable signalHash = new Hashtable();
-            Hashtable signalNameHash = new Hashtable();
 
             //  Build a list of relevant diagram pages for this machine.
 
@@ -339,13 +339,116 @@ namespace IBM1410SMS
 
             }
 
-
-
             logMessage("Found " + signalCount.ToString() + " signals, with " +
                 connCount.ToString() + " connections.");
 
+            //  Having built out hashes, time to report out.
+
+            foreach (string signalName in signalNameHash.Keys) {
+                Signal signal = (Signal)signalNameHash[signalName];
+                List<SignalDetail> origins = signal.origins;
+
+
+                List<string> originSheets = new List<string>();
+                foreach(SignalDetail detail in signal.origins) {
+                    if(!originSheets.Contains(detail.pageName)) {
+                        originSheets.Add(detail.pageName);
+                    }
+                }
+
+                if (origins.Count == 0 || originSheets.Count != 1 || logLevel > 1) {
+                    logMessage("Signal: " + signalName);
+                }
+
+
+                if (origins.Count == 0 || originSheets.Count == 0) {
+                    logMessage("   Signal has NO origin sheet (toEdgeSheet)");
+                    logUsages(signalName);
+                }
+
+                if(originSheets.Count > 1) {
+                    string message = "   Signal has multiple origin sheets: ";
+                    bool first = true;
+                    foreach(string pageName in originSheets) { 
+                        if(!first) {
+                            message += ", ";
+                        }
+                        message += pageName;
+                        first = false;
+                    }
+                    logMessage(message);
+                    logUsages(signalName);
+                }
+            }
+
             logMessage("End of Report.");
             reportButton.Enabled = true;
+        }
+
+        //  Log all of the sheets upon which a given signal appears
+
+        private void logUsages(string signalName) {
+
+            int maxPerLine = 5;
+
+            List<string> sheets = new List<string>();
+
+            Signal signal = (Signal)signalNameHash[signalName];
+            if(signal == null) {
+                return;
+            }
+
+            foreach(SignalDetail detail in signal.origins) {
+                sheets.Add(detail.pageName + ":O");
+            }
+            foreach(SignalDetail detail in signal.outputs) {
+                sheets.Add(detail.pageName + ":o");
+            }
+            foreach(SignalDetail detail in signal.inputs) {
+                sheets.Add(detail.pageName + ":i");
+            }
+            foreach(SignalDetail detail in signal.otherInputs) {
+                sheets.Add(detail.pageName + ":I");
+            }
+
+            bool first = true;
+            string message = "     ";
+            int entryCount = 0;
+
+            foreach (string sheet in sheets) {
+                if(!first) {
+                    message += ", ";
+                }
+                if (entryCount == maxPerLine) {
+                    logMessage(message);
+                    message = "     ";
+                    entryCount = 0;
+                }
+                message += sheet;
+                first = false;
+            }
+
+            /*
+            List<Sheetedgeinformation> signals = sheetEdgeInformationTable.getWhere(
+                "WHERE signalName = '" + signalName + "'");
+            foreach(Sheetedgeinformation signal in signals) {
+                if(!first) {
+                    message += ", ";
+                }
+                if(entryCount == maxPerLine) {
+                    logMessage(message);
+                    message = "     ";
+                    entryCount = 0;
+                }
+                message += Helpers.getDiagramPageName(signal.diagramPage);
+                first = false;
+            }
+            */
+
+            if(message.Length > 5) {
+                logMessage(message);
+            }
+
         }
 
         //  Write a message to the output
