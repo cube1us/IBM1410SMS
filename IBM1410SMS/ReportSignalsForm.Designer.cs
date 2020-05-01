@@ -31,8 +31,8 @@
             this.machineComboBox = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.logLevelComboBox = new System.Windows.Forms.ComboBox();
-            this.directoryButton = new System.Windows.Forms.Button();
             this.directoryTextBox = new System.Windows.Forms.TextBox();
+            this.directoryButton = new System.Windows.Forms.Button();
             this.reportButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -75,6 +75,16 @@
             this.logLevelComboBox.Size = new System.Drawing.Size(51, 21);
             this.logLevelComboBox.TabIndex = 3;
             this.toolTip1.SetToolTip(this.logLevelComboBox, "Select the logging level - higher means more logging");
+            this.logLevelComboBox.SelectedIndexChanged += new System.EventHandler(this.logLevelComboBox_SelectedIndexChanged);
+            // 
+            // directoryTextBox
+            // 
+            this.directoryTextBox.Location = new System.Drawing.Point(154, 71);
+            this.directoryTextBox.Name = "directoryTextBox";
+            this.directoryTextBox.ReadOnly = true;
+            this.directoryTextBox.Size = new System.Drawing.Size(490, 20);
+            this.directoryTextBox.TabIndex = 5;
+            this.toolTip1.SetToolTip(this.directoryTextBox, "Enter the directory for the report output log");
             // 
             // directoryButton
             // 
@@ -85,15 +95,6 @@
             this.directoryButton.Text = "Output Directory";
             this.directoryButton.UseVisualStyleBackColor = true;
             this.directoryButton.Click += new System.EventHandler(this.directoryButton_Click);
-            // 
-            // directoryTextBox
-            // 
-            this.directoryTextBox.Location = new System.Drawing.Point(154, 71);
-            this.directoryTextBox.Name = "directoryTextBox";
-            this.directoryTextBox.ReadOnly = true;
-            this.directoryTextBox.Size = new System.Drawing.Size(490, 20);
-            this.directoryTextBox.TabIndex = 5;
-            this.toolTip1.SetToolTip(this.directoryTextBox, "Enter the directory for the report output log");
             // 
             // reportButton
             // 

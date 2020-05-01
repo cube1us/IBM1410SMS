@@ -69,7 +69,7 @@ namespace IBM1410SMS
 
         int logLevel = 1;
         const int MAXLOGLEVEL = 3;
-
+        bool didSignalHeader = false;
 
         public ReportSignalsForm() {
             InitializeComponent();
@@ -341,29 +341,61 @@ namespace IBM1410SMS
 
             logMessage("Found " + signalCount.ToString() + " signals, with " +
                 connCount.ToString() + " connections.");
+            logMessage("");
+
 
             //  Having built out hashes, time to report out.
 
             foreach (string signalName in signalNameHash.Keys) {
+
+                didSignalHeader = false;
+                bool logUsage = false;
+
                 Signal signal = (Signal)signalNameHash[signalName];
                 List<SignalDetail> origins = signal.origins;
-
+                List<SignalDetail> outputs = signal.outputs;
+                List<SignalDetail> inputs = signal.inputs;
+                List<SignalDetail> otherInputs = signal.otherInputs;
 
                 List<string> originSheets = new List<string>();
+                List<string> outputSheets = new List<string>();
+                List<string> inputSheets = new List<string>();
+                List<string> otherInputsSheets = new List<string>();
+
                 foreach(SignalDetail detail in signal.origins) {
                     if(!originSheets.Contains(detail.pageName)) {
                         originSheets.Add(detail.pageName);
                     }
                 }
 
+                foreach(SignalDetail detail in signal.outputs) {
+                    if(!outputSheets.Contains(detail.pageName)) {
+                        outputSheets.Add(detail.pageName);
+                    }
+                }
+
+                foreach (SignalDetail detail in signal.inputs) {
+                    if (!inputSheets.Contains(detail.pageName)) {
+                        inputSheets.Add(detail.pageName);
+                    }
+                }
+
+                foreach (SignalDetail detail in signal.otherInputs) {
+                    if (!otherInputsSheets.Contains(detail.pageName)) {
+                        otherInputsSheets.Add(detail.pageName);
+                    }
+                }
+
+                //  A signal should originate on one and only one sheet.
+
                 if (origins.Count == 0 || originSheets.Count != 1 || logLevel > 1) {
-                    logMessage("Signal: " + signalName);
+                    doSignalHeader(signalName);
                 }
 
 
                 if (origins.Count == 0 || originSheets.Count == 0) {
-                    logMessage("   Signal has NO origin sheet (toEdgeSheet)");
-                    logUsages(signalName);
+                    logMessage("   Signal has NO origin sheet (O - toEdgeSheet)");
+                    logUsage = true;
                 }
 
                 if(originSheets.Count > 1) {
@@ -377,12 +409,82 @@ namespace IBM1410SMS
                         first = false;
                     }
                     logMessage(message);
+                    logUsage = true;
+                }
+
+                //  The origins and the from on destination sheet inputs) should match up
+
+                if(originSheets.Count != inputSheets.Count) {
+                    doSignalHeader(signalName);
+                    logMessage("   Signal has differing counts from origin sheets (O) and " +
+                        "origins on input sheets (i) [Expect both to be 1]");
+                    logUsage = true;
+                }
+                else {
+                    bool mismatch = false;
+                    foreach(string originSheet in originSheets) {
+                        if(!inputSheets.Contains(originSheet)) {
+                            mismatch = true;
+                        }
+                    }
+                    foreach (string inputSheet in inputSheets) {
+                        if (!originSheets.Contains(inputSheet)) {
+                            mismatch = true;
+                        }
+                    }
+                    if(mismatch) {
+                        logMessage("   Mismatch between signal origins (O) and " +
+                            "origins shown on inputs (i)");
+                    }
+                }
+
+
+                //  The input usage and input usage shown on origin sheets should
+                //  also match up.
+
+                if (outputSheets.Count != otherInputsSheets.Count) {
+                    doSignalHeader(signalName);
+                    logMessage("   Signal has differing input counts from origin " +
+                        " sheets (o-" + outputSheets.Count.ToString() + 
+                        ") and source shown on input sheets (I-" + 
+                        otherInputsSheets.Count.ToString() + ")");
+                    logUsage = true;
+                }
+                else {
+                    bool mismatch = false;
+                    foreach (string outputSheet in outputSheets) {
+                        if (!otherInputsSheets.Contains(outputSheet)) {
+                            mismatch = true;
+                        }
+                    }
+                    foreach (string otherInputSheet in otherInputsSheets) {
+                        if (!outputSheets.Contains(otherInputSheet)) {
+                            mismatch = true;
+                        }
+                    }
+                    if (mismatch) {
+                        logMessage("   Mismatch between signal usage on origin sheet (o)" +
+                            "and source show on inputs (I)");
+                    }
+                }
+
+                //  If there were messages, log the usages and a blank separator.
+
+                if (logUsage) {
                     logUsages(signalName);
+                    logMessage("");
                 }
             }
 
             logMessage("End of Report.");
             reportButton.Enabled = true;
+        }
+
+        private void doSignalHeader(string signalName) {
+            if(!didSignalHeader) {
+                logMessage("Signal: " + signalName);
+                didSignalHeader = true;
+            }
         }
 
         //  Log all of the sheets upon which a given signal appears
@@ -399,16 +501,28 @@ namespace IBM1410SMS
             }
 
             foreach(SignalDetail detail in signal.origins) {
-                sheets.Add(detail.pageName + ":O");
+                string s = detail.pageName + ":O";
+                if(!sheets.Contains(s)) {
+                    sheets.Add(s);
+                }
             }
             foreach(SignalDetail detail in signal.outputs) {
-                sheets.Add(detail.pageName + ":o");
+                string s = detail.pageName + ":o";
+                if (!sheets.Contains(s)) {
+                    sheets.Add(s);
+                }
             }
-            foreach(SignalDetail detail in signal.inputs) {
-                sheets.Add(detail.pageName + ":i");
+            foreach (SignalDetail detail in signal.inputs) {
+                string s = detail.pageName + ":i";
+                if (!sheets.Contains(s)) {
+                    sheets.Add(s);
+                }
             }
-            foreach(SignalDetail detail in signal.otherInputs) {
-                sheets.Add(detail.pageName + ":I");
+            foreach (SignalDetail detail in signal.otherInputs) {
+                string s = detail.pageName + ":I";
+                if (!sheets.Contains(s)) {
+                    sheets.Add(s);
+                }
             }
 
             bool first = true;
@@ -428,22 +542,7 @@ namespace IBM1410SMS
                 first = false;
             }
 
-            /*
-            List<Sheetedgeinformation> signals = sheetEdgeInformationTable.getWhere(
-                "WHERE signalName = '" + signalName + "'");
-            foreach(Sheetedgeinformation signal in signals) {
-                if(!first) {
-                    message += ", ";
-                }
-                if(entryCount == maxPerLine) {
-                    logMessage(message);
-                    message = "     ";
-                    entryCount = 0;
-                }
-                message += Helpers.getDiagramPageName(signal.diagramPage);
-                first = false;
-            }
-            */
+            //  Print any stragglers.
 
             if(message.Length > 5) {
                 logMessage(message);
@@ -458,5 +557,10 @@ namespace IBM1410SMS
             logFile.Flush();
         }
 
+        //  Change the logging level
+
+        private void logLevelComboBox_SelectedIndexChanged(object sender, EventArgs e) {
+            logLevel = logLevelComboBox.SelectedIndex;
+        }
     }
 }
