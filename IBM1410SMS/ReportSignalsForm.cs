@@ -344,14 +344,25 @@ namespace IBM1410SMS
             logMessage("");
 
 
-            //  Having built out hashes, time to report out.
+            //  Having built out hashes, time to report out.  First, get a sorted
+            //  list of signal names
 
-            foreach (string signalName in signalNameHash.Keys) {
+            ArrayList sortedSignals = new ArrayList(signalNameHash.Keys);
+            sortedSignals.Sort();
+
+            //  Then report out on each signal.
+
+            foreach (string signalName in sortedSignals) {
 
                 didSignalHeader = false;
                 bool logUsage = false;
+                bool mismatch = false;
+
 
                 Signal signal = (Signal)signalNameHash[signalName];
+
+                //  Get lists of where the signal comes from and goes to
+
                 List<SignalDetail> origins = signal.origins;
                 List<SignalDetail> outputs = signal.outputs;
                 List<SignalDetail> inputs = signal.inputs;
@@ -385,6 +396,13 @@ namespace IBM1410SMS
                         otherInputsSheets.Add(detail.pageName);
                     }
                 }
+
+                //  Sort those lists for convience.
+
+                originSheets.Sort();
+                outputSheets.Sort();
+                inputSheets.Sort();
+                otherInputsSheets.Sort();
 
                 //  A signal should originate on one and only one sheet.
 
@@ -420,24 +438,22 @@ namespace IBM1410SMS
                         "origins on input sheets (i) [Expect both to be 1]");
                     logUsage = true;
                 }
-                else {
-                    bool mismatch = false;
-                    foreach(string originSheet in originSheets) {
-                        if(!inputSheets.Contains(originSheet)) {
-                            mismatch = true;
-                        }
-                    }
-                    foreach (string inputSheet in inputSheets) {
-                        if (!originSheets.Contains(inputSheet)) {
-                            mismatch = true;
-                        }
-                    }
-                    if(mismatch) {
-                        logMessage("   Mismatch between signal origins (O) and " +
-                            "origins shown on inputs (i)");
+
+                foreach(string originSheet in originSheets) {
+                    if(!inputSheets.Contains(originSheet)) {
+                        logMessage("   Signal appears on origin sheet (O) " + originSheet +
+                            ", that sheet does not appear as an origin on any input sheet (i)");
+                        logUsage = true;
                     }
                 }
 
+                foreach (string inputSheet in inputSheets) {
+                    if (!originSheets.Contains(inputSheet)) {
+                        logMessage("   Signal appears as an origin on input sheet (i) " +
+                            inputSheet + ", that sheet does not appear on any origin sheet (O)");
+                        logUsage = true;
+                    }
+                }
 
                 //  The input usage and input usage shown on origin sheets should
                 //  also match up.
@@ -445,26 +461,25 @@ namespace IBM1410SMS
                 if (outputSheets.Count != otherInputsSheets.Count) {
                     doSignalHeader(signalName);
                     logMessage("   Signal has differing input counts from origin " +
-                        " sheets (o-" + outputSheets.Count.ToString() + 
+                        "sheets (o-" + outputSheets.Count.ToString() + 
                         ") and source shown on input sheets (I-" + 
                         otherInputsSheets.Count.ToString() + ")");
                     logUsage = true;
                 }
-                else {
-                    bool mismatch = false;
-                    foreach (string outputSheet in outputSheets) {
-                        if (!otherInputsSheets.Contains(outputSheet)) {
-                            mismatch = true;
-                        }
+
+                foreach (string outputSheet in outputSheets) {
+                    if (!otherInputsSheets.Contains(outputSheet)) {
+                        logMessage("   Signal appears as an output to sheet (o) " + outputSheet +
+                            ", but it does not appear as an input on that sheet (I).");
+                        logUsage = true;
                     }
-                    foreach (string otherInputSheet in otherInputsSheets) {
-                        if (!outputSheets.Contains(otherInputSheet)) {
-                            mismatch = true;
-                        }
-                    }
-                    if (mismatch) {
-                        logMessage("   Mismatch between signal usage on origin sheet (o)" +
-                            "and source show on inputs (I)");
+                }
+
+                foreach (string otherInputSheet in otherInputsSheets) {
+                    if (!outputSheets.Contains(otherInputSheet)) {
+                        logMessage("   Signal appears as an input on sheet (I) " +
+                            otherInputSheet + ", that does not appear as an output to it (o)");
+                        logUsage = true;
                     }
                 }
 
@@ -491,9 +506,13 @@ namespace IBM1410SMS
 
         private void logUsages(string signalName) {
 
-            int maxPerLine = 5;
+            int maxPerLine = 7;
 
             List<string> sheets = new List<string>();
+            List<string> originSheets = new List<string>();
+            List<string> outputSheets = new List<string>();
+            List<string> inputSheets = new List<string>();
+            List<string> otherInputsSheets = new List<string>();
 
             Signal signal = (Signal)signalNameHash[signalName];
             if(signal == null) {
@@ -502,28 +521,39 @@ namespace IBM1410SMS
 
             foreach(SignalDetail detail in signal.origins) {
                 string s = detail.pageName + ":O";
-                if(!sheets.Contains(s)) {
-                    sheets.Add(s);
+                if(!originSheets.Contains(s)) {
+                    originSheets.Add(s);
                 }
             }
             foreach(SignalDetail detail in signal.outputs) {
                 string s = detail.pageName + ":o";
-                if (!sheets.Contains(s)) {
-                    sheets.Add(s);
+                if (!outputSheets.Contains(s)) {
+                    outputSheets.Add(s);
                 }
             }
             foreach (SignalDetail detail in signal.inputs) {
                 string s = detail.pageName + ":i";
-                if (!sheets.Contains(s)) {
-                    sheets.Add(s);
+                if (!inputSheets.Contains(s)) {
+                    inputSheets.Add(s);
                 }
             }
             foreach (SignalDetail detail in signal.otherInputs) {
                 string s = detail.pageName + ":I";
-                if (!sheets.Contains(s)) {
-                    sheets.Add(s);
+                if (!otherInputsSheets.Contains(s)) {
+                    otherInputsSheets.Add(s);
                 }
             }
+
+            originSheets.Sort();
+            outputSheets.Sort();
+            inputSheets.Sort();
+            otherInputsSheets.Sort();
+
+            sheets.AddRange(originSheets);
+            sheets.AddRange(outputSheets);
+            sheets.AddRange(inputSheets);
+            sheets.AddRange(otherInputsSheets);
+
 
             bool first = true;
             string message = "     ";
@@ -540,6 +570,7 @@ namespace IBM1410SMS
                 }
                 message += sheet;
                 first = false;
+                ++entryCount;
             }
 
             //  Print any stragglers.
