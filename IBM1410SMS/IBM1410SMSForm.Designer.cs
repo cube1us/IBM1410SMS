@@ -63,8 +63,9 @@
             this.cardTypeReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.CONNectorCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.edgeConnectionCheckToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.signalReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.connectionChecksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -349,7 +350,8 @@
             this.cardTypeReportToolStripMenuItem,
             this.CONNectorCheckToolStripMenuItem,
             this.edgeConnectionCheckToolStripMenuItem,
-            this.signalReportToolStripMenuItem});
+            this.signalReportToolStripMenuItem,
+            this.connectionChecksToolStripMenuItem});
             this.reportsToolStripMenuItem.Name = "reportsToolStripMenuItem";
             this.reportsToolStripMenuItem.Size = new System.Drawing.Size(59, 20);
             this.reportsToolStripMenuItem.Text = "Reports";
@@ -375,6 +377,13 @@
             this.edgeConnectionCheckToolStripMenuItem.Text = "Edge Connection Check";
             this.edgeConnectionCheckToolStripMenuItem.Click += new System.EventHandler(this.edgeConnectionCheckToolStripMenuItem_Click);
             // 
+            // signalReportToolStripMenuItem
+            // 
+            this.signalReportToolStripMenuItem.Name = "signalReportToolStripMenuItem";
+            this.signalReportToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.signalReportToolStripMenuItem.Text = "Signal Report";
+            this.signalReportToolStripMenuItem.Click += new System.EventHandler(this.signalReportToolStripMenuItem_Click);
+            // 
             // openFileDialog1
             // 
             this.openFileDialog1.DefaultExt = "csv";
@@ -383,12 +392,12 @@
             this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
             this.openFileDialog1.Title = "Specify File To Import";
             // 
-            // signalReportToolStripMenuItem
+            // connectionChecksToolStripMenuItem
             // 
-            this.signalReportToolStripMenuItem.Name = "signalReportToolStripMenuItem";
-            this.signalReportToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
-            this.signalReportToolStripMenuItem.Text = "Signal Report";
-            this.signalReportToolStripMenuItem.Click += new System.EventHandler(this.signalReportToolStripMenuItem_Click);
+            this.connectionChecksToolStripMenuItem.Name = "connectionChecksToolStripMenuItem";
+            this.connectionChecksToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.connectionChecksToolStripMenuItem.Text = "Connection Checks";
+            this.connectionChecksToolStripMenuItem.Click += new System.EventHandler(this.connectionChecksToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 
@@ -448,6 +457,7 @@
         private System.Windows.Forms.ToolStripMenuItem CONNectorCheckToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem edgeConnectionCheckToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem signalReportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem connectionChecksToolStripMenuItem;
     }
 }
 
