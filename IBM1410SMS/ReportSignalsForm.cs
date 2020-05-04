@@ -59,8 +59,8 @@ namespace IBM1410SMS
         List<Machine> machineList;
         List<Diagrampage> diagramPageList;
 
-        Hashtable signalHash = new Hashtable();
-        Hashtable signalNameHash = new Hashtable();
+        Hashtable signalHash = null;
+        Hashtable signalNameHash = null;
 
         Machine currentMachine = null;
 
@@ -171,6 +171,12 @@ namespace IBM1410SMS
 
             reportButton.Enabled = false;
             diagramPageList = new List<Diagrampage>();
+            signalHash = new Hashtable();
+            signalNameHash = new Hashtable();
+
+
+            Hashtable pageMissingOutputs = new Hashtable();
+            Hashtable pageMissingInputs = new Hashtable();
 
             //  Build a list of relevant diagram pages for this machine.
 
@@ -190,6 +196,8 @@ namespace IBM1410SMS
                 }
                 else {
                     diagramPageList.Add(dpList[0]);
+                    pageMissingInputs.Add(page.name, new List<string>());
+                    pageMissingOutputs.Add(page.name, new List<string>());
                 }
             }
 
@@ -240,7 +248,6 @@ namespace IBM1410SMS
                 bool foundSignal = false;
                 SignalDetail detail = null;
                 Signal signal = null;
-
 
                 if ((detail = (SignalDetail)signalHash[connection.fromEdgeSheet]) != null) {
                     signal = (Signal) signalNameHash[detail.name];
@@ -356,8 +363,6 @@ namespace IBM1410SMS
 
                 didSignalHeader = false;
                 bool logUsage = false;
-                bool mismatch = false;
-
 
                 Signal signal = (Signal)signalNameHash[signalName];
 
@@ -451,6 +456,7 @@ namespace IBM1410SMS
                     if (!originSheets.Contains(inputSheet)) {
                         logMessage("   Signal appears as an origin on input sheet (i) " +
                             inputSheet + ", that sheet does not appear on any origin sheet (O)");
+                        ((List<string>)pageMissingOutputs[inputSheet]).Add(signalName);
                         logUsage = true;
                     }
                 }
@@ -471,6 +477,7 @@ namespace IBM1410SMS
                     if (!otherInputsSheets.Contains(outputSheet)) {
                         logMessage("   Signal appears as an output to sheet (o) " + outputSheet +
                             ", but it does not appear as an input on that sheet (I).");
+                        ((List<string>)pageMissingInputs[outputSheet]).Add(signalName);
                         logUsage = true;
                     }
                 }
@@ -491,7 +498,63 @@ namespace IBM1410SMS
                 }
             }
 
-            logMessage("End of Report.");
+            logMessage("*** End of Signal Report ***");
+            logMessage("");
+
+
+            //  Now report on signals that should be on output sheets, but are not, and
+            //  signals that are output, but never appear on any input.
+
+
+            logMessage("Signals which are used as inputs but have no origin, " +
+                "by origin sheet identified on input sheet (fromEdgeOriginSheet)" );
+            logMessage("");
+
+            ArrayList sortedPages = new ArrayList(pageMissingOutputs.Keys);
+            sortedPages.Sort();
+
+            foreach (string pageName in sortedPages) {
+                bool first = true;
+                foreach(string signalName in (List<string>)pageMissingOutputs[pageName]) {
+                    if(first) {
+                        Page page = pageList.Find(x => x.name == pageName);
+                        logMessage("Page " + pageName + ", " + page.title);
+                    }
+                    first = false;
+                    logMessage("   " + signalName);
+                }
+                if(!first) {
+                    logMessage("");
+                }
+            }
+
+
+            logMessage("");
+            logMessage("Signals which appear as outputs to given sheet but " +
+                "do not appear there, by destination sheet (toEdgeDestinationSheet)");
+            logMessage("");
+
+            sortedPages = new ArrayList(pageMissingInputs.Keys);
+            sortedPages.Sort();
+
+            foreach (string pageName in sortedPages) {
+                bool first = true;
+                foreach (string signalName in (List<string>)pageMissingInputs[pageName]) {
+                    if (first) {
+                        Page page = pageList.Find(x => x.name == pageName);
+                        logMessage("Page " + pageName + ", " + page.title);
+                    }
+                    first = false;
+                    logMessage("   " + signalName);
+                }
+                if (!first) {
+                    logMessage("");
+                }
+            }
+
+
+
+
             reportButton.Enabled = true;
         }
 
@@ -553,7 +616,6 @@ namespace IBM1410SMS
             sheets.AddRange(outputSheets);
             sheets.AddRange(inputSheets);
             sheets.AddRange(otherInputsSheets);
-
 
             bool first = true;
             string message = "     ";
