@@ -67,7 +67,7 @@ namespace IBM1410SMS
         string logFileName = "";
         StreamWriter logFile = null;
 
-        int logLevel = 1;
+        int logLevel = 0;
         const int MAXLOGLEVEL = 3;
         bool didSignalHeader = false;
 
@@ -113,7 +113,7 @@ namespace IBM1410SMS
             //  Pre-select the last log level used.
 
             try {
-                logLevel = Int32.Parse(Parms.getParmValue("edge report log level"));
+                logLevel = Int32.Parse(Parms.getParmValue("signal report log level"));
             }
             catch (FormatException) {
                 logLevel = 1;
@@ -150,9 +150,9 @@ namespace IBM1410SMS
             logLevel = (int)logLevelComboBox.SelectedItem;
 
             Parms.setParmValue("report output directory", directoryTextBox.Text);
-            Parms.setParmValue("edge report log level", logLevel.ToString());
+            Parms.setParmValue("signal report log level", logLevel.ToString());
 
-            logMessage("Sheet Edge Connection Report for Machine: " +
+            logMessage("Signal Report for Machine: " +
                 currentMachine.name);
 
             doSignalReport();

@@ -93,6 +93,7 @@
             this.directoryButton.Size = new System.Drawing.Size(108, 23);
             this.directoryButton.TabIndex = 4;
             this.directoryButton.Text = "Output Directory";
+            this.toolTip1.SetToolTip(this.directoryButton, "Click to enable selection of output directory for the report");
             this.directoryButton.UseVisualStyleBackColor = true;
             this.directoryButton.Click += new System.EventHandler(this.directoryButton_Click);
             // 
