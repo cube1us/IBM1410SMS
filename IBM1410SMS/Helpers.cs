@@ -80,6 +80,9 @@ namespace IBM1410SMS
             "7"
         };
 
+        internal static List<string> connectionTypes = new List<string>()
+            { "P", "D", "E"};
+
         private static readonly Helpers instance = new Helpers();
 
         //  This is the constructor.  It CANNOT do ANYTHING, because it
@@ -98,6 +101,11 @@ namespace IBM1410SMS
             }
         }
 
+        //  Method to check a connection type
+
+        public static bool isValidConnectionType(string connectionType) {
+            return(connectionTypes.Contains(connectionType));
+        }
 
         //  Method to get the card slot key given the names of the tree above it,
         //  adding nodes along the way, if needed.  It also prepares a message

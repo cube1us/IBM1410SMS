@@ -49,6 +49,7 @@ namespace IBM1410SMS
         Table<Diagramblock> diagramBlockTable;
         Table<Cardtype> cardTypeTable;
         Table<Cardgate> cardGateTable;
+        Table<Sheetedgeinformation> sheetEdgeInformationTable;
 
         List<Machine> machineList;
 
@@ -80,6 +81,7 @@ namespace IBM1410SMS
             pageTable = db.getPageTable();
             cardGateTable = db.getCardGateTable();
             cardTypeTable = db.getCardTypeTable();
+            sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
 
             machineList = machineTable.getAll();
 
@@ -156,6 +158,7 @@ namespace IBM1410SMS
             diagramPageHash = new Hashtable();
             dotFunctionHash = new Hashtable();
             diagramBlockHash = new Hashtable();
+            connectionHash = new Hashtable();
 
             List<DotDetail> dotDetalList = new List<DotDetail>();
 
@@ -206,9 +209,36 @@ namespace IBM1410SMS
                     dotFunctionHash.ContainsKey(connection.toDotFunction))  {
                     connectionHash.Add(connection.idConnection, connection);
                 }
+                if(!Helpers.isValidConnectionType(connection.from)) {
+                    logMessage("Invalid FROM connection type: " + connection.from);
+                    logConnection(connection);
+                }
+                if (!Helpers.isValidConnectionType(connection.to)) {
+                    logMessage("Invalid TO connection type: " + connection.to);
+                    logConnection(connection);
+                }
+            }
+
+            //  Go through the connections finding the ones with DOT function 
+            //  destinations.  Also check that it isn't fed by another DOT function
+
+            foreach(int connectionKey in connectionHash.Keys) {
+                Connection connection = (Connection) connectionHash[connectionKey];
+                if(connection.toDotFunction > 0) {
+                    if(connection.fromDotFunction > 0) {
+                        logConnection(connection);
+                    }
+                }
             }
 
             logMessage("End of Report.");
+        }
+
+        //  Log information about a connection
+
+        private void logConnection(Connection connection) {
+            string message = "Connection From: ";
+
         }
 
         //  Write a message to the output
@@ -219,6 +249,8 @@ namespace IBM1410SMS
         }
 
         private void reportButton_Click(object sender, EventArgs e) {
+
+            reportButton.Enabled = false;
 
             logFileName = Path.Combine(directoryTextBox.Text,
                 currentMachine.name + "-ConnectionReport.txt");
@@ -236,6 +268,7 @@ namespace IBM1410SMS
             //  Show a box, maybe, eventually.
 
             logFile.Close();
+            reportButton.Enabled = true;
         }
 
         private void directoryButton_Click(object sender, EventArgs e) {
