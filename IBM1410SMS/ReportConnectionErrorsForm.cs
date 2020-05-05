@@ -21,20 +21,26 @@ namespace IBM1410SMS
 
         class DotConnection
         {
-            public int fromDiagramBlock = 0;
-            public string fromPin = "";
-            public int cardType = 0;
+            public Connection connection { get; set; } = null;
+            public int fromDiagramBlock { get; set; } = 0;
+            public string fromRow { get; set; } = "";
+            public string fromColumn { get; set; }  = "";
+            public int fromGate { get; set; } = 0;
+            public string fromPin { get; set; } = "";
+            public string fromLoadPin { get; set; } = "";
+            public int cardType { get; set; } = 0;
         }
 
         //  Class to store information about a given DOT function (Wired OR/AND)
 
        class DotDetail
         {
-            public string page = "";
-            public string row = "";
-            public string column = "";
-            public string logicFunction = "";
-            public List<DotConnection> connections = new List<DotConnection>();
+            public int dotFunctionKey = 0;
+            public string page { get; set; } = "";
+            public string row { get; set; } = "";
+            public string column { get; set; } = "";
+            public string logicFunction { get; set; } = "";
+            public List<DotConnection> connections { get; set; } = new List<DotConnection>();
         }
 
         //  Class to store information about a card gate
@@ -50,17 +56,20 @@ namespace IBM1410SMS
         Table<Cardtype> cardTypeTable;
         Table<Cardgate> cardGateTable;
         Table<Sheetedgeinformation> sheetEdgeInformationTable;
+        Table<Logicfamily> logicFamilyTable;
 
         List<Machine> machineList;
 
         Hashtable cardGateHash = new Hashtable();
         Hashtable cardTypeHash = new Hashtable();
+        Hashtable logicFamilyHash = new Hashtable();
 
         Hashtable connectionHash = null;
         Hashtable diagramPageHash = null;
         Hashtable pageHash = null;
         Hashtable dotFunctionHash = null;
         Hashtable diagramBlockHash = null;
+        Hashtable dotDetailHash = null;
    
         Machine currentMachine = null;
 
@@ -82,6 +91,7 @@ namespace IBM1410SMS
             cardGateTable = db.getCardGateTable();
             cardTypeTable = db.getCardTypeTable();
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
+            logicFamilyTable = db.getLogicFamilyTable();
 
             machineList = machineTable.getAll();
 
@@ -139,6 +149,13 @@ namespace IBM1410SMS
                 cardTypeHash.Add(ct.idCardType, ct);
             }
 
+            //  And logic families
+
+            List<Logicfamily> logicFamilyList = logicFamilyTable.getAll();
+            foreach (Logicfamily lf in logicFamilyList) {
+                logicFamilyHash.Add(lf.idLogicFamily, lf);
+            }
+
             //  Disable the report button for now.
 
             reportButton.Enabled = directoryTextBox.Text.Length > 0;
@@ -159,6 +176,9 @@ namespace IBM1410SMS
             dotFunctionHash = new Hashtable();
             diagramBlockHash = new Hashtable();
             connectionHash = new Hashtable();
+            dotDetailHash = new Hashtable();
+
+            Hashtable dotFunctionsByPage = new Hashtable();
 
             List<DotDetail> dotDetalList = new List<DotDetail>();
 
@@ -199,7 +219,8 @@ namespace IBM1410SMS
                 }
             }
 
-            //  And, finally, a list of related connections.
+            //  And, finally, a list of related connections (exluding sheet edge
+            //  connections, which are handled in the Signals report.)
 
             List<Connection> connectionList = connectionTable.getAll();
             foreach (Connection connection in connectionList) {
@@ -210,25 +231,155 @@ namespace IBM1410SMS
                     connectionHash.Add(connection.idConnection, connection);
                 }
                 if(!Helpers.isValidConnectionType(connection.from)) {
-                    logMessage("Invalid FROM connection type: " + connection.from);
                     logConnection(connection);
+                    logMessage("  Invalid FROM connection type: " + connection.from);
                 }
                 if (!Helpers.isValidConnectionType(connection.to)) {
-                    logMessage("Invalid TO connection type: " + connection.to);
                     logConnection(connection);
+                    logMessage("  Invalid TO connection type: " + connection.to);
                 }
             }
+
+            //  DOT Function checks
 
             //  Go through the connections finding the ones with DOT function 
             //  destinations.  Also check that it isn't fed by another DOT function
 
+            //  For those that are dot function destinations, create a DOT function detail
+            //  entry (if not already present) and add this connection to its list
+            //  of connections.
+
             foreach(int connectionKey in connectionHash.Keys) {
                 Connection connection = (Connection) connectionHash[connectionKey];
                 if(connection.toDotFunction > 0) {
-                    if(connection.fromDotFunction > 0) {
+
+                    Dotfunction dotFunction =
+                        (Dotfunction)dotFunctionHash[connection.toDotFunction];
+
+                    if (dotFunction == null) {
                         logConnection(connection);
+                        logMessage("   Error: Invalid DOT Function (" +
+                            connection.toDotFunction.ToString() + ")");
+                    }
+                    else if (connection.fromDotFunction > 0) {
+                        logConnection(connection);
+                        logMessage("   Error: Connection is FROM DOT Function TO DOT Function.");
+                    }
+                    else if(connection.fromEdgeSheet != 0) {
+                        //  Ignore connections from edge signals.
+                    }
+                    else if(connection.fromDiagramBlock == 0) {
+                        logConnection(connection);
+                        logMessage("   Connection to DOT function is not from a diagram block?");
+                    }
+                    else if(!diagramBlockHash.ContainsKey(connection.fromDiagramBlock)) {
+                        logConnection(connection);
+                        logMessage("   Connection to DOT function from invalid diagram block (" +
+                            connection.fromDiagramBlock + ")");
+                    }
+                    else {
+
+                        Diagramblock diagramBlock = 
+                            (Diagramblock) diagramBlockHash[connection.fromDiagramBlock];
+
+                        //  If there is not already a detail entry for this DOT function,
+                        //  create one now.
+
+                        if (!dotDetailHash.ContainsKey(dotFunction.idDotFunction)) {                            
+                            DotDetail detail = new DotDetail();
+                            detail.dotFunctionKey = dotFunction.idDotFunction;
+                            detail.page = getDiagramPageName(dotFunction.diagramPage);
+                            detail.row = dotFunction.diagramRowTop;
+                            detail.column = dotFunction.diagramColumnToLeft.ToString();
+                            detail.logicFunction = dotFunction.logicFunction;
+                            detail.connections = new List<DotConnection>();
+                            dotDetailHash.Add(dotFunction.idDotFunction, detail);
+                        }
+
+                        //  Add a new connection to the detail entry.
+
+                        DotDetail dotDetail = (DotDetail) dotDetailHash[dotFunction.idDotFunction];
+                        DotConnection dotConnection = new DotConnection();
+                        dotConnection.connection = connection;
+                        dotConnection.cardType = diagramBlock.cardType;
+                        dotConnection.fromDiagramBlock = diagramBlock.idDiagramBlock;
+                        dotConnection.fromPin = connection.fromPin;
+                        dotConnection.fromRow = diagramBlock.diagramRow;
+                        dotConnection.fromColumn = diagramBlock.diagramColumn.ToString();
+                        dotConnection.fromGate = diagramBlock.cardGate;
+                        dotConnection.fromLoadPin =
+                            connection.fromLoadPin == null ? "" : connection.fromLoadPin;                        
+                        dotDetail.connections.Add(dotConnection);
                     }
                 }
+            }
+
+            //  Now spin through all of the DOT functions we just assembled, to see
+            //  if there are any cases where we have multiple loads (i.e., loads +
+            //  NON open collector gates > 1)
+
+            //  TODO:  Get these sorted by page.
+
+
+            foreach(DotDetail detail in dotDetailHash.Values) {
+                if(!dotFunctionsByPage.Contains(detail.page)) {
+                    dotFunctionsByPage.Add(detail.page, new List<DotDetail>());
+                }
+                ((List<DotDetail>)dotFunctionsByPage[detail.page]).Add(detail);
+            }
+
+            ArrayList sortedPages = new ArrayList(dotFunctionsByPage.Keys);
+            sortedPages.Sort();
+
+
+            foreach (string page in sortedPages) {
+                foreach (DotDetail detail in (List<DotDetail>)dotFunctionsByPage[page]) {
+                    int loadCount = 0;
+                    bool hasSwitch = false;
+                    List<DotConnection> connections = detail.connections;
+                    foreach (DotConnection dotConnection in connections) {
+
+                        //  Is a load pin involved?  If so, count it.
+
+                        if (dotConnection.fromLoadPin.Length > 0) {
+                            ++loadCount;
+                        }
+
+                        //  Is the gate open collector?  If not, count it.
+
+                        Diagramblock diagramBlock =
+                            (Diagramblock)diagramBlockHash[dotConnection.fromDiagramBlock];
+                        if (diagramBlock == null) {
+                            logConnection(dotConnection.connection);
+                            logMessage("   Internal Error: DotConnection Diagram Block not " +
+                                "found (" + dotConnection.fromDiagramBlock.ToString() + ")");
+                            continue;
+                        }
+                        Cardgate gate = (Cardgate)cardGateHash[dotConnection.fromGate];
+                        if (gate == null) {
+                            logConnection(dotConnection.connection);
+                            logMessage("   Internal Error:  Card Gate not found (" +
+                                dotConnection.fromGate.ToString() + ")");
+                            continue;
+                        }
+
+                        if (isCardASwitch(dotConnection.cardType)) {
+                            //  Switches are treaed as special, and also not as loads
+                            hasSwitch = true;
+                        }
+                        else if (gate.openCollector == 0) {
+                            ++loadCount;
+                        }
+
+                    }
+                    if ((!hasSwitch && loadCount == 0) || loadCount > 1) {
+                        logMessage("Invalid DOT Function load count of " + loadCount.ToString() +
+                            " [Expected to be 1]");
+                        logMessage("   " + getDotFunctionInfo(detail.dotFunctionKey) + " (" +
+                            connections.Count.ToString() + " connections)");
+                    }
+                }
+
             }
 
             logMessage("End of Report.");
@@ -237,8 +388,104 @@ namespace IBM1410SMS
         //  Log information about a connection
 
         private void logConnection(Connection connection) {
-            string message = "Connection From: ";
 
+            string message = "Connection From: ";
+            switch (connection.from) {
+                case "P":
+                    message += "Block " + getDiagramBlockInfo(connection.fromDiagramBlock) +
+                        " pin " + connection.fromPin;
+                    if(connection.fromLoadPin.Length > 0) {
+                        message += " (Load pin " + connection.fromLoadPin + ")";
+                    }
+                    break;
+                case "D":
+                    message += "DOT Function " + getDotFunctionInfo(connection.fromDotFunction);
+                    break;
+                case "E":
+                    message += "Edge Signal ";
+                    break;
+                default:
+                    message += "INVALID ";
+                    break;
+            }
+
+            message += " To: ";
+            switch (connection.to) {
+                case "P":
+                    message += "Block " + getDiagramBlockInfo(connection.toDiagramBlock) +
+                        " pin " + connection.toPin;
+                    break;
+                case "D":
+                    message += "DOT Function " + getDotFunctionInfo(connection.toDotFunction);
+                    break;
+                case "E":
+                    message += "Edge Signal ";
+                    break;
+                default:
+                    message += "INVALID ";
+                    break;
+            }
+
+            logMessage(message);
+        }
+
+        //  Return information on a diagram block connection
+
+        private string getDiagramBlockInfo(int diagramBlockKey) {
+            string info = "Diagram Block ";
+
+            Diagramblock diagramBlock = (Diagramblock) diagramBlockHash[diagramBlockKey];
+            if(diagramBlock == null) {
+                return ("Invalid Diagram Block (" + diagramBlockKey.ToString() + ")");
+            }            
+            info += getDiagramPageName(diagramBlock.diagramPage) + ", row " + 
+                diagramBlock.diagramRow + ", column " +  diagramBlock.diagramColumn.ToString();
+            return (info);
+        }
+
+        private string getDiagramPageName(int diagramPageKey) {
+            if(!diagramPageHash.ContainsKey(diagramPageKey)) {
+                return (" Invalid Diagram page (" + diagramPageKey.ToString() + ")");
+            }
+            Diagrampage diagramPage = (Diagrampage)diagramPageHash[diagramPageKey];
+            if(!pageHash.ContainsKey(diagramPage.page)) {
+                return(" Invalid Page (" + diagramPage.page.ToString() + ")");
+            }
+
+            return ((string)pageHash[diagramPage.page]);
+        }
+
+        //  Return information on a dot function connection
+
+        private string getDotFunctionInfo(int dotFunctionKey) {
+            string info = "";
+
+            Dotfunction dotFunction = (Dotfunction)dotFunctionHash[dotFunctionKey];
+            if(dotFunction == null) {
+                return ("Invalid DOT Function (" + dotFunctionKey.ToString() + ")");
+            }
+
+            Diagrampage diagramPage = (Diagrampage)diagramPageHash[dotFunction.diagramPage];
+            info += diagramPage != null ? "Page " + 
+                getDiagramPageName(diagramPage.idDiagramPage) : "(Invalid page) ";
+            info += ", row " + dotFunction.diagramRowTop + ", column " +
+                dotFunction.diagramColumnToLeft.ToString();
+            return (info);
+
+        }
+
+        //  Determine if a card type is a switch
+
+        private bool isCardASwitch(int cardTypeKey) {
+            Cardtype type = (Cardtype) cardTypeHash[cardTypeKey];
+            if(type == null) {
+                return false;
+            }
+            Logicfamily family = (Logicfamily) logicFamilyHash[type.logicFamily];
+            if(family == null) {
+                return false;
+            }
+            return (family.name == "SWITCH");
         }
 
         //  Write a message to the output
