@@ -318,8 +318,7 @@ namespace IBM1410SMS
             //  if there are any cases where we have multiple loads (i.e., loads +
             //  NON open collector gates > 1)
 
-            //  TODO:  Get these sorted by page.
-
+            //  Report them in page order!
 
             foreach(DotDetail detail in dotDetailHash.Values) {
                 if(!dotFunctionsByPage.Contains(detail.page)) {
@@ -330,7 +329,6 @@ namespace IBM1410SMS
 
             ArrayList sortedPages = new ArrayList(dotFunctionsByPage.Keys);
             sortedPages.Sort();
-
 
             foreach (string page in sortedPages) {
                 foreach (DotDetail detail in (List<DotDetail>)dotFunctionsByPage[page]) {
@@ -373,10 +371,11 @@ namespace IBM1410SMS
 
                     }
                     if ((!hasSwitch && loadCount == 0) || loadCount > 1) {
-                        logMessage("Invalid DOT Function load count of " + loadCount.ToString() +
+                        logMessage("Unexpected DOT Function load count of " + loadCount.ToString() +
                             " [Expected to be 1]");
                         logMessage("   " + getDotFunctionInfo(detail.dotFunctionKey) + " (" +
                             connections.Count.ToString() + " connections)");
+                        logMessage("");
                     }
                 }
 
