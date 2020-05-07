@@ -71,6 +71,7 @@ namespace IBM1410SMS
         Hashtable dotFunctionHash = null;
         Hashtable diagramBlockHash = null;
         Hashtable dotDetailHash = null;
+        Hashtable sheetEdgeHash = null;
    
         Machine currentMachine = null;
 
@@ -178,6 +179,7 @@ namespace IBM1410SMS
             diagramBlockHash = new Hashtable();
             connectionHash = new Hashtable();
             dotDetailHash = new Hashtable();
+            sheetEdgeHash = new Hashtable();
 
             Hashtable dotFunctionsByPage = new Hashtable();
 
@@ -220,15 +222,28 @@ namespace IBM1410SMS
                 }
             }
 
+            //  A list of sheet edge information signals, too...
+
+            List<Sheetedgeinformation> sheetEdgeInformationList =
+                sheetEdgeInformationTable.getAll();
+            foreach(Sheetedgeinformation se in sheetEdgeInformationList) {
+                if(diagramPageHash.ContainsKey(se.diagramPage)) {
+                    sheetEdgeHash.Add(se.idSheetEdgeInformation, se);
+                }
+            }
+
+
             //  And, finally, a list of related connections (exluding sheet edge
             //  connections, which are handled in the Signals report.)
 
             List<Connection> connectionList = connectionTable.getAll();
             foreach (Connection connection in connectionList) {
                 if(diagramBlockHash.ContainsKey(connection.fromDiagramBlock) ||
-                    dotFunctionHash.ContainsKey(connection.fromDotFunction) ||
-                    diagramBlockHash.ContainsKey(connection.toDiagramBlock) ||
-                    dotFunctionHash.ContainsKey(connection.toDotFunction))  {
+                   dotFunctionHash.ContainsKey(connection.fromDotFunction) ||
+                   diagramBlockHash.ContainsKey(connection.toDiagramBlock) ||
+                   dotFunctionHash.ContainsKey(connection.toDotFunction) ||
+                   sheetEdgeHash.ContainsKey(connection.fromEdgeSheet) ||
+                   sheetEdgeHash.ContainsKey(connection.toEdgeSheet)) {
                     connectionHash.Add(connection.idConnection, connection);
                 }
                 if(!Helpers.isValidConnectionType(connection.from)) {
