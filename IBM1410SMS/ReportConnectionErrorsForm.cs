@@ -40,6 +40,7 @@ namespace IBM1410SMS
             public string row { get; set; } = "";
             public string column { get; set; } = "";
             public string logicFunction { get; set; } = "";
+            public bool hasEdgeOutput { get; set; } = false;
             public List<DotConnection> connections { get; set; } = new List<DotConnection>();
         }
 
@@ -251,7 +252,8 @@ namespace IBM1410SMS
 
             foreach(int connectionKey in connectionHash.Keys) {
                 Connection connection = (Connection) connectionHash[connectionKey];
-                if(connection.toDotFunction > 0) {
+
+                if (connection.toDotFunction > 0) {
 
                     Dotfunction dotFunction =
                         (Dotfunction)dotFunctionHash[connection.toDotFunction];
@@ -293,6 +295,7 @@ namespace IBM1410SMS
                             detail.column = dotFunction.diagramColumnToLeft.ToString();
                             detail.logicFunction = dotFunction.logicFunction;
                             detail.connections = new List<DotConnection>();
+                            detail.hasEdgeOutput = false;
                             dotDetailHash.Add(dotFunction.idDotFunction, detail);
                         }
 
@@ -310,6 +313,34 @@ namespace IBM1410SMS
                         dotConnection.fromLoadPin =
                             connection.fromLoadPin == null ? "" : connection.fromLoadPin;                        
                         dotDetail.connections.Add(dotConnection);
+                    }
+                }
+
+                //  Note if this DOT function has a connection to a sheet edge.
+                //  (In those cases, we suppress error messages if the load count is 0)
+                //  But we do not remember the connection itself.
+
+                if(connection.fromDotFunction > 0 && connection.toEdgeSheet > 0) {
+                    Dotfunction dotFunction =
+                        (Dotfunction)dotFunctionHash[connection.fromDotFunction];
+
+                    //  Might be a new DOT functionw we have to add.
+
+                    if (!dotDetailHash.ContainsKey(dotFunction.idDotFunction)) {
+                        DotDetail detail = new DotDetail();
+                        detail.dotFunctionKey = dotFunction.idDotFunction;
+                        detail.page = getDiagramPageName(dotFunction.diagramPage);
+                        detail.row = dotFunction.diagramRowTop;
+                        detail.column = dotFunction.diagramColumnToLeft.ToString();
+                        detail.logicFunction = dotFunction.logicFunction;
+                        detail.connections = new List<DotConnection>();
+                        dotDetailHash.Add(dotFunction.idDotFunction, detail);
+                        detail.hasEdgeOutput = true;
+                    }
+                    else {
+                        DotDetail dotDetail = 
+                            (DotDetail)dotDetailHash[dotFunction.idDotFunction];
+                        dotDetail.hasEdgeOutput = true;
                     }
                 }
             }
@@ -362,7 +393,7 @@ namespace IBM1410SMS
                         }
 
                         if (isCardASwitch(dotConnection.cardType)) {
-                            //  Switches are treaed as special, and also not as loads
+                            //  Switches are treated as special, and also not as loads
                             hasSwitch = true;
                         }
                         else if (gate.openCollector == 0) {
@@ -370,7 +401,13 @@ namespace IBM1410SMS
                         }
 
                     }
-                    if ((!hasSwitch && loadCount == 0) || loadCount > 1) {
+
+                    //  If the load count is 0 and it isn't a switch or a DOT function
+                    //  whose output goes to a sheet edge, OR, if the load count is more
+                    //  than 1 (meaning 2 non-open collector gates), issue a warning.
+
+                    if ((!(hasSwitch || detail.hasEdgeOutput) && loadCount == 0) ||
+                        loadCount > 1) {
                         logMessage("Unexpected DOT Function load count of " + loadCount.ToString() +
                             " [Expected to be 1]");
                         logMessage("   " + getDotFunctionInfo(detail.dotFunctionKey) + " (" +
