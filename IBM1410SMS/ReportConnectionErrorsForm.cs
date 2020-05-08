@@ -41,10 +41,30 @@ namespace IBM1410SMS
             public string column { get; set; } = "";
             public string logicFunction { get; set; } = "";
             public bool hasEdgeOutput { get; set; } = false;
+            public bool hasGateOutput { get; set; } = false;
             public List<DotConnection> connections { get; set; } = new List<DotConnection>();
         }
 
-        //  Class to store information about a card gate
+        //  Class to store information about connections that eminate from a given pin
+
+        class PinDetail
+        {
+            public string pin { get; set; } = "";
+            public int loadPins { get; set; }  = 0;
+            public bool input { get; set; } = false;
+            public bool output { get; set; } = false;
+            public List<Connection> connectionsFrom { get; set; } = new List<Connection>();
+            public List<Connection> connectionsTo { get; set; } = new List<Connection>();
+        }
+
+        //  Class to store information about a Logic Block
+
+        class BlockDetail
+        {
+            public Diagramblock diagramBlock { get; set; } = null;
+            public string page { get; set; } = "";
+            public List<PinDetail> pinList { get; set; }  = new List<PinDetail>();
+        }
 
         DBSetup db = DBSetup.Instance;
 
@@ -58,6 +78,7 @@ namespace IBM1410SMS
         Table<Cardgate> cardGateTable;
         Table<Sheetedgeinformation> sheetEdgeInformationTable;
         Table<Logicfamily> logicFamilyTable;
+        Table<Gatepin> gatePinTable;
 
         List<Machine> machineList;
 
@@ -94,6 +115,7 @@ namespace IBM1410SMS
             cardTypeTable = db.getCardTypeTable();
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
             logicFamilyTable = db.getLogicFamilyTable();
+            gatePinTable = db.getGatePinTable();
 
             machineList = machineTable.getAll();
 
@@ -131,7 +153,7 @@ namespace IBM1410SMS
                 logLevel = Int32.Parse(Parms.getParmValue("connection report log level"));
             }
             catch (FormatException) {
-                logLevel = 1;
+                logLevel = 0;
             }
 
             logLevel = Math.Min(MAXLOGLEVEL, Math.Max(0, logLevel));
@@ -182,6 +204,9 @@ namespace IBM1410SMS
             sheetEdgeHash = new Hashtable();
 
             Hashtable dotFunctionsByPage = new Hashtable();
+            Hashtable diagramBlocksByPage = new Hashtable();
+
+            ArrayList sortedPages = null;
 
             List<DotDetail> dotDetalList = new List<DotDetail>();
 
@@ -218,7 +243,12 @@ namespace IBM1410SMS
             List<Diagramblock> diagramBlockList = diagramBlockTable.getAll();
             foreach(Diagramblock diagramBlock in diagramBlockList) {
                 if(diagramPageHash.ContainsKey(diagramBlock.diagramPage)) {
-                    diagramBlockHash.Add(diagramBlock.idDiagramBlock, diagramBlock);
+                    // diagramBlockHash.Add(diagramBlock.idDiagramBlock, diagramBlock);
+                    BlockDetail detail = new BlockDetail();
+                    detail.diagramBlock = diagramBlock;
+                    Diagrampage dp = (Diagrampage)diagramPageHash[diagramBlock.diagramPage];
+                    detail.page = (String)pageHash[dp.page];
+                    diagramBlockHash.Add(diagramBlock.idDiagramBlock, detail);
                 }
             }
 
@@ -255,6 +285,8 @@ namespace IBM1410SMS
                     logMessage("  Invalid TO connection type: " + connection.to);
                 }
             }
+
+            logMessage("*** Begin DOT Function Connection Checks ***");
 
             //  DOT Function checks
 
@@ -296,8 +328,8 @@ namespace IBM1410SMS
                     }
                     else {
 
-                        Diagramblock diagramBlock = 
-                            (Diagramblock) diagramBlockHash[connection.fromDiagramBlock];
+                        Diagramblock diagramBlock =
+                            ((BlockDetail)diagramBlockHash[connection.fromDiagramBlock]).diagramBlock;
 
                         //  If there is not already a detail entry for this DOT function,
                         //  create one now.
@@ -335,11 +367,12 @@ namespace IBM1410SMS
                 //  (In those cases, we suppress error messages if the load count is 0)
                 //  But we do not remember the connection itself.
 
-                if(connection.fromDotFunction > 0 && connection.toEdgeSheet > 0) {
+                if((connection.fromDotFunction > 0 && connection.toEdgeSheet > 0) ||
+                   (connection.fromDotFunction > 0 && connection.toDiagramBlock > 0)) {
                     Dotfunction dotFunction =
                         (Dotfunction)dotFunctionHash[connection.fromDotFunction];
 
-                    //  Might be a new DOT functionw we have to add.
+                    //  Might be a new DOT function we have to add.
 
                     if (!dotDetailHash.ContainsKey(dotFunction.idDotFunction)) {
                         DotDetail detail = new DotDetail();
@@ -350,12 +383,14 @@ namespace IBM1410SMS
                         detail.logicFunction = dotFunction.logicFunction;
                         detail.connections = new List<DotConnection>();
                         dotDetailHash.Add(dotFunction.idDotFunction, detail);
-                        detail.hasEdgeOutput = true;
+                        detail.hasEdgeOutput = (connection.toEdgeSheet > 0);
+                        detail.hasGateOutput = (connection.toDiagramBlock > 0);
                     }
                     else {
                         DotDetail dotDetail = 
                             (DotDetail)dotDetailHash[dotFunction.idDotFunction];
-                        dotDetail.hasEdgeOutput = true;
+                        dotDetail.hasEdgeOutput = (connection.toEdgeSheet > 0);
+                        dotDetail.hasGateOutput = (connection.toDiagramBlock > 0);
                     }
                 }
             }
@@ -373,7 +408,7 @@ namespace IBM1410SMS
                 ((List<DotDetail>)dotFunctionsByPage[detail.page]).Add(detail);
             }
 
-            ArrayList sortedPages = new ArrayList(dotFunctionsByPage.Keys);
+            sortedPages = new ArrayList(dotFunctionsByPage.Keys);
             sortedPages.Sort();
 
             foreach (string page in sortedPages) {
@@ -392,7 +427,7 @@ namespace IBM1410SMS
                         //  Is the gate open collector?  If not, count it.
 
                         Diagramblock diagramBlock =
-                            (Diagramblock)diagramBlockHash[dotConnection.fromDiagramBlock];
+                            ((BlockDetail)diagramBlockHash[dotConnection.fromDiagramBlock]).diagramBlock;
                         if (diagramBlock == null) {
                             logConnection(dotConnection.connection);
                             logMessage("   Internal Error: DotConnection Diagram Block not " +
@@ -412,19 +447,19 @@ namespace IBM1410SMS
                             hasSwitch = true;
                         }
                         else if (gate.openCollector == 0) {
+                            //  Not open collector - so count it.
                             ++loadCount;
                         }
-
                     }
 
                     //  If the load count is 0 and it isn't a switch or a DOT function
                     //  whose output goes to a sheet edge, OR, if the load count is more
                     //  than 1 (meaning 2 non-open collector gates), issue a warning.
 
-                    if ((!(hasSwitch || detail.hasEdgeOutput) && loadCount == 0) ||
-                        loadCount > 1) {
-                        logMessage("Unexpected DOT Function load count of " + loadCount.ToString() +
-                            " [Expected to be 1]");
+                    if ((!(hasSwitch || detail.hasEdgeOutput || detail.hasGateOutput) 
+                        && loadCount == 0) || loadCount > 1) {
+                        logMessage("Unexpected DOT Function load count of " + 
+                            loadCount.ToString() + " [Expected to be 1]");
                         logMessage("   " + getDotFunctionInfo(detail.dotFunctionKey) + " (" +
                             connections.Count.ToString() + " connections)");
                         logMessage("");
@@ -433,7 +468,252 @@ namespace IBM1410SMS
 
             }
 
+            logMessage("*** End of DOT Function Check ***");
+            logMessage("");
+
+            logMessage("*** Logic Block Connection Check ***");
+
+            //  Diagram block checks
+
+            //  Go through the connectiosn finding the ones that originate from
+            //  diagram logic blocks, and create a list of connections to and from 
+            //  each pin of each lbock.  Also note the load pins.
+
+            foreach(int connectionKey in connectionHash.Keys) {
+                Connection connection = (Connection)connectionHash[connectionKey];
+                if(connection.fromDiagramBlock > 0) {
+
+                    logDebug(2, "DEBUG: FROM Logic block "     +
+                            getDiagramBlockInfo(connection.fromDiagramBlock));
+
+                    BlockDetail detail = 
+                        (BlockDetail)diagramBlockHash[connection.fromDiagramBlock];
+                    if(detail == null) {
+                        logConnection(connection);
+                        logMessage("   Error:  Invalid fromDiagramBlock");
+                    }
+                    // else if(connection.fromEdgeSheet > 0 || connection.toEdgeSheet > 0) {
+                        //  Ignore connections from to or from edge signals
+                    // }
+                    PinDetail pinDetail = 
+                        detail.pinList.Find(x => x.pin == connection.fromPin);
+                    if(pinDetail == null) {
+                        logDebug(2, "DEBUG: Adding pin Detail for Card type " +
+                            Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                            " FROM pin " + connection.fromPin);
+                        pinDetail = new PinDetail();
+                        detail.pinList.Add(pinDetail);
+
+                        //  Track down the pin
+                        List<Gatepin> gatePinList = gatePinTable.getWhere(
+                            "WHERE cardGate = '" + detail.diagramBlock.cardGate +
+                            "' AND pin = '" + connection.fromPin + "'");
+                        if(gatePinList.Count != 1) {
+                            logDebug(2, "DEBUG: Card type " +
+                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                " Pin " + connection.fromPin + " returned " +
+                                gatePinList.Count.ToString() + " matches [expected 1]");
+                        }
+                        if (gatePinList.Count == 1) {
+                            Gatepin gatePin = gatePinList[0];
+                            pinDetail.input = (gatePin.input > 0);
+                            pinDetail.output = (gatePin.output > 0);
+                            if(pinDetail.input) {
+                                logDebug(2, "DEBUG:   Pin is INPUT");
+                            }
+                            if(pinDetail.output) {
+                                logDebug(2, "DEBUG:   Pin is OUTPUT");
+                            }
+                        }
+
+                        pinDetail.pin = connection.fromPin;
+                        pinDetail.loadPins = 0;
+                        pinDetail.connectionsFrom = new List<Connection>();
+                        pinDetail.connectionsTo = new List<Connection>();
+                    }
+                    if (connection.fromLoadPin != null && connection.fromLoadPin.Length > 0) {
+                        ++pinDetail.loadPins;
+                    }
+                    logDebug(2, "DEBUG: Adding connection FROM pin " + connection.fromPin);
+                    pinDetail.connectionsFrom.Add(connection);
+                }
+
+                if (connection.toDiagramBlock > 0) {
+                    BlockDetail detail =
+                        (BlockDetail)diagramBlockHash[connection.toDiagramBlock];
+                    if (detail == null) {
+                        logConnection(connection);
+                        logMessage("   Error:  Invalid toDiagramBlock");
+                    }
+                    // else if (connection.fromEdgeSheet > 0 || connection.toEdgeSheet > 0) {
+                        //  Ignore connections from to or from edge signals
+                    // }
+                    PinDetail pinDetail =
+                        detail.pinList.Find(x => x.pin == connection.toPin);
+                    if (pinDetail == null) {
+                        logDebug(2, "DEBUG: Adding pin Detail for card type " +
+                             Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                             " TO pin " + connection.toPin);
+
+                        pinDetail = new PinDetail();
+                        detail.pinList.Add(pinDetail);
+
+                        //  Track down the pin
+                        List<Gatepin> gatePinList = gatePinTable.getWhere(
+                            "WHERE cardGate = '" + detail.diagramBlock.cardGate +
+                            "' AND pin = '" + connection.toPin + "'");
+
+                        if (gatePinList.Count != 1) {
+                            logDebug(2, "Card type " +
+                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                " Pin " + connection.fromPin + " returned " +
+                                gatePinList.Count.ToString() + " matches [expected 1]");
+                        }
+
+                        if (gatePinList.Count == 1) {
+                            Gatepin gatePin = gatePinList[0];
+                            pinDetail.input = (gatePin.input > 0);
+                            pinDetail.output = (gatePin.output > 0);
+                            if(pinDetail.input) {
+                                logDebug(2, "DEBUG:   pin is INPUT");
+                            }
+                            if(pinDetail.output) {
+                                logDebug(2, "DEBUG:   pin is OUTPUT");
+                            }
+                        }
+
+                        pinDetail.pin = connection.toPin;
+                        pinDetail.loadPins = 0;
+                        pinDetail.connectionsFrom = new List<Connection>();
+                        pinDetail.connectionsTo = new List<Connection>();
+                    }
+                    logDebug(2, "DEBUG: Adding connection TO pin " + connection.toPin);
+                    pinDetail.connectionsTo.Add(connection);
+                }
+            }
+
+            //  Now spin through all of the logic blocks we just assembled, to check
+            //  for anomolous connections - in page order.
+
+            foreach(BlockDetail detail in diagramBlockHash.Values) {
+                if(!diagramBlocksByPage.Contains(detail.page)) {
+                    diagramBlocksByPage.Add(detail.page, new List<BlockDetail>());                
+                }
+                ((List<BlockDetail>)diagramBlocksByPage[detail.page]).Add(detail);
+            }
+
+            sortedPages = new ArrayList(diagramBlocksByPage.Keys);
+            sortedPages.Sort();
+
+            foreach(string page in sortedPages) {
+
+                logDebug(1, "Testing Logic blocks on page " + page);
+
+                foreach(BlockDetail detail in (List<BlockDetail>)diagramBlocksByPage[page]) {
+
+                    int inputsCount = 0;
+                    int outputsCount = 0;
+
+                    logDebug(1, "Testing Logic Block " +
+                        getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                    logDebug(2, "   Pin list has " + detail.pinList.Count.ToString() +
+                        " entries.");
+
+                    Cardgate gate = (Cardgate)cardGateHash[detail.diagramBlock.cardGate];
+                    if (gate == null) {
+                        logMessage("Invalid card gate in connection from logic block, " +
+                            getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        logMessage("");
+                        continue;
+                    }
+
+                    foreach (PinDetail pinDetail in detail.pinList) {
+                        bool toDotFunction = false;
+
+                        inputsCount += pinDetail.connectionsTo.Count;
+                        outputsCount += pinDetail.connectionsFrom.Count;
+
+                        logDebug(2, "DEBUG: Pin " + pinDetail.pin + " of logic block " +
+                            getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        logDebug(2, "   With " + pinDetail.connectionsTo.Count.ToString() +
+                            " inputs and " + pinDetail.connectionsFrom.Count.ToString() +
+                            " outputs");
+
+                        //  An input only pin should not be an output, and vice versa
+
+                        if(pinDetail.connectionsFrom.Count > 0 && !pinDetail.output) {
+                            string msgtype = pinDetail.input ? "input only" : "incorrect";
+                            logMessage("Outputs from " + msgtype + " pin " +
+                                pinDetail.pin + ", " +
+                                getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+
+                        if(pinDetail.connectionsTo.Count > 0 && !pinDetail.input) {
+                            string msgtype = pinDetail.output ? "output only" : "incorrect";
+                            logMessage("Input to " + msgtype + " pin " +
+                                pinDetail.pin + ", " +
+                                getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+
+                        //  Flag any connections that are not open collector with a load
+                        //  pin specified.
+
+                        if (gate.openCollector == 0 && pinDetail.loadPins > 0) {
+                            logMessage("Non open collector output with load pin from " +
+                                "logic block pin " + pinDetail.pin + ", " +
+                                getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+
+                        //  Note if this gate has any connections to DOT functions
+
+                        foreach (Connection connection in pinDetail.connectionsFrom) {
+                            if(connection.toDotFunction > 0) {
+                                toDotFunction = true;
+                            }
+                        }
+
+                        //  A block should not connect to anything else if it connects
+                        //  to a DOT function.
+
+                        if(toDotFunction && pinDetail.connectionsFrom.Count > 1) {
+                            logMessage("Outputs to DOT function and other outputs " +
+                                "from logic block pin " + pinDetail.pin + ", " + 
+                                getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+
+                        //  A given input pin should only have one input.
+
+                        if(pinDetail.connectionsTo.Count > 1) {
+                            logMessage("Inputs from more than one output " +
+                                "to logic block pin " + pinDetail.pin + ", " +
+                                getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+                    }
+
+                    //  Note if this block has no inputs or no outptus
+
+                    if(inputsCount == 0) {
+                        logMessage("NO inputs to logic block at " +
+                            getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                    }
+                    if(outputsCount == 0) {
+                        logMessage("NO outputs from logic block at " +
+                            getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                    }
+
+                }
+            }
+
+            logMessage("*** End of Logic Block Connection Check ***");
+            logMessage("");
+
             logMessage("End of Report.");
+
+            Parms.setParmValue("machine", currentMachine.idMachine.ToString());
+            Parms.setParmValue("report output directory", directoryTextBox.Text);
+            Parms.setParmValue("connection report log level", logLevel.ToString());
         }
 
         //  Log information about a connection
@@ -450,7 +730,8 @@ namespace IBM1410SMS
                     }
                     break;
                 case "D":
-                    message += "DOT Function " + getDotFunctionInfo(connection.fromDotFunction);
+                    message += "DOT Function " + 
+                        getDotFunctionInfo(connection.fromDotFunction);
                     break;
                 case "E":
                     message += "Edge Signal ";
@@ -485,7 +766,8 @@ namespace IBM1410SMS
         private string getDiagramBlockInfo(int diagramBlockKey) {
             string info = "Diagram Block ";
 
-            Diagramblock diagramBlock = (Diagramblock) diagramBlockHash[diagramBlockKey];
+            Diagramblock diagramBlock =
+                ((BlockDetail)diagramBlockHash[diagramBlockKey]).diagramBlock;
             if(diagramBlock == null) {
                 return ("Invalid Diagram Block (" + diagramBlockKey.ToString() + ")");
             }            
@@ -544,6 +826,14 @@ namespace IBM1410SMS
         private void logMessage(string message) {
             logFile.WriteLine(message);
             logFile.Flush();
+        }
+
+        //  Write a message for debug, depending up on log level
+
+        private void logDebug(int level, string message) {
+            if(level <= logLevel) {
+                logMessage(message);
+            }
         }
 
         private void reportButton_Click(object sender, EventArgs e) {
