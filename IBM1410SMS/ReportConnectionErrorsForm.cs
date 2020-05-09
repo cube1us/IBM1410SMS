@@ -490,10 +490,19 @@ namespace IBM1410SMS
             //  diagram logic blocks, and create a list of connections to and from 
             //  each pin of each lbock.  Also note the load pins.
 
-            //  TODO:  This also MIGHT be the right area to handle extended blocks?
+            //  Sometimes a block has an extension.  If a given pin doesn't match
+            //  On a given block, check its extensin.
 
             foreach(int connectionKey in connectionHash.Keys) {
                 Connection connection = (Connection)connectionHash[connectionKey];
+
+                if((connection.fromPin == "--" ^ connection.toPin == "--") &&
+                    connection.fromDiagramBlock > 0 && connection.toDiagramBlock > 0) {
+                    logConnection(connection);
+                    logMessage("Block to Block connection has only one internal " +
+                        "pin of \"--\" [Expect both]");
+                }
+
                 if(connection.fromDiagramBlock > 0) {
 
                     logDebug(2, "DEBUG: FROM Logic block "     +
@@ -521,13 +530,58 @@ namespace IBM1410SMS
                         List<Gatepin> gatePinList = gatePinTable.getWhere(
                             "WHERE cardGate = '" + detail.diagramBlock.cardGate +
                             "' AND pin = '" + connection.fromPin + "'");
-                        if(gatePinList.Count != 1) {
+
+                        //  If there was not exactly one match report it unless
+                        //  there were no matches and it is an internal connectin (pin "--")
+
+                        if(gatePinList.Count != 1 &&
+                            !(gatePinList.Count == 0 && connection.fromPin == "--")) {
+                            if(logLevel >= 2) {
+                                logConnection(connection);
+                            }
                             logDebug(2, "DEBUG: Card type " +
                                 Helpers.getCardTypeType(detail.diagramBlock.cardType) +
                                 " Gate (" + detail.diagramBlock.cardGate + ")" +
                                 " Pin " + connection.fromPin + " returned " +
                                 gatePinList.Count.ToString() + " matches [expected 1]");
                         }
+
+                        //  If no match was found, and this gate has an extension, 
+                        //  use the information from the extension to decide if this
+                        //  pin is an input or an output (and therefore valid.)
+
+                        if(gatePinList.Count == 0 && 
+                            connection.fromPin != "--" && 
+                            detail.diagramBlock.extendedTo != 0) {
+                            logDebug(2, "DEBUG: Trying extended block for FROM connection.");
+                            BlockDetail extendedDetail = 
+                                (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
+                            if(extendedDetail == null) {
+                                logConnection(connection);
+                                logMessage("   Error:  Invalid ExtendedTo in fromDiagramBlock");
+                            }
+                            else {
+                                gatePinList = gatePinTable.getWhere(
+                                    "WHERE cardGate = '" + 
+                                    extendedDetail.diagramBlock.cardGate +
+                                    "' AND pin = '" + connection.fromPin + "'");
+                                if (gatePinList.Count != 1) {
+                                    if(logLevel >= 2) {
+                                        logConnection(connection);
+                                    }
+                                    logDebug(2, "DEBUG: Extended Block Card type " +
+                                        Helpers.getCardTypeType(
+                                            extendedDetail.diagramBlock.cardType) +
+                                        " Gate (" + extendedDetail.diagramBlock.cardGate + ")" +
+                                        " Pin " + connection.fromPin + " returned " +
+                                        gatePinList.Count.ToString() + " matches [expected 1]");
+                                }
+                                else {
+                                    logDebug(2, "DEBUG: Found 1 match on extended block.");
+                                }
+                            }
+                        }
+
                         if (gatePinList.Count == 1) {
                             Gatepin gatePin = gatePinList[0];
                             pinDetail.input = (gatePin.input > 0);
@@ -540,7 +594,16 @@ namespace IBM1410SMS
                             }
                         }
 
+                        //  If the pin is not --, just use its name.  Otherwise,
+                        //  if it is --, qualify the name with the logic block on
+                        //  the OTHER end of the connection.
+
                         pinDetail.pin = connection.fromPin;
+                        if (connection.fromPin == "--") {
+                            pinDetail.pin += connection.toDiagramBlock.ToString();
+                            pinDetail.output = true;
+                            pinDetail.input = false;
+                        }
                         pinDetail.loadPins = 0;
                         pinDetail.connectionsFrom = new List<Connection>();
                         pinDetail.connectionsTo = new List<Connection>();
@@ -553,6 +616,10 @@ namespace IBM1410SMS
                 }
 
                 if (connection.toDiagramBlock > 0) {
+
+                    logDebug(2, "DEBUG: TO Logic block " +
+                        getDiagramBlockInfo(connection.toDiagramBlock));
+
                     BlockDetail detail =
                         (BlockDetail)diagramBlockHash[connection.toDiagramBlock];
                     if (detail == null) {
@@ -585,6 +652,57 @@ namespace IBM1410SMS
                                 gatePinList.Count.ToString() + " matches [expected 1]");
                         }
 
+                        //  If there was not exactly one match report it unless
+                        //  there were no matches and it is an internal connectin (pin "--")
+
+                        if (gatePinList.Count != 1 &&
+                            !(gatePinList.Count == 0 && connection.toPin == "--")) {
+                            if (logLevel >= 2) {
+                                logConnection(connection);
+                            }
+                            logDebug(2, "DEBUG: Card type " +
+                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                " Pin " + connection.fromPin + " returned " +
+                                gatePinList.Count.ToString() + " matches [expected 1]");
+                        }
+
+                        //  If no match was found, and this gate has an extension, 
+                        //  use the information from the extension to decide if this
+                        //  pin is an input or an output (and therefore valid.)
+
+                        if (gatePinList.Count == 0 &&
+                            connection.toPin != "--" &&
+                            detail.diagramBlock.extendedTo != 0) {
+                            logDebug(2, "DEBUG: Trying extended block for TO connection.");
+                            BlockDetail extendedDetail =
+                                (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
+                            if (extendedDetail == null) {
+                                logConnection(connection);
+                                logMessage("   Error:  Invalid ExtendedTo in toDiagramBlock");
+                            }
+                            else {
+                                gatePinList = gatePinTable.getWhere(
+                                    "WHERE cardGate = '" +
+                                    extendedDetail.diagramBlock.cardGate +
+                                    "' AND pin = '" + connection.toPin + "'");
+                                if (gatePinList.Count != 1) {
+                                    if (logLevel >= 2) {
+                                        logConnection(connection);
+                                    }
+                                    logDebug(2, "DEBUG: Extended Block Card type " +
+                                        Helpers.getCardTypeType(
+                                            extendedDetail.diagramBlock.cardType) +
+                                        " Gate (" + extendedDetail.diagramBlock.cardGate + ")" +
+                                        " Pin " + connection.toPin + " returned " +
+                                        gatePinList.Count.ToString() + " matches [expected 1]");
+                                }
+                                else {
+                                    logDebug(2, "DEBUG: Found 1 match on extended block.");
+                                }
+                            }
+                        }
+
                         if (gatePinList.Count == 1) {
                             Gatepin gatePin = gatePinList[0];
                             pinDetail.input = (gatePin.input > 0);
@@ -597,7 +715,17 @@ namespace IBM1410SMS
                             }
                         }
 
+                        //  If the pin is not --, just use its name.  Otherwise,
+                        //  if it is --, qualify the name with the logic block on
+                        //  the OTHER end of the connection.
+
                         pinDetail.pin = connection.toPin;
+                        if (connection.toPin == "--") {
+                            pinDetail.pin += connection.toDiagramBlock.ToString();
+                            pinDetail.output = false;
+                            pinDetail.input = true;
+                        }
+
                         pinDetail.loadPins = 0;
                         pinDetail.connectionsFrom = new List<Connection>();
                         pinDetail.connectionsTo = new List<Connection>();
@@ -642,9 +770,20 @@ namespace IBM1410SMS
                         continue;
                     }
 
-                    //  TODO:  If extended, merge with its pair to come up with a merged
-                    //  pin list.  THIS MAY NOT BE THE RIGHT PLACE TO DO THAT - perhaps
-                    //  do that up above?
+                    //  Count inputs and outputs from any extension block
+
+                    if (detail.diagramBlock.extendedTo != 0) {
+                        BlockDetail extendedDetail =
+                            (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
+                        if (extendedDetail != null) {
+                            foreach (PinDetail extendedPinDetail in extendedDetail.pinList) {
+                                inputsCount += extendedPinDetail.connectionsTo.Count;
+                                outputsCount += extendedPinDetail.connectionsFrom.Count;
+                            }
+                        }
+                    }
+
+                    //  Then look at this block itself in more detail
 
                     foreach (PinDetail pinDetail in detail.pinList) {
                         bool toDotFunction = false;
@@ -658,16 +797,19 @@ namespace IBM1410SMS
                             " inputs and " + pinDetail.connectionsFrom.Count.ToString() +
                             " outputs");
 
-                        //  An input only pin should not be an output, and vice versa
+                        //  An input only pin should not be an output, (and the pin is not
+                        //  "--"), and vice versa
 
-                        if(pinDetail.connectionsFrom.Count > 0 && !pinDetail.output) {
+                        if(pinDetail.connectionsFrom.Count > 0 && !pinDetail.output &&
+                            (pinDetail.input || !pinDetail.pin.StartsWith("--"))) {
                             string msgtype = pinDetail.input ? "input only" : "incorrect";
                             logMessage("Outputs from " + msgtype + " pin " +
                                 pinDetail.pin + ", " +
                                 getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                         }
 
-                        if(pinDetail.connectionsTo.Count > 0 && !pinDetail.input) {
+                        if(pinDetail.connectionsTo.Count > 0 && !pinDetail.input &&
+                            (pinDetail.output || !pinDetail.pin.StartsWith("--"))) {
                             string msgtype = pinDetail.output ? "output only" : "incorrect";
                             logMessage("Input to " + msgtype + " pin " +
                                 pinDetail.pin + ", " +
@@ -711,14 +853,15 @@ namespace IBM1410SMS
 
                     //  Note if this block has no inputs or no outputs (except that
                     //  if a diagram block is symbol "L" for load, or "LAMP", 
-                    //  no outputs is OK)
+                    //  or "R" for resistor, no outputs is OK)
 
                     if(inputsCount == 0) {
                         logMessage("NO inputs to logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
                     if(outputsCount == 0 && detail.diagramBlock.symbol != "L"  &&
-                        detail.diagramBlock.symbol != "LAMP") {
+                        detail.diagramBlock.symbol != "LAMP"  &&
+                        detail.diagramBlock.symbol != "R") {
                         logMessage("NO outputs from logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
@@ -745,7 +888,7 @@ namespace IBM1410SMS
                 case "P":
                     message += "Block " + getDiagramBlockInfo(connection.fromDiagramBlock) +
                         " pin " + connection.fromPin;
-                    if(connection.fromLoadPin.Length > 0) {
+                    if(connection.fromLoadPin != null && connection.fromLoadPin.Length > 0) {
                         message += " (Load pin " + connection.fromLoadPin + ")";
                     }
                     break;
