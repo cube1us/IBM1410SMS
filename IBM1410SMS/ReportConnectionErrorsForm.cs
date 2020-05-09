@@ -29,6 +29,7 @@ namespace IBM1410SMS
             public string fromPin { get; set; } = "";
             public string fromLoadPin { get; set; } = "";
             public int cardType { get; set; } = 0;
+            public bool fromResistor { get; set; } = false;
         }
 
         //  Class to store information about a given DOT function (Wired OR/AND)
@@ -348,7 +349,8 @@ namespace IBM1410SMS
 
                         //  Add a new connection to the detail entry.
 
-                        DotDetail dotDetail = (DotDetail) dotDetailHash[dotFunction.idDotFunction];
+                        DotDetail dotDetail = 
+                            (DotDetail) dotDetailHash[dotFunction.idDotFunction];
                         DotConnection dotConnection = new DotConnection();
                         dotConnection.connection = connection;
                         dotConnection.cardType = diagramBlock.cardType;
@@ -359,6 +361,9 @@ namespace IBM1410SMS
                         dotConnection.fromGate = diagramBlock.cardGate;
                         dotConnection.fromLoadPin =
                             connection.fromLoadPin == null ? "" : connection.fromLoadPin;                        
+                        if(diagramBlock.symbol == "R") {
+                            dotConnection.fromResistor = true;
+                        }
                         dotDetail.connections.Add(dotConnection);
                     }
                 }
@@ -415,6 +420,7 @@ namespace IBM1410SMS
                 foreach (DotDetail detail in (List<DotDetail>)dotFunctionsByPage[page]) {
                     int loadCount = 0;
                     bool hasSwitch = false;
+                    bool hasResistor = false;
                     List<DotConnection> connections = detail.connections;
                     foreach (DotConnection dotConnection in connections) {
 
@@ -434,6 +440,8 @@ namespace IBM1410SMS
                                 "found (" + dotConnection.fromDiagramBlock.ToString() + ")");
                             continue;
                         }
+
+
                         Cardgate gate = (Cardgate)cardGateHash[dotConnection.fromGate];
                         if (gate == null) {
                             logConnection(dotConnection.connection);
@@ -442,7 +450,10 @@ namespace IBM1410SMS
                             continue;
                         }
 
-                        if (isCardASwitch(dotConnection.cardType)) {
+                        if(dotConnection.fromResistor) {
+                            hasResistor = true;
+                        }
+                        else if (isCardASwitch(dotConnection.cardType)) {
                             //  Switches are treated as special, and also not as loads
                             hasSwitch = true;
                         }
@@ -456,8 +467,8 @@ namespace IBM1410SMS
                     //  whose output goes to a sheet edge, OR, if the load count is more
                     //  than 1 (meaning 2 non-open collector gates), issue a warning.
 
-                    if ((!(hasSwitch || detail.hasEdgeOutput || detail.hasGateOutput) 
-                        && loadCount == 0) || loadCount > 1) {
+                    if ((!(hasSwitch || detail.hasEdgeOutput || detail.hasGateOutput ||
+                        hasResistor) && loadCount == 0) || loadCount > 1) {
                         logMessage("Unexpected DOT Function load count of " + 
                             loadCount.ToString() + " [Expected to be 1]");
                         logMessage("   " + getDotFunctionInfo(detail.dotFunctionKey) + " (" +
@@ -475,9 +486,11 @@ namespace IBM1410SMS
 
             //  Diagram block checks
 
-            //  Go through the connectiosn finding the ones that originate from
+            //  Go through the connections finding the ones that originate from
             //  diagram logic blocks, and create a list of connections to and from 
             //  each pin of each lbock.  Also note the load pins.
+
+            //  TODO:  This also MIGHT be the right area to handle extended blocks?
 
             foreach(int connectionKey in connectionHash.Keys) {
                 Connection connection = (Connection)connectionHash[connectionKey];
@@ -629,6 +642,10 @@ namespace IBM1410SMS
                         continue;
                     }
 
+                    //  TODO:  If extended, merge with its pair to come up with a merged
+                    //  pin list.  THIS MAY NOT BE THE RIGHT PLACE TO DO THAT - perhaps
+                    //  do that up above?
+
                     foreach (PinDetail pinDetail in detail.pinList) {
                         bool toDotFunction = false;
 
@@ -692,13 +709,16 @@ namespace IBM1410SMS
                         }
                     }
 
-                    //  Note if this block has no inputs or no outptus
+                    //  Note if this block has no inputs or no outputs (except that
+                    //  if a diagram block is symbol "L" for load, or "LAMP", 
+                    //  no outputs is OK)
 
                     if(inputsCount == 0) {
                         logMessage("NO inputs to logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
-                    if(outputsCount == 0) {
+                    if(outputsCount == 0 && detail.diagramBlock.symbol != "L"  &&
+                        detail.diagramBlock.symbol != "LAMP") {
                         logMessage("NO outputs from logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
