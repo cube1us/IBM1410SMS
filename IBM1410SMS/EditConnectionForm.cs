@@ -330,6 +330,9 @@ namespace IBM1410SMS
                             originEdgeSheet.diagramPage);
                         refComboBox.SelectedItem = edgeConnectorList.Find(
                             x => x.reference == connection.fromEdgeConnectorReference);
+                        if(refComboBox.SelectedItem == null) {
+                            refComboBox.SelectedItem = edgeConnectorList[0];
+                        }
                         ref2ComboBox.SelectedItem = edgeConnectorList2[0];
                         break;
                     default:
@@ -369,6 +372,9 @@ namespace IBM1410SMS
                                     x => x.pin == connection.toPin);
                             gateRefComboBox.SelectedItem = gateEdgeConnectorList.Find(
                                 x => x.reference == connection.toEdgeConnectorReference);
+                            if(gateRefComboBox.SelectedItem == null) {
+                                gateRefComboBox.SelectedItem = gateEdgeConnectorList[0];
+                            }
                         }
                         else {
                             connectingPinComboBox.Visible = false;
@@ -398,8 +404,14 @@ namespace IBM1410SMS
                             destinationEdgeSheet.diagramPage);
                         refComboBox.SelectedItem = edgeConnectorList.Find(
                             x => x.reference == connection.toEdgeConnectorReference);
+                        if(refComboBox.SelectedItem == null) {
+                            refComboBox.SelectedItem = edgeConnectorList[0];
+                        }
                         ref2ComboBox.SelectedItem = edgeConnectorList2.Find(
                             x => x.reference == connection.toEdge2ndConnectorReference);
+                        if(ref2ComboBox.SelectedItem == null) {
+                            ref2ComboBox.SelectedItem = edgeConnectorList2[0];
+                        }
                         break;
                     default:
                         break;
