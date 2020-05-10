@@ -859,9 +859,14 @@ namespace IBM1410SMS
                         logMessage("NO inputs to logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
+
+                    //  Maybe the following should look at the card/gate characteristics,
+                    //  instead of the ALD symbol??
+
                     if(outputsCount == 0 && detail.diagramBlock.symbol != "L"  &&
                         detail.diagramBlock.symbol != "LAMP"  &&
-                        detail.diagramBlock.symbol != "R") {
+                        detail.diagramBlock.symbol != "R" &&
+                        detail.diagramBlock.symbol != "CAP") {
                         logMessage("NO outputs from logic block at " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                     }
