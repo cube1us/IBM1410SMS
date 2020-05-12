@@ -1140,5 +1140,14 @@ namespace IBM1410SMS
             }
         }
 
+        private void cardTypeComboBox_EnabledChanged(object sender, EventArgs e) {
+            string message = "Card type cannot be changed with connections present.";
+            if (cardTypeComboBox.Enabled) {
+                message =
+                    "The card type of the card associated with this logic block (e.g. AEK)";
+            }
+            toolTip1.SetToolTip(cardTypeComboBox, message);
+            toolTip1.SetToolTip(cardTypeLabel, message);
+        }
     }
 }

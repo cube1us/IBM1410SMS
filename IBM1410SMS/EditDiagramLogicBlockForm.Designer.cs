@@ -60,7 +60,7 @@
             this.selectRowLabel = new System.Windows.Forms.Label();
             this.cardRowComboBox = new System.Windows.Forms.ComboBox();
             this.selectColumnLabel = new System.Windows.Forms.Label();
-            this.label18 = new System.Windows.Forms.Label();
+            this.cardTypeLabel = new System.Windows.Forms.Label();
             this.cardTypeComboBox = new System.Windows.Forms.ComboBox();
             this.extendedCheckBox = new System.Windows.Forms.CheckBox();
             this.extendedAboveRadioButton = new System.Windows.Forms.RadioButton();
@@ -69,6 +69,7 @@
             this.cardGateComboBox = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
             this.notesTextBox = new System.Windows.Forms.TextBox();
+            this.noHDLGen = new System.Windows.Forms.CheckBox();
             this.flippedCheckBox = new System.Windows.Forms.CheckBox();
             this.label19 = new System.Windows.Forms.Label();
             this.blockConfigurationTextBox = new System.Windows.Forms.TextBox();
@@ -80,7 +81,6 @@
             this.label20 = new System.Windows.Forms.Label();
             this.editConnectionsButton = new System.Windows.Forms.Button();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
-            this.noHDLGen = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -438,15 +438,15 @@
             this.toolTip1.SetToolTip(this.selectColumnLabel, "The column of the card slot that contains the card associated with this logic blo" +
         "ck");
             // 
-            // label18
+            // cardTypeLabel
             // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(10, 295);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(59, 13);
-            this.label18.TabIndex = 62;
-            this.label18.Text = "Card Type:";
-            this.toolTip1.SetToolTip(this.label18, "The card type of the card associated with this logic block (e.g. AEK)");
+            this.cardTypeLabel.AutoSize = true;
+            this.cardTypeLabel.Location = new System.Drawing.Point(10, 295);
+            this.cardTypeLabel.Name = "cardTypeLabel";
+            this.cardTypeLabel.Size = new System.Drawing.Size(59, 13);
+            this.cardTypeLabel.TabIndex = 62;
+            this.cardTypeLabel.Text = "Card Type:";
+            this.toolTip1.SetToolTip(this.cardTypeLabel, "The card type of the card associated with this logic block (e.g. AEK)");
             // 
             // cardTypeComboBox
             // 
@@ -459,6 +459,7 @@
             this.cardTypeComboBox.TabIndex = 90;
             this.toolTip1.SetToolTip(this.cardTypeComboBox, "The card type of the card associated with this logic block (e.g. AEK)");
             this.cardTypeComboBox.SelectedIndexChanged += new System.EventHandler(this.cardTypeComboBox_SelectedIndexChanged);
+            this.cardTypeComboBox.EnabledChanged += new System.EventHandler(this.cardTypeComboBox_EnabledChanged);
             // 
             // extendedCheckBox
             // 
@@ -535,6 +536,17 @@
             this.notesTextBox.TabIndex = 115;
             this.toolTip1.SetToolTip(this.notesTextBox, "Use this field to describe internal jumprers/cuts.  Comma Separated, L: for left," +
         " R: for right  e.g.  R:AJ for a capacitor.");
+            // 
+            // noHDLGen
+            // 
+            this.noHDLGen.AutoSize = true;
+            this.noHDLGen.Location = new System.Drawing.Point(207, 119);
+            this.noHDLGen.Name = "noHDLGen";
+            this.noHDLGen.Size = new System.Drawing.Size(91, 17);
+            this.noHDLGen.TabIndex = 116;
+            this.noHDLGen.Text = "No HDL Gen.";
+            this.toolTip1.SetToolTip(this.noHDLGen, "Select to inhibit HDL generation for this logic block");
+            this.noHDLGen.UseVisualStyleBackColor = true;
             // 
             // flippedCheckBox
             // 
@@ -644,17 +656,6 @@
             this.cardColumnTextBox.TabIndex = 85;
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             // 
-            // noHDLGen
-            // 
-            this.noHDLGen.AutoSize = true;
-            this.noHDLGen.Location = new System.Drawing.Point(207, 119);
-            this.noHDLGen.Name = "noHDLGen";
-            this.noHDLGen.Size = new System.Drawing.Size(91, 17);
-            this.noHDLGen.TabIndex = 116;
-            this.noHDLGen.Text = "No HDL Gen.";
-            this.toolTip1.SetToolTip(this.noHDLGen, "Select to inhibit HDL generation for this logic block");
-            this.noHDLGen.UseVisualStyleBackColor = true;
-            // 
             // EditDiagramLogicBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -678,7 +679,7 @@
             this.Controls.Add(this.label19);
             this.Controls.Add(this.flippedCheckBox);
             this.Controls.Add(this.cardTypeComboBox);
-            this.Controls.Add(this.label18);
+            this.Controls.Add(this.cardTypeLabel);
             this.Controls.Add(this.selectColumnLabel);
             this.Controls.Add(this.cardRowComboBox);
             this.Controls.Add(this.selectRowLabel);
@@ -760,7 +761,7 @@
         private System.Windows.Forms.Label selectRowLabel;
         private System.Windows.Forms.ComboBox cardRowComboBox;
         private System.Windows.Forms.Label selectColumnLabel;
-        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label cardTypeLabel;
         private System.Windows.Forms.ComboBox cardTypeComboBox;
         private System.Windows.Forms.CheckBox flippedCheckBox;
         private System.Windows.Forms.Label label19;
