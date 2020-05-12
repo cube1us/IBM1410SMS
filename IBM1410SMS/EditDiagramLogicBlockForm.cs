@@ -287,6 +287,17 @@ namespace IBM1410SMS
             populatingDialog = false;
             drawLogicbox();
 
+            //  If there are any connections, disable changes to the card type.
+
+            if(currentDiagramBlock.idDiagramBlock != 0) {
+                List<Connection> connectionList = connectionTable.getWhere(
+                    "WHERE fromDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'" +
+                    " OR toDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'");
+                if (connectionList.Count > 0) {
+                    cardTypeComboBox.Enabled = false;
+                }
+            }
+
             //  I looked for a way to have the little dotted box for 
             //  selection of a particular combo box show up before the
             //  tab key is pressed, but was unsuccessful.  
@@ -1038,6 +1049,14 @@ namespace IBM1410SMS
             //  Redraw the logic box, as outputs may have changed.
 
             drawLogicbox();
+
+            //  Also, the connections may have changed, so we may need to
+            //  enable or disable the card type combo box.
+
+            List<Connection> connectionList = connectionTable.getWhere(
+                            "WHERE fromDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'" +
+                            " OR toDiagramBlock='" + currentDiagramBlock.idDiagramBlock + "'");
+            cardTypeComboBox.Enabled = (connectionList.Count == 0);
         }
 
 
