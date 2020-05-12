@@ -1005,7 +1005,9 @@ namespace IBM1410SMS
         }
 
         private void reportButton_Click(object sender, EventArgs e) {
-
+            if(!reportButton.Enabled) {
+                return;
+            }
             reportButton.Enabled = false;
 
             logFileName = Path.Combine(directoryTextBox.Text,
