@@ -265,21 +265,44 @@ namespace IBM1410SMS
             //  Fill in the dictionary of CardSlot:Gate values with pages that use
             //  that gate ("There can only be one"), and card types, by slot.
 
-            List<Diagramblock> diagramBlockList = diagramBlockTable.getAll();
+            List<Diagramblock> diagramBlockList = diagramBlockTable.getWhere(
+                "ORDER BY diagramColumn, diagramRow");
             foreach(Diagramblock diagramBlock in diagramBlockList) {
                 Diagrampage dp;
                 CardGateDetail cardGateDetail;
+                string cardSlotString = "";
 
-                if(diagramPageDict.TryGetValue(diagramBlock.diagramPage, out dp)) {
+                if (diagramPageDict.TryGetValue(diagramBlock.diagramPage, out dp)) {
 
                     BlockDetail detail = new BlockDetail();
                     detail.diagramBlock = diagramBlock;
                     detail.page = pageDict[dp.page];
                     diagramBlockDict.Add(diagramBlock.idDiagramBlock, detail);
-                    string cardSlotString = "";
-
                     CardSlotInfo cardSlot = Helpers.getCardSlotInfo(
                         diagramBlock.cardSlot);
+                    cardSlotString = cardSlot.ToString();
+
+                    CardSlotTypeDetail cardSlotTypeDetail;
+                    string cardTypeType = cardTypeDict[diagramBlock.cardType].type;
+                    if (!cardSlotUsageDict.TryGetValue(cardSlotString,
+                            out cardSlotTypeDetail)) {
+                        cardSlotTypeDetail = new CardSlotTypeDetail();
+                        cardSlotTypeDetail.cardTypes = new List<string>();
+                        cardSlotTypeDetail.firstPage = new List<string>();
+                        cardSlotUsageDict.Add(cardSlotString, cardSlotTypeDetail);
+                    }
+                    if (!cardSlotTypeDetail.cardTypes.Contains(cardTypeType)) {
+                        cardSlotTypeDetail.cardTypes.Add(cardTypeType);
+                        cardSlotTypeDetail.firstPage.Add(detail.page);
+                    }
+
+                    //  (If a gate has a symbol of "E" and an extension field, 
+                    //  ignore it for card gate re-use checks.)
+
+                    if (diagramBlock.symbol == "E" && diagramBlock.extendedTo != 0) {
+                        continue;
+                    }
+
                     Cardgate cardGate = cardGateTable.getByKey(
                         diagramBlock.cardGate);
                     if(cardGate.number == 0) {
@@ -287,7 +310,6 @@ namespace IBM1410SMS
                             getDiagramBlockInfo(diagramBlock.idDiagramBlock));
                     }
 
-                    cardSlotString = cardSlot.ToString();
                     string cardGateKey = 
                         cardSlotString + ":" + cardGate.number.ToString();
                     if(!cardSlotGateDict.TryGetValue(cardGateKey,
@@ -300,26 +322,11 @@ namespace IBM1410SMS
                     // if(!cardGateDetail.pageUsage.Contains(detail.page)) {
                         cardGateDetail.pageUsage.Add(detail.page);
                     // }        
-
-                    CardSlotTypeDetail cardSlotTypeDetail;
-                    string cardTypeType = cardTypeDict[diagramBlock.cardType].type;
-                    if(!cardSlotUsageDict.TryGetValue(cardSlotString,
-                            out cardSlotTypeDetail)) {
-                        cardSlotTypeDetail = new CardSlotTypeDetail();
-                        cardSlotTypeDetail.cardTypes = new List<string>();
-                        cardSlotTypeDetail.firstPage = new List<string>();
-                        cardSlotUsageDict.Add(cardSlotString, cardSlotTypeDetail);
-                    }
-                    if(!cardSlotTypeDetail.cardTypes.Contains(cardTypeType)) {
-                        cardSlotTypeDetail.cardTypes.Add(cardTypeType);
-                        cardSlotTypeDetail.firstPage.Add(detail.page);
-                    }
                 }
             }
 
             //  Report any cases where a given card gate appears twice in the
-            //  ALD's, and that any cases where the card type isn't the same
-            
+            //  ALD's, and that any cases where the card type isn't the same.
 
             logMessage("*** Begin Duplicate Card Slot:Gate usage Report.");
             ArrayList cardSlotGateArrayList = new ArrayList(
@@ -620,7 +627,7 @@ namespace IBM1410SMS
             //  each pin of each lbock.  Also note the load pins.
 
             //  Sometimes a block has an extension.  If a given pin doesn't match
-            //  On a given block, check its extensin.
+            //  On a given block, check its extension.
 
             foreach(int connectionKey in connectionDict.Keys) {
 
