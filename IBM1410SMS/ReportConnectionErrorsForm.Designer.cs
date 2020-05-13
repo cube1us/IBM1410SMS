@@ -34,6 +34,7 @@
             this.directoryButton = new System.Windows.Forms.Button();
             this.directoryTextBox = new System.Windows.Forms.TextBox();
             this.reportButton = new System.Windows.Forms.Button();
+            this.workingLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // label1
@@ -107,11 +108,22 @@
             this.reportButton.UseVisualStyleBackColor = true;
             this.reportButton.Click += new System.EventHandler(this.reportButton_Click);
             // 
-            // ReportConnectionErrors
+            // workingLabel
+            // 
+            this.workingLabel.AutoSize = true;
+            this.workingLabel.Location = new System.Drawing.Point(439, 139);
+            this.workingLabel.Name = "workingLabel";
+            this.workingLabel.Size = new System.Drawing.Size(47, 13);
+            this.workingLabel.TabIndex = 7;
+            this.workingLabel.Text = "Working";
+            this.workingLabel.Visible = false;
+            // 
+            // ReportConnectionErrorsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(708, 200);
+            this.Controls.Add(this.workingLabel);
             this.Controls.Add(this.reportButton);
             this.Controls.Add(this.directoryTextBox);
             this.Controls.Add(this.directoryButton);
@@ -119,7 +131,7 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.machineComboBox);
             this.Controls.Add(this.label1);
-            this.Name = "ReportConnectionErrors";
+            this.Name = "ReportConnectionErrorsForm";
             this.Text = "Connection Errors Report";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -136,5 +148,6 @@
         private System.Windows.Forms.Button directoryButton;
         private System.Windows.Forms.TextBox directoryTextBox;
         private System.Windows.Forms.Button reportButton;
+        private System.Windows.Forms.Label workingLabel;
     }
 }

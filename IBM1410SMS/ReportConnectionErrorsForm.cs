@@ -67,6 +67,20 @@ namespace IBM1410SMS
             public List<PinDetail> pinList { get; set; }  = new List<PinDetail>();
         }
 
+        //  Class to store information about a given card slot as used
+        //  in an ALD
+
+        class CardGateDetail
+        {
+            public List<string> pageUsage = new List<string>();
+        }
+       
+        class CardSlotTypeDetail
+        {
+            public List<string> cardTypes = new List<string>();
+            public List<string> firstPage = new List<string>();
+        }
+
         DBSetup db = DBSetup.Instance;
 
         Table<Machine> machineTable;
@@ -80,22 +94,27 @@ namespace IBM1410SMS
         Table<Sheetedgeinformation> sheetEdgeInformationTable;
         Table<Logicfamily> logicFamilyTable;
         Table<Gatepin> gatePinTable;
+        Table<Cardslot> cardSlotTable;
 
         List<Machine> machineList;
 
-        Hashtable cardGateHash = new Hashtable();
-        Hashtable cardTypeHash = new Hashtable();
-        Hashtable logicFamilyHash = new Hashtable();
+        Dictionary<int, Cardgate> cardGateDict = new Dictionary<int, Cardgate>();
+        Dictionary<int, Cardtype> cardTypeDict = new Dictionary<int, Cardtype>();
+        Dictionary<int, Logicfamily> logicFamilyDict = 
+            new Dictionary<int, Logicfamily>();
 
-        Hashtable connectionHash = null;
-        Hashtable diagramPageHash = null;
-        Hashtable pageHash = null;
-        Hashtable dotFunctionHash = null;
-        Hashtable diagramBlockHash = null;
-        Hashtable dotDetailHash = null;
-        Hashtable sheetEdgeHash = null;
+        Dictionary<int,Connection> connectionDict = null;
+        Dictionary<int,Diagrampage> diagramPageDict = null;
+        Dictionary<int,string> pageDict = null;
+        Dictionary<int,Dotfunction> dotFunctionDict = null;
+        Dictionary<int,BlockDetail> diagramBlockDict = null;
+        Dictionary<int,DotDetail> dotDetailDict = null;
+        Dictionary<int,Sheetedgeinformation> sheetEdgeDict = null;
+        Dictionary<string,CardGateDetail> cardSlotGateDict = null;
+        Dictionary<string, CardSlotTypeDetail> cardSlotUsageDict = null;
    
         Machine currentMachine = null;
+        Boolean reporting = false;          //  If true, the working label will blink
 
         string logFileName = "";
         StreamWriter logFile = null;
@@ -117,6 +136,7 @@ namespace IBM1410SMS
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
             logicFamilyTable = db.getLogicFamilyTable();
             gatePinTable = db.getGatePinTable();
+            cardSlotTable = db.getCardSlotTable();
 
             machineList = machineTable.getAll();
 
@@ -164,21 +184,21 @@ namespace IBM1410SMS
 
             List<Cardgate> cardGateList = cardGateTable.getAll();
             foreach(Cardgate gate in cardGateList) {
-                cardGateHash.Add(gate.idcardGate, gate);
+                cardGateDict.Add(gate.idcardGate, gate);
             }
 
             //  Same for the card types
 
             List<Cardtype> cardTypeList = cardTypeTable.getAll();
             foreach(Cardtype ct in cardTypeList) {
-                cardTypeHash.Add(ct.idCardType, ct);
+                cardTypeDict.Add(ct.idCardType, ct);
             }
 
             //  And logic families
 
             List<Logicfamily> logicFamilyList = logicFamilyTable.getAll();
             foreach (Logicfamily lf in logicFamilyList) {
-                logicFamilyHash.Add(lf.idLogicFamily, lf);
+                logicFamilyDict.Add(lf.idLogicFamily, lf);
             }
 
             //  Disable the report button for now.
@@ -196,13 +216,15 @@ namespace IBM1410SMS
 
         private void doConnectionReport() {
 
-            pageHash = new Hashtable();
-            diagramPageHash = new Hashtable();
-            dotFunctionHash = new Hashtable();
-            diagramBlockHash = new Hashtable();
-            connectionHash = new Hashtable();
-            dotDetailHash = new Hashtable();
-            sheetEdgeHash = new Hashtable();
+            pageDict = new Dictionary<int,string>();
+            diagramPageDict = new Dictionary<int, Diagrampage>();
+            dotFunctionDict = new Dictionary<int, Dotfunction>();
+            diagramBlockDict = new Dictionary<int, BlockDetail>();
+            connectionDict = new Dictionary<int, Connection>();
+            dotDetailDict = new Dictionary<int, DotDetail>();
+            sheetEdgeDict = new Dictionary<int, Sheetedgeinformation>();
+            cardSlotGateDict = new Dictionary<string, CardGateDetail>();
+            cardSlotUsageDict = new Dictionary<string, CardSlotTypeDetail>();
 
             Hashtable dotFunctionsByPage = new Hashtable();
             Hashtable diagramBlocksByPage = new Hashtable();
@@ -216,7 +238,7 @@ namespace IBM1410SMS
             List<Page> pageList = pageTable.getAll();
             foreach(Page page in pageList) {
                 if(page.machine == currentMachine.idMachine) {
-                    pageHash.Add(page.idPage, page.name);
+                    pageDict.Add(page.idPage, page.name);
                 }
             }
 
@@ -224,8 +246,8 @@ namespace IBM1410SMS
 
             List<Diagrampage> diagramPageList = diagramPageTable.getAll();
             foreach(Diagrampage dp in diagramPageList) {
-                if(pageHash.ContainsKey(dp.page)) {
-                    diagramPageHash.Add(dp.idDiagramPage, dp);
+                if(pageDict.ContainsKey(dp.page)) {
+                    diagramPageDict.Add(dp.idDiagramPage, dp);
                 }
             }
 
@@ -234,32 +256,133 @@ namespace IBM1410SMS
 
             List<Dotfunction> dotFunctionList = dotFunctionTable.getAll();
             foreach(Dotfunction df in dotFunctionList) {
-                if(diagramPageHash.ContainsKey(df.diagramPage)) {
-                    dotFunctionHash.Add(df.idDotFunction, df);
+                if(diagramPageDict.ContainsKey(df.diagramPage)) {
+                    dotFunctionDict.Add(df.idDotFunction, df);
                 }
             }
 
-            //  And, also a list of related diagram blocks
+            //  And, also a list of related diagram blocks.  While we are at it,
+            //  Fill in the dictionary of CardSlot:Gate values with pages that use
+            //  that gate ("There can only be one"), and card types, by slot.
 
             List<Diagramblock> diagramBlockList = diagramBlockTable.getAll();
             foreach(Diagramblock diagramBlock in diagramBlockList) {
-                if(diagramPageHash.ContainsKey(diagramBlock.diagramPage)) {
-                    // diagramBlockHash.Add(diagramBlock.idDiagramBlock, diagramBlock);
+                Diagrampage dp;
+                CardGateDetail cardGateDetail;
+
+                if(diagramPageDict.TryGetValue(diagramBlock.diagramPage, out dp)) {
+
                     BlockDetail detail = new BlockDetail();
                     detail.diagramBlock = diagramBlock;
-                    Diagrampage dp = (Diagrampage)diagramPageHash[diagramBlock.diagramPage];
-                    detail.page = (String)pageHash[dp.page];
-                    diagramBlockHash.Add(diagramBlock.idDiagramBlock, detail);
+                    detail.page = pageDict[dp.page];
+                    diagramBlockDict.Add(diagramBlock.idDiagramBlock, detail);
+                    string cardSlotString = "";
+
+                    CardSlotInfo cardSlot = Helpers.getCardSlotInfo(
+                        diagramBlock.cardSlot);
+                    Cardgate cardGate = cardGateTable.getByKey(
+                        diagramBlock.cardGate);
+                    if(cardGate.number == 0) {
+                        logMessage("Invalid gate number of 0 " +
+                            getDiagramBlockInfo(diagramBlock.idDiagramBlock));
+                    }
+
+                    cardSlotString = cardSlot.ToString();
+                    string cardGateKey = 
+                        cardSlotString + ":" + cardGate.number.ToString();
+                    if(!cardSlotGateDict.TryGetValue(cardGateKey,
+                        out cardGateDetail)) {
+                        cardGateDetail = new CardGateDetail();
+                        cardGateDetail.pageUsage = new List<string>();
+                        cardSlotGateDict.Add(cardGateKey, cardGateDetail);
+                    }
+
+                    // if(!cardGateDetail.pageUsage.Contains(detail.page)) {
+                        cardGateDetail.pageUsage.Add(detail.page);
+                    // }        
+
+                    CardSlotTypeDetail cardSlotTypeDetail;
+                    string cardTypeType = cardTypeDict[diagramBlock.cardType].type;
+                    if(!cardSlotUsageDict.TryGetValue(cardSlotString,
+                            out cardSlotTypeDetail)) {
+                        cardSlotTypeDetail = new CardSlotTypeDetail();
+                        cardSlotTypeDetail.cardTypes = new List<string>();
+                        cardSlotTypeDetail.firstPage = new List<string>();
+                        cardSlotUsageDict.Add(cardSlotString, cardSlotTypeDetail);
+                    }
+                    if(!cardSlotTypeDetail.cardTypes.Contains(cardTypeType)) {
+                        cardSlotTypeDetail.cardTypes.Add(cardTypeType);
+                        cardSlotTypeDetail.firstPage.Add(detail.page);
+                    }
                 }
             }
+
+            //  Report any cases where a given card gate appears twice in the
+            //  ALD's, and that any cases where the card type isn't the same
+            
+
+            logMessage("*** Begin Duplicate Card Slot:Gate usage Report.");
+            ArrayList cardSlotGateArrayList = new ArrayList(
+                cardSlotGateDict.Keys);
+            cardSlotGateArrayList.Sort();
+            foreach(string cardSlotGate in cardSlotGateArrayList) {
+                CardGateDetail cardGateDetail = cardSlotGateDict[cardSlotGate];
+                bool reportPages = false;
+
+                if(cardGateDetail.pageUsage.Count != 1) {
+                    logMessage("Unexpected card gate use count of " +
+                        cardGateDetail.pageUsage.Count.ToString() + 
+                        " for cardslot:gate of " + cardSlotGate);
+                    reportPages = true;
+                }
+
+                if(reportPages) {
+                    string pageNames = "";
+                    for (int i = 0; i < cardGateDetail.pageUsage.Count; ++i) {
+                        pageNames += (i > 0 ? ", " : "") +
+                            cardGateDetail.pageUsage[i];
+                    }
+                    if (pageNames.Length > 0) {
+                        logMessage("   Pages: " + pageNames);
+                    }
+                    logMessage("");
+                }
+            }
+
+            ArrayList cardSlotArrayList = new ArrayList(cardSlotUsageDict.Keys);
+            cardSlotArrayList.Sort();
+            foreach(string cardSlotName in cardSlotArrayList) {
+                CardSlotTypeDetail cardSlotTypeDetail = 
+                    cardSlotUsageDict[cardSlotName];
+                if (cardSlotTypeDetail.cardTypes.Count != 1) {
+                    logMessage("Duplicate or missing card types numbering " +
+                        cardSlotTypeDetail.cardTypes.Count.ToString() +
+                        " for cardslot " + cardSlotName);
+                    string cardTypes = "";
+                    for (int i = 0; i < cardSlotTypeDetail.cardTypes.Count; ++i) {
+                        cardTypes += (i > 0 ? ", " : "") +
+                            cardSlotTypeDetail.cardTypes[i] +
+                            " (Page " + cardSlotTypeDetail.firstPage[i] + ")";
+                    }
+                    if (cardTypes.Length > 0) {
+                        logMessage("   Types (first pages): " + cardTypes);
+                        logMessage("");
+                    }
+                }
+            }
+
+
+
+            logMessage("*** End Duplicate Card Slot:Gate usage Report.");
+            logMessage("");
 
             //  A list of sheet edge information signals, too...
 
             List<Sheetedgeinformation> sheetEdgeInformationList =
                 sheetEdgeInformationTable.getAll();
             foreach(Sheetedgeinformation se in sheetEdgeInformationList) {
-                if(diagramPageHash.ContainsKey(se.diagramPage)) {
-                    sheetEdgeHash.Add(se.idSheetEdgeInformation, se);
+                if(diagramPageDict.ContainsKey(se.diagramPage)) {
+                    sheetEdgeDict.Add(se.idSheetEdgeInformation, se);
                 }
             }
 
@@ -269,13 +392,13 @@ namespace IBM1410SMS
 
             List<Connection> connectionList = connectionTable.getAll();
             foreach (Connection connection in connectionList) {
-                if(diagramBlockHash.ContainsKey(connection.fromDiagramBlock) ||
-                   dotFunctionHash.ContainsKey(connection.fromDotFunction) ||
-                   diagramBlockHash.ContainsKey(connection.toDiagramBlock) ||
-                   dotFunctionHash.ContainsKey(connection.toDotFunction) ||
-                   sheetEdgeHash.ContainsKey(connection.fromEdgeSheet) ||
-                   sheetEdgeHash.ContainsKey(connection.toEdgeSheet)) {
-                    connectionHash.Add(connection.idConnection, connection);
+                if(diagramBlockDict.ContainsKey(connection.fromDiagramBlock) ||
+                   dotFunctionDict.ContainsKey(connection.fromDotFunction) ||
+                   diagramBlockDict.ContainsKey(connection.toDiagramBlock) ||
+                   dotFunctionDict.ContainsKey(connection.toDotFunction) ||
+                   sheetEdgeDict.ContainsKey(connection.fromEdgeSheet) ||
+                   sheetEdgeDict.ContainsKey(connection.toEdgeSheet)) {
+                    connectionDict.Add(connection.idConnection, connection);
                 }
                 if(!Helpers.isValidConnectionType(connection.from)) {
                     logConnection(connection);
@@ -298,15 +421,15 @@ namespace IBM1410SMS
             //  entry (if not already present) and add this connection to its list
             //  of connections.
 
-            foreach(int connectionKey in connectionHash.Keys) {
-                Connection connection = (Connection) connectionHash[connectionKey];
+            foreach(int connectionKey in connectionDict.Keys) {
+                Connection connection = connectionDict[connectionKey];
+                BlockDetail diagramBlockDetail;
 
                 if (connection.toDotFunction > 0) {
 
-                    Dotfunction dotFunction =
-                        (Dotfunction)dotFunctionHash[connection.toDotFunction];
-
-                    if (dotFunction == null) {
+                    Dotfunction dotFunction;
+                    if(!dotFunctionDict.TryGetValue(connection.toDotFunction,
+                        out dotFunction)) {
                         logConnection(connection);
                         logMessage("   Error: Invalid DOT Function (" +
                             connection.toDotFunction.ToString() + ")");
@@ -322,35 +445,37 @@ namespace IBM1410SMS
                         logConnection(connection);
                         logMessage("   Connection to DOT function is not from a diagram block?");
                     }
-                    else if(!diagramBlockHash.ContainsKey(connection.fromDiagramBlock)) {
+                    else if(!diagramBlockDict.TryGetValue(connection.fromDiagramBlock,
+                        out diagramBlockDetail)) {
                         logConnection(connection);
                         logMessage("   Connection to DOT function from invalid diagram block (" +
                             connection.fromDiagramBlock + ")");
+
                     }
                     else {
 
-                        Diagramblock diagramBlock =
-                            ((BlockDetail)diagramBlockHash[connection.fromDiagramBlock]).diagramBlock;
+                        //  At this point, diagramBlockDetail is filled in!
+
+                        Diagramblock diagramBlock = diagramBlockDetail.diagramBlock;
+                        DotDetail dotDetail;
 
                         //  If there is not already a detail entry for this DOT function,
                         //  create one now.
 
-                        if (!dotDetailHash.ContainsKey(dotFunction.idDotFunction)) {                            
-                            DotDetail detail = new DotDetail();
-                            detail.dotFunctionKey = dotFunction.idDotFunction;
-                            detail.page = getDiagramPageName(dotFunction.diagramPage);
-                            detail.row = dotFunction.diagramRowTop;
-                            detail.column = dotFunction.diagramColumnToLeft.ToString();
-                            detail.logicFunction = dotFunction.logicFunction;
-                            detail.connections = new List<DotConnection>();
-                            detail.hasEdgeOutput = false;
-                            dotDetailHash.Add(dotFunction.idDotFunction, detail);
+                        if(!dotDetailDict.TryGetValue(dotFunction.idDotFunction,
+                            out dotDetail)) {
+                            dotDetail = new DotDetail();
+                            dotDetail.dotFunctionKey = dotFunction.idDotFunction;
+                            dotDetail.page = getDiagramPageName(dotFunction.diagramPage);
+                            dotDetail.row = dotFunction.diagramRowTop;
+                            dotDetail.column = dotFunction.diagramColumnToLeft.ToString();
+                            dotDetail.logicFunction = dotFunction.logicFunction;
+                            dotDetail.connections = new List<DotConnection>();
+                            dotDetail.hasEdgeOutput = false;
+                            dotDetail.hasGateOutput = false;
+                            dotDetailDict.Add(dotFunction.idDotFunction, dotDetail);
                         }
 
-                        //  Add a new connection to the detail entry.
-
-                        DotDetail dotDetail = 
-                            (DotDetail) dotDetailHash[dotFunction.idDotFunction];
                         DotConnection dotConnection = new DotConnection();
                         dotConnection.connection = connection;
                         dotConnection.cardType = diagramBlock.cardType;
@@ -375,27 +500,30 @@ namespace IBM1410SMS
                 if((connection.fromDotFunction > 0 && connection.toEdgeSheet > 0) ||
                    (connection.fromDotFunction > 0 && connection.toDiagramBlock > 0)) {
                     Dotfunction dotFunction =
-                        (Dotfunction)dotFunctionHash[connection.fromDotFunction];
+                        dotFunctionDict[connection.fromDotFunction];
+                    DotDetail dotDetail;
 
                     //  Might be a new DOT function we have to add.
 
-                    if (!dotDetailHash.ContainsKey(dotFunction.idDotFunction)) {
-                        DotDetail detail = new DotDetail();
-                        detail.dotFunctionKey = dotFunction.idDotFunction;
-                        detail.page = getDiagramPageName(dotFunction.diagramPage);
-                        detail.row = dotFunction.diagramRowTop;
-                        detail.column = dotFunction.diagramColumnToLeft.ToString();
-                        detail.logicFunction = dotFunction.logicFunction;
-                        detail.connections = new List<DotConnection>();
-                        dotDetailHash.Add(dotFunction.idDotFunction, detail);
-                        detail.hasEdgeOutput = (connection.toEdgeSheet > 0);
-                        detail.hasGateOutput = (connection.toDiagramBlock > 0);
+                    if (!dotDetailDict.TryGetValue(dotFunction.idDotFunction,
+                        out dotDetail)) {
+                        dotDetail = new DotDetail();
+                        dotDetail.dotFunctionKey = dotFunction.idDotFunction;
+                        dotDetail.page = getDiagramPageName(dotFunction.diagramPage);
+                        dotDetail.row = dotFunction.diagramRowTop;
+                        dotDetail.column = dotFunction.diagramColumnToLeft.ToString();
+                        dotDetail.logicFunction = dotFunction.logicFunction;
+                        dotDetail.connections = new List<DotConnection>();
+                        dotDetail.hasEdgeOutput = false;
+                        dotDetail.hasGateOutput = false;
+                        dotDetailDict.Add(dotFunction.idDotFunction, dotDetail);
                     }
-                    else {
-                        DotDetail dotDetail = 
-                            (DotDetail)dotDetailHash[dotFunction.idDotFunction];
-                        dotDetail.hasEdgeOutput = (connection.toEdgeSheet > 0);
-                        dotDetail.hasGateOutput = (connection.toDiagramBlock > 0);
+
+                    if(connection.toEdgeSheet > 0) {
+                        dotDetail.hasEdgeOutput = true;
+                    }
+                    if(connection.toDiagramBlock > 0) {
+                        dotDetail.hasGateOutput = true;
                     }
                 }
             }
@@ -406,7 +534,7 @@ namespace IBM1410SMS
 
             //  Report them in page order!
 
-            foreach(DotDetail detail in dotDetailHash.Values) {
+            foreach(DotDetail detail in dotDetailDict.Values) {
                 if(!dotFunctionsByPage.Contains(detail.page)) {
                     dotFunctionsByPage.Add(detail.page, new List<DotDetail>());
                 }
@@ -421,6 +549,8 @@ namespace IBM1410SMS
                     int loadCount = 0;
                     bool hasSwitch = false;
                     bool hasResistor = false;
+                    BlockDetail diagramBlockDetail;
+
                     List<DotConnection> connections = detail.connections;
                     foreach (DotConnection dotConnection in connections) {
 
@@ -432,18 +562,17 @@ namespace IBM1410SMS
 
                         //  Is the gate open collector?  If not, count it.
 
-                        Diagramblock diagramBlock =
-                            ((BlockDetail)diagramBlockHash[dotConnection.fromDiagramBlock]).diagramBlock;
-                        if (diagramBlock == null) {
+                        if(!diagramBlockDict.TryGetValue(dotConnection.fromDiagramBlock,
+                            out diagramBlockDetail)) {
                             logConnection(dotConnection.connection);
                             logMessage("   Internal Error: DotConnection Diagram Block not " +
                                 "found (" + dotConnection.fromDiagramBlock.ToString() + ")");
                             continue;
                         }
+                        Diagramblock diagramBlock = diagramBlockDetail.diagramBlock;
 
-
-                        Cardgate gate = (Cardgate)cardGateHash[dotConnection.fromGate];
-                        if (gate == null) {
+                        Cardgate gate;
+                        if(!cardGateDict.TryGetValue(dotConnection.fromGate, out gate)) {
                             logConnection(dotConnection.connection);
                             logMessage("   Internal Error:  Card Gate not found (" +
                                 dotConnection.fromGate.ToString() + ")");
@@ -493,10 +622,13 @@ namespace IBM1410SMS
             //  Sometimes a block has an extension.  If a given pin doesn't match
             //  On a given block, check its extensin.
 
-            foreach(int connectionKey in connectionHash.Keys) {
-                Connection connection = (Connection)connectionHash[connectionKey];
+            foreach(int connectionKey in connectionDict.Keys) {
 
-                if((connection.fromPin == "--" ^ connection.toPin == "--") &&
+                //  Give up control                
+
+                Connection connection = connectionDict[connectionKey];
+
+                if ((connection.fromPin == "--" ^ connection.toPin == "--") &&
                     connection.fromDiagramBlock > 0 && connection.toDiagramBlock > 0) {
                     logConnection(connection);
                     logMessage("Block to Block connection has only one internal " +
@@ -504,31 +636,36 @@ namespace IBM1410SMS
                 }
 
                 if(connection.fromDiagramBlock > 0) {
+                    BlockDetail fromDetail;
+                    BlockDetail fromExtendedDetail;
 
                     logDebug(2, "DEBUG: FROM Logic block "     +
                             getDiagramBlockInfo(connection.fromDiagramBlock));
 
-                    BlockDetail detail = 
-                        (BlockDetail)diagramBlockHash[connection.fromDiagramBlock];
-                    if(detail == null) {
+                    if(!diagramBlockDict.TryGetValue(connection.fromDiagramBlock,
+                        out fromDetail)) {
                         logConnection(connection);
                         logMessage("   Error:  Invalid fromDiagramBlock");
+                        continue;
                     }
-                    // else if(connection.fromEdgeSheet > 0 || connection.toEdgeSheet > 0) {
+
+                    // if(connection.fromEdgeSheet > 0 || connection.toEdgeSheet > 0) {
                         //  Ignore connections from to or from edge signals
+                        //continue;
                     // }
+
                     PinDetail pinDetail = 
-                        detail.pinList.Find(x => x.pin == connection.fromPin);
+                        fromDetail.pinList.Find(x => x.pin == connection.fromPin);
                     if(pinDetail == null) {
                         logDebug(2, "DEBUG: Adding pin Detail for Card type " +
-                            Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                            Helpers.getCardTypeType(fromDetail.diagramBlock.cardType) +
                             " FROM pin " + connection.fromPin);
                         pinDetail = new PinDetail();
-                        detail.pinList.Add(pinDetail);
+                        fromDetail.pinList.Add(pinDetail);
 
                         //  Track down the pin
                         List<Gatepin> gatePinList = gatePinTable.getWhere(
-                            "WHERE cardGate = '" + detail.diagramBlock.cardGate +
+                            "WHERE cardGate = '" + fromDetail.diagramBlock.cardGate +
                             "' AND pin = '" + connection.fromPin + "'");
 
                         //  If there was not exactly one match report it unless
@@ -540,8 +677,8 @@ namespace IBM1410SMS
                                 logConnection(connection);
                             }
                             logDebug(2, "DEBUG: Card type " +
-                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
-                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                Helpers.getCardTypeType(fromDetail.diagramBlock.cardType) +
+                                " Gate (" + fromDetail.diagramBlock.cardGate + ")" +
                                 " Pin " + connection.fromPin + " returned " +
                                 gatePinList.Count.ToString() + " matches [expected 1]");
                         }
@@ -552,18 +689,17 @@ namespace IBM1410SMS
 
                         if(gatePinList.Count == 0 && 
                             connection.fromPin != "--" && 
-                            detail.diagramBlock.extendedTo != 0) {
+                            fromDetail.diagramBlock.extendedTo != 0) {
                             logDebug(2, "DEBUG: Trying extended block for FROM connection.");
-                            BlockDetail extendedDetail = 
-                                (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
-                            if(extendedDetail == null) {
+                            if(!diagramBlockDict.TryGetValue(fromDetail.diagramBlock.extendedTo,
+                                out fromExtendedDetail)) {
                                 logConnection(connection);
                                 logMessage("   Error:  Invalid ExtendedTo in fromDiagramBlock");
                             }
                             else {
                                 gatePinList = gatePinTable.getWhere(
                                     "WHERE cardGate = '" + 
-                                    extendedDetail.diagramBlock.cardGate +
+                                    fromExtendedDetail.diagramBlock.cardGate +
                                     "' AND pin = '" + connection.fromPin + "'");
                                 if (gatePinList.Count != 1) {
                                     if(logLevel >= 2) {
@@ -571,8 +707,8 @@ namespace IBM1410SMS
                                     }
                                     logDebug(2, "DEBUG: Extended Block Card type " +
                                         Helpers.getCardTypeType(
-                                            extendedDetail.diagramBlock.cardType) +
-                                        " Gate (" + extendedDetail.diagramBlock.cardGate + ")" +
+                                            fromExtendedDetail.diagramBlock.cardType) +
+                                        " Gate (" + fromExtendedDetail.diagramBlock.cardGate + ")" +
                                         " Pin " + connection.fromPin + " returned " +
                                         gatePinList.Count.ToString() + " matches [expected 1]");
                                 }
@@ -616,38 +752,40 @@ namespace IBM1410SMS
                 }
 
                 if (connection.toDiagramBlock > 0) {
+                    BlockDetail toDetail;
+                    BlockDetail toExtendedDetail;
 
                     logDebug(2, "DEBUG: TO Logic block " +
                         getDiagramBlockInfo(connection.toDiagramBlock));
 
-                    BlockDetail detail =
-                        (BlockDetail)diagramBlockHash[connection.toDiagramBlock];
-                    if (detail == null) {
+                    if(!diagramBlockDict.TryGetValue(connection.toDiagramBlock,
+                        out toDetail)) {
                         logConnection(connection);
                         logMessage("   Error:  Invalid toDiagramBlock");
+                        continue;
                     }
                     // else if (connection.fromEdgeSheet > 0 || connection.toEdgeSheet > 0) {
                         //  Ignore connections from to or from edge signals
                     // }
                     PinDetail pinDetail =
-                        detail.pinList.Find(x => x.pin == connection.toPin);
+                        toDetail.pinList.Find(x => x.pin == connection.toPin);
                     if (pinDetail == null) {
                         logDebug(2, "DEBUG: Adding pin Detail for card type " +
-                             Helpers.getCardTypeType(detail.diagramBlock.cardType) +
+                             Helpers.getCardTypeType(toDetail.diagramBlock.cardType) +
                              " TO pin " + connection.toPin);
 
                         pinDetail = new PinDetail();
-                        detail.pinList.Add(pinDetail);
+                        toDetail.pinList.Add(pinDetail);
 
                         //  Track down the pin
                         List<Gatepin> gatePinList = gatePinTable.getWhere(
-                            "WHERE cardGate = '" + detail.diagramBlock.cardGate +
+                            "WHERE cardGate = '" + toDetail.diagramBlock.cardGate +
                             "' AND pin = '" + connection.toPin + "'");
 
                         if (gatePinList.Count != 1) {
                             logDebug(2, "Card type " +
-                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
-                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                Helpers.getCardTypeType(toDetail.diagramBlock.cardType) +
+                                " Gate (" + toDetail.diagramBlock.cardGate + ")" +
                                 " Pin " + connection.fromPin + " returned " +
                                 gatePinList.Count.ToString() + " matches [expected 1]");
                         }
@@ -661,8 +799,8 @@ namespace IBM1410SMS
                                 logConnection(connection);
                             }
                             logDebug(2, "DEBUG: Card type " +
-                                Helpers.getCardTypeType(detail.diagramBlock.cardType) +
-                                " Gate (" + detail.diagramBlock.cardGate + ")" +
+                                Helpers.getCardTypeType(toDetail.diagramBlock.cardType) +
+                                " Gate (" + toDetail.diagramBlock.cardGate + ")" +
                                 " Pin " + connection.fromPin + " returned " +
                                 gatePinList.Count.ToString() + " matches [expected 1]");
                         }
@@ -673,18 +811,17 @@ namespace IBM1410SMS
 
                         if (gatePinList.Count == 0 &&
                             connection.toPin != "--" &&
-                            detail.diagramBlock.extendedTo != 0) {
+                            toDetail.diagramBlock.extendedTo != 0) {
                             logDebug(2, "DEBUG: Trying extended block for TO connection.");
-                            BlockDetail extendedDetail =
-                                (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
-                            if (extendedDetail == null) {
+                            if(!diagramBlockDict.TryGetValue(toDetail.diagramBlock.extendedTo,
+                                out toExtendedDetail)) {
                                 logConnection(connection);
                                 logMessage("   Error:  Invalid ExtendedTo in toDiagramBlock");
                             }
                             else {
                                 gatePinList = gatePinTable.getWhere(
                                     "WHERE cardGate = '" +
-                                    extendedDetail.diagramBlock.cardGate +
+                                    toExtendedDetail.diagramBlock.cardGate +
                                     "' AND pin = '" + connection.toPin + "'");
                                 if (gatePinList.Count != 1) {
                                     if (logLevel >= 2) {
@@ -692,8 +829,8 @@ namespace IBM1410SMS
                                     }
                                     logDebug(2, "DEBUG: Extended Block Card type " +
                                         Helpers.getCardTypeType(
-                                            extendedDetail.diagramBlock.cardType) +
-                                        " Gate (" + extendedDetail.diagramBlock.cardGate + ")" +
+                                            toExtendedDetail.diagramBlock.cardType) +
+                                        " Gate (" + toExtendedDetail.diagramBlock.cardGate + ")" +
                                         " Pin " + connection.toPin + " returned " +
                                         gatePinList.Count.ToString() + " matches [expected 1]");
                                 }
@@ -738,7 +875,7 @@ namespace IBM1410SMS
             //  Now spin through all of the logic blocks we just assembled, to check
             //  for anomolous connections - in page order.
 
-            foreach(BlockDetail detail in diagramBlockHash.Values) {
+            foreach(BlockDetail detail in diagramBlockDict.Values) {
                 if(!diagramBlocksByPage.Contains(detail.page)) {
                     diagramBlocksByPage.Add(detail.page, new List<BlockDetail>());                
                 }
@@ -762,8 +899,9 @@ namespace IBM1410SMS
                     logDebug(2, "   Pin list has " + detail.pinList.Count.ToString() +
                         " entries.");
 
-                    Cardgate gate = (Cardgate)cardGateHash[detail.diagramBlock.cardGate];
-                    if (gate == null) {
+                    Cardgate gate;
+                    if (!cardGateDict.TryGetValue(detail.diagramBlock.cardGate,
+                        out gate)) {
                         logMessage("Invalid card gate in connection from logic block, " +
                             getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
                         logMessage("");
@@ -774,7 +912,7 @@ namespace IBM1410SMS
 
                     if (detail.diagramBlock.extendedTo != 0) {
                         BlockDetail extendedDetail =
-                            (BlockDetail)diagramBlockHash[detail.diagramBlock.extendedTo];
+                            (BlockDetail)diagramBlockDict[detail.diagramBlock.extendedTo];
                         if (extendedDetail != null) {
                             foreach (PinDetail extendedPinDetail in extendedDetail.pinList) {
                                 inputsCount += extendedPinDetail.connectionsTo.Count;
@@ -935,7 +1073,7 @@ namespace IBM1410SMS
             string info = "Diagram Block ";
 
             Diagramblock diagramBlock =
-                ((BlockDetail)diagramBlockHash[diagramBlockKey]).diagramBlock;
+                ((BlockDetail)diagramBlockDict[diagramBlockKey]).diagramBlock;
             if(diagramBlock == null) {
                 return ("Invalid Diagram Block (" + diagramBlockKey.ToString() + ")");
             }            
@@ -945,30 +1083,39 @@ namespace IBM1410SMS
         }
 
         private string getDiagramPageName(int diagramPageKey) {
-            if(!diagramPageHash.ContainsKey(diagramPageKey)) {
+            string page;
+            Diagrampage diagramPage;
+
+            if(!diagramPageDict.TryGetValue(diagramPageKey, out diagramPage)) {
                 return (" Invalid Diagram page (" + diagramPageKey.ToString() + ")");
             }
-            Diagrampage diagramPage = (Diagrampage)diagramPageHash[diagramPageKey];
-            if(!pageHash.ContainsKey(diagramPage.page)) {
+            
+            if(pageDict.TryGetValue(diagramPage.page,out page)) {
+                return pageDict[diagramPage.page];
+            }
+            else {
                 return(" Invalid Page (" + diagramPage.page.ToString() + ")");
             }
 
-            return ((string)pageHash[diagramPage.page]);
         }
 
         //  Return information on a dot function connection
 
         private string getDotFunctionInfo(int dotFunctionKey) {
             string info = "";
+            Diagrampage diagramPage;
+            Dotfunction dotFunction;
 
-            Dotfunction dotFunction = (Dotfunction)dotFunctionHash[dotFunctionKey];
-            if(dotFunction == null) {
+            if(!dotFunctionDict.TryGetValue(dotFunctionKey, out dotFunction)) {
                 return ("Invalid DOT Function (" + dotFunctionKey.ToString() + ")");
             }
 
-            Diagrampage diagramPage = (Diagrampage)diagramPageHash[dotFunction.diagramPage];
-            info += diagramPage != null ? "Page " + 
-                getDiagramPageName(diagramPage.idDiagramPage) : "(Invalid page) ";
+            if(diagramPageDict.TryGetValue(dotFunction.diagramPage, out diagramPage)) {
+                info += "Page " + getDiagramPageName(diagramPage.idDiagramPage);
+            }
+            else {
+                info += "(Invalid page) ";
+            }
             info += ", row " + dotFunction.diagramRowTop + ", column " +
                 dotFunction.diagramColumnToLeft.ToString();
             return (info);
@@ -978,15 +1125,17 @@ namespace IBM1410SMS
         //  Determine if a card type is a switch
 
         private bool isCardASwitch(int cardTypeKey) {
-            Cardtype type = (Cardtype) cardTypeHash[cardTypeKey];
-            if(type == null) {
+            Cardtype type;
+            if(!cardTypeDict.TryGetValue(cardTypeKey, out type)) { 
                 return false;
             }
-            Logicfamily family = (Logicfamily) logicFamilyHash[type.logicFamily];
-            if(family == null) {
+            Logicfamily family;
+            if(logicFamilyDict.TryGetValue(type.logicFamily,out family)) {
+                return (family.name == "SWITCH");
+            }
+            else {
                 return false;
             }
-            return (family.name == "SWITCH");
         }
 
         //  Write a message to the output
@@ -1004,11 +1153,13 @@ namespace IBM1410SMS
             }
         }
 
-        private void reportButton_Click(object sender, EventArgs e) {
+        private async void reportButton_Click(object sender, EventArgs e) {
             if(!reportButton.Enabled) {
                 return;
             }
             reportButton.Enabled = false;
+            reporting = true;
+            workingLabel.Visible = true;
 
             logFileName = Path.Combine(directoryTextBox.Text,
                 currentMachine.name + "-ConnectionReport.txt");
@@ -1021,11 +1172,16 @@ namespace IBM1410SMS
             logMessage("Connection Report for Machine: " +
                 currentMachine.name);
 
-            doConnectionReport();
+
+            workingBlink();
+            await Task.Run(() => doConnectionReport());
+
 
             //  Show a box, maybe, eventually.
 
             logFile.Close();
+            reporting = false;
+            workingLabel.Visible = false;
             reportButton.Enabled = true;
         }
 
@@ -1042,6 +1198,20 @@ namespace IBM1410SMS
                 reportButton.Enabled = (directoryTextBox.Text.Length > 0);
             }
 
+        }
+
+        //  Routine to blink the working label
+
+        private async void workingBlink() {
+            while(reporting) {
+                if(InvokeRequired) {
+                    Invoke((Action)workingBlink);
+                }
+                else {
+                    workingLabel.Visible = !workingLabel.Visible;
+                }
+                await Task.Delay(750);
+            }
         }
     }
 }
