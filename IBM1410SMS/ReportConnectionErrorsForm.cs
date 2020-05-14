@@ -54,6 +54,9 @@ namespace IBM1410SMS
             public int loadPins { get; set; }  = 0;
             public bool input { get; set; } = false;
             public bool output { get; set; } = false;
+            public bool positive = false;
+            public bool negative = false;
+            public bool nullPolarity = false;
             public List<Connection> connectionsFrom { get; set; } = new List<Connection>();
             public List<Connection> connectionsTo { get; set; } = new List<Connection>();
         }
@@ -756,6 +759,24 @@ namespace IBM1410SMS
                     }
                     logDebug(2, "DEBUG: Adding connection FROM pin " + connection.fromPin);
                     pinDetail.connectionsFrom.Add(connection);
+                    switch(connection.fromPhasePolarity) {
+                        case null:
+                            pinDetail.nullPolarity = true;
+                            break;
+                        case "+":
+                            pinDetail.positive = true;
+                            break;
+                        case "-":
+                            pinDetail.negative = true;
+                            break;
+                        default:
+                            logMessage("Connection (" + connection.idConnection +
+                                ") from dialog block " +
+                                getDiagramBlockInfo(connection.fromDiagramBlock) +
+                                " has an invalid fromPhasePolarity" );
+                            break;
+                    }
+
                 }
 
                 if (connection.toDiagramBlock > 0) {
@@ -959,6 +980,22 @@ namespace IBM1410SMS
                             logMessage("Input to " + msgtype + " pin " +
                                 pinDetail.pin + ", " +
                                 getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
+                        }
+
+                        //  Flag cases where the fromPhasepolarity is null
+
+                        if(pinDetail.nullPolarity) {
+                            logMessage("Output from pin " + pinDetail.pin +
+                                ", " + getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock) +
+                                " has at least one connection with NULL polarity.");
+                        }
+
+                        //  Also flag cases where a pin has both negative and positive outputs
+
+                        if(pinDetail.positive && pinDetail.negative) {
+                            logMessage("Output from pin " + pinDetail.pin +
+                                ", " + getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock) +
+                                " has both positive and negative polarity connections.");
                         }
 
                         //  Flag any connections that are not open collector with a load
