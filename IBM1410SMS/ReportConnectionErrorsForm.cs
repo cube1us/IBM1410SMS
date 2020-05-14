@@ -17,7 +17,7 @@ namespace IBM1410SMS
     public partial class ReportConnectionErrorsForm : Form
     {
 
-        //  Class to store information about a connection to a DOT functino
+        //  Class to store information about a connection to a DOT function
 
         class DotConnection
         {
@@ -229,8 +229,11 @@ namespace IBM1410SMS
             cardSlotGateDict = new Dictionary<string, CardGateDetail>();
             cardSlotUsageDict = new Dictionary<string, CardSlotTypeDetail>();
 
-            Hashtable dotFunctionsByPage = new Hashtable();
-            Hashtable diagramBlocksByPage = new Hashtable();
+            Dictionary<string, List<DotDetail>> dotFunctionsByPage =
+                new Dictionary<string, List<DotDetail>>();
+            Dictionary<string, List<BlockDetail>> diagramBlocksByPage =
+                new Dictionary<string, List<BlockDetail>>();
+            Dictionary<int, int> internalEdgeConnDict = new Dictionary<int, int>();
 
             ArrayList sortedPages = null;
 
@@ -455,12 +458,17 @@ namespace IBM1410SMS
                         logConnection(connection);
                         logMessage("   Connection to DOT function is not from a diagram block?");
                     }
+                    //  The following use case is actually legitimate...
+                    //else if(connection.fromPin == "--") {
+                    //    logConnection(connection);
+                    //    logMessage("   Connection to DOT function is from an " +
+                    //        "internal -- pin.");
+                    //}
                     else if(!diagramBlockDict.TryGetValue(connection.fromDiagramBlock,
                         out diagramBlockDetail)) {
                         logConnection(connection);
                         logMessage("   Connection to DOT function from invalid diagram block (" +
                             connection.fromDiagramBlock + ")");
-
                     }
                     else {
 
@@ -502,6 +510,14 @@ namespace IBM1410SMS
                         dotDetail.connections.Add(dotConnection);
                     }
                 }
+
+                //
+                //  The following use case is actually legitimate...
+                //if(connection.fromDotFunction > 0 && connection.toPin == "--") {
+                //    logConnection(connection);
+                //    logMessage("   Connection from DOT function is to an internal " +
+                //        "-- pin.");
+                //}
 
                 //  Note if this DOT function has a connection to a sheet edge.
                 //  (In those cases, we suppress error messages if the load count is 0)
@@ -545,17 +561,19 @@ namespace IBM1410SMS
             //  Report them in page order!
 
             foreach(DotDetail detail in dotDetailDict.Values) {
-                if(!dotFunctionsByPage.Contains(detail.page)) {
-                    dotFunctionsByPage.Add(detail.page, new List<DotDetail>());
+                List<DotDetail> detailList = null;
+                if(!dotFunctionsByPage.TryGetValue(detail.page, out detailList)) {
+                    detailList = new List<DotDetail>();
+                    dotFunctionsByPage.Add(detail.page, detailList);
                 }
-                ((List<DotDetail>)dotFunctionsByPage[detail.page]).Add(detail);
+                detailList.Add(detail);
             }
 
             sortedPages = new ArrayList(dotFunctionsByPage.Keys);
             sortedPages.Sort();
 
             foreach (string page in sortedPages) {
-                foreach (DotDetail detail in (List<DotDetail>)dotFunctionsByPage[page]) {
+                foreach (DotDetail detail in dotFunctionsByPage[page]) {
                     int loadCount = 0;
                     bool hasSwitch = false;
                     bool hasResistor = false;
@@ -634,16 +652,144 @@ namespace IBM1410SMS
 
             foreach(int connectionKey in connectionDict.Keys) {
 
-                //  Give up control                
-
                 Connection connection = connectionDict[connectionKey];
 
-                if ((connection.fromPin == "--" ^ connection.toPin == "--") &&
-                    connection.fromDiagramBlock > 0 && connection.toDiagramBlock > 0) {
-                    logConnection(connection);
-                    logMessage("Block to Block connection has only one internal " +
-                        "pin of \"--\" [Expect both]");
+                //  Check internal connections (pin "--")
+
+                if (connection.fromPin == "--" ^ connection.toPin == "--") {
+                    if(connection.fromDiagramBlock > 0 && connection.toDiagramBlock > 0) {
+                        logConnection(connection);
+                        logMessage("   Block to Block connection has only one internal " +
+                            "pin of \"--\" [Expect both]");
+                        logMessage("");
+                    }
                 }
+
+                //  We just check -- to -- connections on the FROM side to avoid
+                //  redundant error messages.
+
+                if(connection.fromPin == "--") {
+
+                    //  Block to block internal connection checks
+
+                    if(connection.toPin == "--") {
+                        BlockDetail toBlockDetail = 
+                            diagramBlockDict[connection.toDiagramBlock];
+                        BlockDetail fromBlockDetail =
+                            diagramBlockDict[connection.fromDiagramBlock];
+
+                        //  The following should never happen, but...
+
+                        if(toBlockDetail.page != fromBlockDetail.page) {
+                            logConnection(connection);
+                            logMessage("   Block to Block internal -- connection is on " +
+                                "two different pages");
+                            logMessage("");
+                        }
+
+                        if (toBlockDetail.diagramBlock.cardSlot != 
+                            fromBlockDetail.diagramBlock.cardSlot) {
+                            logConnection(connection);
+                            logMessage("    Block to Block internal -- connection " +
+                                "occupies different card slots - From: " +
+                                Helpers.getCardSlotInfo(
+                                    fromBlockDetail.diagramBlock.cardSlot).ToString() +
+                                ", To: " +
+                                Helpers.getCardSlotInfo(
+                                    toBlockDetail.diagramBlock.cardSlot).ToString());
+                            logMessage("");
+                        }
+                    }
+
+                    //  Block to sheet edge to block internal connection check
+
+                    if(connection.toEdgeSheet != 0) {
+                        string signalName = 
+                            sheetEdgeDict[connection.toEdgeSheet].signalName;
+
+                        //  Internal signals that cross sheets are rare, so I didn't
+                        //  build a dictionary for them.
+
+                        List<Sheetedgeinformation> edges =
+                            sheetEdgeInformationTable.getWhere(
+                                "WHERE signalName = '" + signalName + "'");
+
+                        if(edges.Count != 2) {
+                            logConnection(connection);
+                            logMessage("    Internal -- to Edge connection to signal " +
+                                signalName + " has " + edges.Count + " instances of " +
+                                "the signal name [2 expected]");
+                            string message = "";
+                            foreach(Sheetedgeinformation se in edges) {
+                                message += message.Length == 0 ? "    Page(s): " : ", ";
+                                message += diagramPageDict[se.diagramPage].page;
+                            }
+                            if(message.Length > 0) {
+                                logMessage(message);
+                            }
+                            logMessage("");
+                        }
+
+                        if (edges.Count == 2) {
+
+                            // if(connection.idConnection == 232528) {
+                            //    logMessage("Breakpoint");
+                            // }
+                            Sheetedgeinformation otherEdge = 
+                                edges[0].idSheetEdgeInformation == 
+                                    connection.toEdgeSheet ? edges[1] : edges[0];
+
+                            //  Find the matching connection - there should be only 1.
+
+                            List<Connection> connections = connectionTable.getWhere(
+                                "WHERE fromEdgeSheet = '" + 
+                                connection.toEdgeDestinationSheet + "'");
+
+                            if(connections.Count != 1) {
+                                logConnection(connection);
+                                logMessage("    Internal -- to Edge connection to signal " +
+                                    signalName + " found " + connections.Count.ToString() +
+                                    " toEdgeDestinationSheet connections [1 expected]");
+                                logMessage("");
+                            }
+                            else {
+                                if(signalName != otherEdge.signalName) {
+                                    logConnection(connection);
+                                    logMessage("    Internal --- to Edge connection to " +
+                                        "signals do not match, toEdgeSeet is " +
+                                        signalName + ", toEdgeDestinationSheet is " +
+                                        otherEdge.signalName);
+                                    logMessage("");
+                                }
+
+                                Connection otherConnection = connections[0];
+                                if(connection.toEdgeSheet != 
+                                    otherConnection.fromEdgeOriginSheet ||
+                                    connection.toEdgeDestinationSheet !=
+                                    otherConnection.fromEdgeSheet) {
+                                    logConnection(connection);
+                                    logConnection(otherConnection);
+                                    logDebug(0, "    edge[0] is (" +
+                                        edges[0].idSheetEdgeInformation + "), " +
+                                        "edge[1] is (" +
+                                        edges[1].idSheetEdgeInformation + ")");
+                                    logMessage("    The above connections on internal --" +
+                                        " pin for signals " +
+                                        signalName + " and " + otherEdge.signalName);
+                                    logMessage("      do not match up.");
+                                    logMessage("");
+                                }
+                                else {
+                                    //  Remember this match for later.
+                                    internalEdgeConnDict.Add(connection.toEdgeDestinationSheet
+                                        , connection.toEdgeSheet);
+                                }
+                            }                            
+                        }   
+                    }
+                }
+
+                //  Connections from a diagram block
 
                 if(connection.fromDiagramBlock > 0) {
                     BlockDetail fromDetail;
@@ -757,7 +903,8 @@ namespace IBM1410SMS
                     if (connection.fromLoadPin != null && connection.fromLoadPin.Length > 0) {
                         ++pinDetail.loadPins;
                     }
-                    logDebug(2, "DEBUG: Adding connection FROM pin " + connection.fromPin);
+                    logDebug(2, "DEBUG: Adding connection FROM pin " + 
+                        connection.fromPin);
                     pinDetail.connectionsFrom.Add(connection);
                     switch(connection.fromPhasePolarity) {
                         case null:
@@ -778,6 +925,8 @@ namespace IBM1410SMS
                     }
 
                 }
+
+                //  Connections to a diagram block
 
                 if (connection.toDiagramBlock > 0) {
                     BlockDetail toDetail;
@@ -900,14 +1049,37 @@ namespace IBM1410SMS
                 }
             }
 
-            //  Now spin through all of the logic blocks we just assembled, to check
-            //  for anomolous connections - in page order.
+            //  Now, spin through the connections looking for cases where an internal
+            //  pin is an input FROM an edge connection.  It should already have an
+            //  entry in the internalEdgeConnDict dictionary.
 
-            foreach(BlockDetail detail in diagramBlockDict.Values) {
-                if(!diagramBlocksByPage.Contains(detail.page)) {
-                    diagramBlocksByPage.Add(detail.page, new List<BlockDetail>());                
+            foreach (int connectionKey in connectionDict.Keys) {
+
+                Connection connection = connectionDict[connectionKey];
+
+                if(connection.toPin == "--" && connection.fromEdgeSheet > 0) {
+                    if(!internalEdgeConnDict.ContainsKey(connection.fromEdgeSheet)) {
+                        logConnection(connection);
+                        logMessage("    Connection from Edge TO an internal -- pin " +
+                            "does not have a ");
+                        logMessage("      corresponding connection FROM an " +
+                            "internal -- pin");
+                    }
                 }
-                ((List<BlockDetail>)diagramBlocksByPage[detail.page]).Add(detail);
+            }
+
+
+            //  Now spin through all of the logic blocks we just assembled, to check
+            //  for anomolous connections at the pin/gate level - in page order.
+
+            foreach (BlockDetail detail in diagramBlockDict.Values) {
+                List<BlockDetail> diagramBlocksList;
+                if(!diagramBlocksByPage.TryGetValue(detail.page, 
+                        out diagramBlocksList)) {
+                    diagramBlocksList = new List<BlockDetail>();
+                    diagramBlocksByPage.Add(detail.page, diagramBlocksList);
+                }
+                diagramBlocksList.Add(detail);
             }
 
             sortedPages = new ArrayList(diagramBlocksByPage.Keys);
@@ -917,7 +1089,7 @@ namespace IBM1410SMS
 
                 logDebug(1, "Testing Logic blocks on page " + page);
 
-                foreach(BlockDetail detail in (List<BlockDetail>)diagramBlocksByPage[page]) {
+                foreach(BlockDetail detail in diagramBlocksByPage[page]) {
 
                     int inputsCount = 0;
                     int outputsCount = 0;
@@ -1070,7 +1242,7 @@ namespace IBM1410SMS
 
         private void logConnection(Connection connection) {
 
-            string message = "Connection From: ";
+            string message = "Connection (" + connection.idConnection + ") From: ";
             switch (connection.from) {
                 case "P":
                     message += "Block " + getDiagramBlockInfo(connection.fromDiagramBlock) +
