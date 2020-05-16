@@ -1,16 +1,10 @@
-﻿using System;
+﻿using MySQLFramework;
+using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using MySQLFramework;
-using System.IO;
-using System.Collections;
 
 namespace IBM1410SMS
 {
@@ -89,7 +83,7 @@ namespace IBM1410SMS
         //  defined in the card gate table.  (Eventually this is maybe moved to
         //  helpers, and used during editing?)
 
-        public class LogicCheckTable
+        public class LogicCheckEntry
         {
             public string logicFunction;   //  Special, DELAY, NAND, AND, NOR, OR ...
             public string symbol;          //  DLY, * (any)
@@ -97,7 +91,7 @@ namespace IBM1410SMS
             public string firstChar;       //  +, -, "*" (any)
             public string outputSense;     //  + (top of block), - (bottom), * (any)
 
-            public LogicCheckTable(string logicFunction, string symbol, string blockType,
+            public LogicCheckEntry(string logicFunction, string symbol, string blockType,
                 string firstChar, string outputSense) {
                 this.logicFunction = logicFunction;
                 this.symbol = symbol;
@@ -109,23 +103,23 @@ namespace IBM1410SMS
 
         //  Th
 
-        LogicCheckTable[] logicCheckTable = new LogicCheckTable[]
+        LogicCheckEntry[] logicCheckTable = new LogicCheckEntry[]
         {
-             new LogicCheckTable("Special", "*",   "*",   "*", "*"),
-             new LogicCheckTable("DELAY",   "DLY", "*",   "*", "*"),
-             new LogicCheckTable("NAND",    "*",   "and", "+", "+"),
-             new LogicCheckTable("NAND",    "*",   "or",  "-", "+"),
-             new LogicCheckTable("AND",     "*",   "and", "+", "-"),
-             new LogicCheckTable("AND",     "*",   "or",  "-", "-"),
-             new LogicCheckTable("NOR",     "*",   "and", "-", "+"),
-             new LogicCheckTable("NOR",     "*",   "or",  "+", "+"),
-             new LogicCheckTable("OR",      "*",   "or",  "+", "-"),
-             new LogicCheckTable("OR",      "*",   "and", "-", "-"),
-             new LogicCheckTable("NOT",     "*",   "inv", "+", "+"),
-             new LogicCheckTable("NAND",    "*",   "inv", "+", "+"),  // NAND gate as Inverter
-             new LogicCheckTable("NOR",     "*",   "inv", "-", "+"),  // NOR gate as Inverter
-             new LogicCheckTable("NOT",     "*",   "drv", "+", "+"),
-             new LogicCheckTable("EQUAL",   "*",   "drv", "-", "+"),
+             new LogicCheckEntry("Special", "*",   "*",   "*", "*"),
+             new LogicCheckEntry("DELAY",   "DLY", "*",   "*", "*"),
+             new LogicCheckEntry("NAND",    "*",   "and", "+", "+"),
+             new LogicCheckEntry("NAND",    "*",   "or",  "-", "+"),
+             new LogicCheckEntry("AND",     "*",   "and", "+", "-"),
+             new LogicCheckEntry("AND",     "*",   "or",  "-", "-"),
+             new LogicCheckEntry("NOR",     "*",   "and", "-", "+"),
+             new LogicCheckEntry("NOR",     "*",   "or",  "+", "+"),
+             new LogicCheckEntry("OR",      "*",   "or",  "+", "-"),
+             new LogicCheckEntry("OR",      "*",   "and", "-", "-"),
+             new LogicCheckEntry("NOT",     "*",   "inv", "+", "+"),
+             new LogicCheckEntry("NAND",    "*",   "inv", "+", "+"),  // NAND gate as Inverter
+             new LogicCheckEntry("NOR",     "*",   "inv", "-", "+"),  // NOR gate as Inverter
+             new LogicCheckEntry("NOT",     "*",   "drv", "+", "+"),
+             new LogicCheckEntry("EQUAL",   "*",   "drv", "-", "+"),
         };
 
         DBSetup db = DBSetup.Instance;
@@ -1149,6 +1143,7 @@ namespace IBM1410SMS
                     int outputsCount = 0;
                     string logicBlockSymbol = detail.diagramBlock.symbol;
                     string blockInfo = getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock);
+                    string outputSense = "+";
 
                     logDebug(1, "Testing Logic Block " +
                         getDiagramBlockInfo(detail.diagramBlock.idDiagramBlock));
@@ -1224,6 +1219,10 @@ namespace IBM1410SMS
                                 " has both positive and negative polarity connections.");
                         }
 
+                        if(outputSense == "" && pinDetail.negative) {
+                            outputSense = "-";
+                        }
+
                         //  Flag any connections that are not open collector with a load
                         //  pin specified.
 
@@ -1286,12 +1285,9 @@ namespace IBM1410SMS
                         logicBlockSymbol.Substring(2, 1) : "";
                     string fourthChar = logicBlockSymbol.Length >= 4 ?
                         logicBlockSymbol.Substring(3, 1) : "";
-                    bool andBlock = false;
-                    bool orBlock = false;
-                    bool inverter = false;
-                    bool driver = false;
                     string logicFunction = gate.logicFunction == 0 ?
-                        "NONE" : logicFunctionDict[gate.logicFunction];
+                        "NONE" : logicFunctionDict[gate.logicFunction];                    
+                    string blockType = "";
 
                     switch (firstChar) {
                         case "":
@@ -1301,17 +1297,17 @@ namespace IBM1410SMS
                         case "-":
                             switch (secondChar) {
                                 case "A":
-                                    andBlock = true;
+                                    blockType = "and";
                                     break;
                                 case "O":
-                                    orBlock = true;
+                                    blockType = "or";
                                     break;
                                 case "I":
                                     switch(thirdChar) {
                                         case "A":
                                         case "O":
                                             //  Inverter followed by DOT function
-                                            inverter = true;
+                                            blockType = "inv";
                                             break;
                                         case "P":
                                             if(fourthChar != "A" && fourthChar != "O") {
@@ -1339,10 +1335,10 @@ namespace IBM1410SMS
                             }
                             break;
                         case "D":
-                            driver = true;
+                            blockType = "drv";
                             break;
                         case "I":
-                            inverter = true;
+                            blockType = "inv";
                             if(secondChar != "" && secondChar != "P" && 
                                 secondChar != "A" && secondChar != "O") {
                                 logMessage("Logic Block symbol I not alone or " +
@@ -1385,7 +1381,30 @@ namespace IBM1410SMS
                     //        logicFunction + ": " + blockInfo);
                     //}
 
-                
+                    //  Check this block against a table of valid configurations.
+                    //  A "*" in the table matches anything
+
+                    LogicCheckEntry foundEntry = null;
+                    foreach(LogicCheckEntry entry in logicCheckTable) {
+                        if (entry.logicFunction == logicFunction &&
+                            (entry.symbol == "*" || entry.symbol == logicBlockSymbol) &&
+                            (entry.blockType == "*" || entry.blockType == blockType) &&
+                            (entry.firstChar == "*" || entry.firstChar == firstChar) &&
+                            (entry.outputSense == "*" || entry.outputSense == outputSense)) {
+                            foundEntry = entry;
+                            break;
+                        }
+                    }
+
+                    if(foundEntry == null) {
+                        logMessage("No match on circuit logic / logic block entry for " +
+                            blockInfo);
+                        logMessage("   For card type " + Helpers.getCardTypeType(
+                            detail.diagramBlock.cardType) + " gate " +
+                            gate.number.ToString() + " logic function " + logicFunction);
+                        logMessage("   Block Symbol " + logicBlockSymbol + 
+                            (outputSense == "-" ? " negative" : " positive") + " output.");
+                    }                
                 }
             }
 
