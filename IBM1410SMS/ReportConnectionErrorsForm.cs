@@ -62,6 +62,8 @@ namespace IBM1410SMS
             public Diagramblock diagramBlock { get; set; } = null;
             public string page { get; set; } = "";
             public List<PinDetail> pinList { get; set; }  = new List<PinDetail>();
+            public int gateNumber = 0;
+            public string cardTypeName = "";
         }
 
         //  Class to store information about a given card slot as used
@@ -76,6 +78,16 @@ namespace IBM1410SMS
         {
             public List<string> cardTypes = new List<string>();
             public List<string> firstPage = new List<string>();
+        }
+
+        //  Class to store informationa about how a given gate in a given card type 
+        //  is used in the ALDS.  Key is CardTypeName:Gate#.  usage entries are by 
+        //  SymbolName:PolarityOut
+
+        class CardTypeGateDetail
+        {
+            public string logicFunction;
+            public Dictionary<string, int> usage;
         }
 
         //  Table to allow matching the symbol on a logic block and its output sense
@@ -101,25 +113,45 @@ namespace IBM1410SMS
             }
         };
 
-        //  Th
+        //  TODO: The following should probably really be in a database, as it
+        //  would vary by machine.
 
         LogicCheckEntry[] logicCheckTable = new LogicCheckEntry[]
         {
-             new LogicCheckEntry("Special", "*",   "*",   "*", "*"),
-             new LogicCheckEntry("DELAY",   "DLY", "*",   "*", "*"),
-             new LogicCheckEntry("NAND",    "*",   "and", "+", "+"),
-             new LogicCheckEntry("NAND",    "*",   "or",  "-", "+"),
-             new LogicCheckEntry("AND",     "*",   "and", "+", "-"),
-             new LogicCheckEntry("AND",     "*",   "or",  "-", "-"),
-             new LogicCheckEntry("NOR",     "*",   "and", "-", "+"),
-             new LogicCheckEntry("NOR",     "*",   "or",  "+", "+"),
-             new LogicCheckEntry("OR",      "*",   "or",  "+", "-"),
-             new LogicCheckEntry("OR",      "*",   "and", "-", "-"),
-             new LogicCheckEntry("NOT",     "*",   "inv", "+", "+"),
-             new LogicCheckEntry("NAND",    "*",   "inv", "+", "+"),  // NAND gate as Inverter
-             new LogicCheckEntry("NOR",     "*",   "inv", "-", "+"),  // NOR gate as Inverter
-             new LogicCheckEntry("NOT",     "*",   "drv", "+", "+"),
-             new LogicCheckEntry("EQUAL",   "*",   "drv", "-", "+"),
+             new LogicCheckEntry("NAND",     "*",   "and", "+", "+"),
+             new LogicCheckEntry("NAND",     "*",   "or",  "-", "+"),
+             new LogicCheckEntry("NOT",      "*",   "inv", "I", "+"),
+             new LogicCheckEntry("NAND",     "*",   "inv", "*", "+"),   // NAND gate as Inverter
+             new LogicCheckEntry("NOT",      "*",   "drv", "D", "+"),
+             new LogicCheckEntry("NOT",      "*",   "and", "+", "+"),   // Inverter with +AA symbol
+             new LogicCheckEntry("Trigger",  "T",   "*",   "T", "*"),
+             new LogicCheckEntry("Resistor", "R",   "*",   "R", "*"),
+             new LogicCheckEntry("Resistor", "L",   "*",   "L", "+"),
+             new LogicCheckEntry("Capacitor","CAP", "*",   "C", "*"),
+             new LogicCheckEntry("EQUAL",    "*",   "drv", "D", "-"),
+             new LogicCheckEntry("EQUAL",    "DL",  "drv", "D", "+"),
+             new LogicCheckEntry("EQUAL",    "DE",  "drv", "D", "+"),
+             new LogicCheckEntry("AND",      "*",   "and", "+", "-"),
+             new LogicCheckEntry("AND",      "*",   "or",  "-", "-"),
+             new LogicCheckEntry("NOR",      "*",   "and", "-", "+"),
+             new LogicCheckEntry("NOR",      "*",   "or",  "+", "+"),
+             new LogicCheckEntry("OR",       "*",   "or",  "+", "-"),
+             new LogicCheckEntry("OR",       "*",   "and", "-", "-"),
+             new LogicCheckEntry("NOR",      "*",   "inv", "I", "+"),   // NOR gate as Inverter
+             new LogicCheckEntry("Special",  "*",   "*",   "*", "*"),
+             new LogicCheckEntry("DELAY",    "DLY", "*",   "D", "+"),
+             new LogicCheckEntry("Clamp",    "L",   "*",   "L", "+"),
+             new LogicCheckEntry("Lamp",     "LAMP","*",   "L", "+"),
+             new LogicCheckEntry("Switch",   "TOG", "*",   "T", "*"),
+             new LogicCheckEntry("Switch",   "ROT", "*",   "R", "+"),
+             new LogicCheckEntry("Switch",   "MOM", "*",   "M", "*"),
+             new LogicCheckEntry("SS",       "SS",  "*",   "S", "*"),
+             new LogicCheckEntry("NAND",     "G",   "*",   "G", "+"),   // LS Matrix Switch Gate
+             new LogicCheckEntry("LSS",      "LSS", "*",   "L", "*"),   // LS matrix Switch
+             new LogicCheckEntry("Sense",    "AM",  "*",   "A", "+"),   // Sense Amp.
+             new LogicCheckEntry("AND",      "*",   "drv", "D", "-"),   // Inhibit Driver
+             new LogicCheckEntry("Trigger",  "TV",  "*",   "T", "*"),
+             new LogicCheckEntry("*",        "E",   "*",   "*", "*"),   // Don't check extended blocks
         };
 
         DBSetup db = DBSetup.Instance;
@@ -267,6 +299,8 @@ namespace IBM1410SMS
 
         private void doConnectionReport() {
 
+            logMessage("*** Begin Report on " + DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
+
             pageDict = new Dictionary<int,string>();
             diagramPageDict = new Dictionary<int, Diagrampage>();
             dotFunctionDict = new Dictionary<int, Dotfunction>();
@@ -282,6 +316,8 @@ namespace IBM1410SMS
             Dictionary<string, List<BlockDetail>> diagramBlocksByPage =
                 new Dictionary<string, List<BlockDetail>>();
             Dictionary<int, int> internalEdgeConnDict = new Dictionary<int, int>();
+            Dictionary<string, CardTypeGateDetail> cardTypeGateUsageDict =
+                new Dictionary<string, CardTypeGateDetail>();
 
             ArrayList sortedPages = null;
 
@@ -321,6 +357,7 @@ namespace IBM1410SMS
 
             List<Diagramblock> diagramBlockList = diagramBlockTable.getWhere(
                 "ORDER BY diagramColumn, diagramRow");
+
             foreach(Diagramblock diagramBlock in diagramBlockList) {
                 Diagrampage dp;
                 CardGateDetail cardGateDetail;
@@ -332,6 +369,7 @@ namespace IBM1410SMS
                     detail.diagramBlock = diagramBlock;
                     detail.page = pageDict[dp.page];
                     diagramBlockDict.Add(diagramBlock.idDiagramBlock, detail);
+
                     CardSlotInfo cardSlot = Helpers.getCardSlotInfo(
                         diagramBlock.cardSlot);
                     cardSlotString = cardSlot.ToString();
@@ -364,8 +402,8 @@ namespace IBM1410SMS
                             getDiagramBlockInfo(diagramBlock.idDiagramBlock));
                     }
 
-                    string cardGateKey = 
-                        cardSlotString + ":" + cardGate.number.ToString();
+                    string cardGateNumber = cardGate.number.ToString();
+                    string cardGateKey = cardSlotString + ":" + cardGateNumber;
                     if(!cardSlotGateDict.TryGetValue(cardGateKey,
                         out cardGateDetail)) {
                         cardGateDetail = new CardGateDetail();
@@ -376,13 +414,30 @@ namespace IBM1410SMS
                     // if(!cardGateDetail.pageUsage.Contains(detail.page)) {
                         cardGateDetail.pageUsage.Add(detail.page);
                     // }        
+
+                    //  Create CardGateUsageDict entry if it does not exist, and
+                    //  remember the card gate number associated with this logic block
+                    //  to use later.
+
+                    detail.gateNumber = cardGate.number;
+                    detail.cardTypeName = cardTypeType;
+
+                    string cardTypeGateUsageKey = cardTypeType + ":" + cardGateNumber;
+                    if(!cardTypeGateUsageDict.ContainsKey(cardTypeGateUsageKey)) {
+                        CardTypeGateDetail cardTypeGateDetail = new CardTypeGateDetail();
+                        cardTypeGateDetail.logicFunction =
+                            logicFunctionDict[cardGate.logicFunction];
+                        cardTypeGateDetail.usage = new Dictionary<string, int>();
+                        cardTypeGateUsageDict.Add(cardTypeGateUsageKey, cardTypeGateDetail);
+                    }
                 }
             }
 
             //  Report any cases where a given card gate appears twice in the
             //  ALD's, and that any cases where the card type isn't the same.
 
-            logMessage("*** Begin Duplicate Card Slot:Gate usage Report.");
+            logMessage("*** Begin Duplicate Card Slot:Gate usage Report on " +
+                 DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
             ArrayList cardSlotGateArrayList = new ArrayList(
                 cardSlotGateDict.Keys);
             cardSlotGateArrayList.Sort();
@@ -434,7 +489,8 @@ namespace IBM1410SMS
 
 
 
-            logMessage("*** End Duplicate Card Slot:Gate usage Report.");
+            logMessage("*** End Duplicate Card Slot:Gate usage Report on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
             logMessage("");
 
             //  A list of sheet edge information signals, too...
@@ -471,7 +527,8 @@ namespace IBM1410SMS
                 }
             }
 
-            logMessage("*** Begin DOT Function Connection Checks ***");
+            logMessage("*** Begin DOT Function Connection Checks *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
 
             //  DOT Function checks
 
@@ -684,10 +741,12 @@ namespace IBM1410SMS
 
             }
 
-            logMessage("*** End of DOT Function Check ***");
+            logMessage("*** End of DOT Function Check *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
             logMessage("");
 
-            logMessage("*** Logic Block Connection Check ***");
+            logMessage("*** Logic Block Connection Checks *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
 
             //  Diagram block checks
 
@@ -697,6 +756,8 @@ namespace IBM1410SMS
 
             //  Sometimes a block has an extension.  If a given pin doesn't match
             //  On a given block, check its extension.
+
+            //  Also, build up the counts in the cardTypeGateUsage dictionary.
 
             foreach(int connectionKey in connectionDict.Keys) {
 
@@ -954,15 +1015,19 @@ namespace IBM1410SMS
                     logDebug(2, "DEBUG: Adding connection FROM pin " + 
                         connection.fromPin);
                     pinDetail.connectionsFrom.Add(connection);
+                    string polarity = "";
+
                     switch(connection.fromPhasePolarity) {
                         case null:
                             pinDetail.nullPolarity = true;
                             break;
                         case "+":
                             pinDetail.positive = true;
+                            polarity = "+";
                             break;
                         case "-":
                             pinDetail.negative = true;
+                            polarity = "-";
                             break;
                         default:
                             logMessage("Connection (" + connection.idConnection +
@@ -972,6 +1037,23 @@ namespace IBM1410SMS
                             break;
                     }
 
+                    //  Increment the counter that tracks  usage by card type: gate number
+                    //  (but skip Extension blocks)
+
+                    if(fromDetail.diagramBlock.symbol != "E" ||
+                        fromDetail.diagramBlock.extendedTo == 0) {
+                        string cardTypeGateUsageKey = fromDetail.cardTypeName + ":" +
+                                fromDetail.gateNumber.ToString();
+                        CardTypeGateDetail cardTypeGateDetail =
+                            cardTypeGateUsageDict[cardTypeGateUsageKey];
+                        string usageKey = fromDetail.diagramBlock.symbol + ":" + polarity;
+                        if (!cardTypeGateDetail.usage.ContainsKey(usageKey)) {
+                            cardTypeGateDetail.usage.Add(usageKey, 1);
+                        }
+                        else {
+                            ++cardTypeGateDetail.usage[usageKey];
+                        }
+                    }
                 }
 
                 //  Connections to a diagram block
@@ -1097,6 +1179,62 @@ namespace IBM1410SMS
                 }
             }
 
+            logMessage("*** Card Type:Gate Symbol:Polarity Usage Report *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
+
+            ArrayList cardTypeGateUsageList = new ArrayList(
+                cardTypeGateUsageDict.Keys);
+            cardTypeGateUsageList.Sort();
+
+            string lastCardType = "";
+            foreach (string cardTypeGateUsageKey in cardTypeGateUsageList) {
+                CardTypeGateDetail cardTypeGateDetail =
+                    cardTypeGateUsageDict[cardTypeGateUsageKey];
+                int colonIndex = cardTypeGateUsageKey.IndexOf(':');
+                string cardType = cardTypeGateUsageKey.Substring(0, colonIndex);
+                if (lastCardType != cardType && lastCardType.Length > 0) {
+                    logMessage("");
+                }
+                if (lastCardType != cardType) {
+                    logMessage("Card Type Usage: " + cardType);
+                    lastCardType = cardType;
+                }
+
+                //  Don't report on onused gates to save space (and confusion)
+
+                if(cardTypeGateDetail.usage.Count == 0) {
+                    continue;
+                }
+
+                ArrayList cardSymbols = new ArrayList(cardTypeGateDetail.usage.Keys);
+                cardSymbols.Sort();
+                string symbolMessage = "    Gate:" +
+                    cardTypeGateUsageKey.Substring(colonIndex+1) + "[" +
+                    cardTypeGateDetail.logicFunction + "]  ";
+                string comma = "";
+
+                foreach (string symbol in cardSymbols) {
+                    string s = symbol + cardTypeGateDetail.usage[symbol].ToString();
+                    if (symbolMessage.Length + s.Length > 72) {
+                        logMessage(symbolMessage);
+                        symbolMessage = "        ";
+                        comma = "";
+                    }
+                    symbolMessage += comma + s;
+                    comma = ", ";
+                }
+                if (symbolMessage.Length > 8) {
+                    logMessage(symbolMessage);
+                }
+            }
+
+            logMessage("*** End of Card Type:Gate Symbol:Polarity Usage Report *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
+            logMessage("");
+
+            logMessage("*** Logic Block Pin Connection Checks ***");
+
+
             //  Now, spin through the connections looking for cases where an internal
             //  pin is an input FROM an edge connection.  It should already have an
             //  entry in the internalEdgeConnDict dictionary.
@@ -1219,7 +1357,7 @@ namespace IBM1410SMS
                                 " has both positive and negative polarity connections.");
                         }
 
-                        if(outputSense == "" && pinDetail.negative) {
+                        if(outputSense == "+" && pinDetail.negative) {
                             outputSense = "-";
                         }
 
@@ -1314,6 +1452,7 @@ namespace IBM1410SMS
                                                 logMessage("Logic Block symbol +/-IP not " +
                                                     "followed by A or O: " + blockInfo);
                                             }
+                                            blockType = "inv";
                                             break;
                                         default:
                                             logMessage("Logic block symbol +/-I not " +
@@ -1335,7 +1474,9 @@ namespace IBM1410SMS
                             }
                             break;
                         case "D":
-                            blockType = "drv";
+                            if (logicBlockSymbol != "DLY") {
+                                blockType = "drv";
+                            }
                             break;
                         case "I":
                             blockType = "inv";
@@ -1344,6 +1485,9 @@ namespace IBM1410SMS
                                 logMessage("Logic Block symbol I not alone or " +
                                     "followed by A, O or P: " + blockInfo);
                             }
+                            break;
+                        case "L":
+                            blockType = "load";
                             break;
                         default:
                             break;
@@ -1386,7 +1530,7 @@ namespace IBM1410SMS
 
                     LogicCheckEntry foundEntry = null;
                     foreach(LogicCheckEntry entry in logicCheckTable) {
-                        if (entry.logicFunction == logicFunction &&
+                        if ((entry.logicFunction == "*" || entry.logicFunction == logicFunction) &&
                             (entry.symbol == "*" || entry.symbol == logicBlockSymbol) &&
                             (entry.blockType == "*" || entry.blockType == blockType) &&
                             (entry.firstChar == "*" || entry.firstChar == firstChar) &&
@@ -1403,15 +1547,18 @@ namespace IBM1410SMS
                             detail.diagramBlock.cardType) + " gate " +
                             gate.number.ToString() + " logic function " + logicFunction);
                         logMessage("   Block Symbol " + logicBlockSymbol + 
+                            ", Block type: " + blockType + 
                             (outputSense == "-" ? " negative" : " positive") + " output.");
+                        logMessage("");
                     }                
                 }
             }
 
-            logMessage("*** End of Logic Block Connection Check ***");
+            logMessage("*** End of Logic Block Pin Connection Checks *** on " +
+                DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
             logMessage("");
 
-            logMessage("End of Report.");
+            logMessage("End of Report. " + DateTime.Now.ToString("MM / dd / yyyy hh:mm:ss"));
 
             Parms.setParmValue("machine", currentMachine.idMachine.ToString());
             Parms.setParmValue("report output directory", directoryTextBox.Text);
