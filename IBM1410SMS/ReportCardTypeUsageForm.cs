@@ -53,6 +53,7 @@ namespace IBM1410SMS
         Table<Diagramblock> diagramBlockTable;
         Table<Logiclevels> logicLevelsTable;
         Table<Connection> connectionTable;
+        Table<Cardgate> cardGateTable;
 
         List<Cardtype> cardTypeList;
         List<Diagramblock> diagramBlockList;
@@ -67,6 +68,14 @@ namespace IBM1410SMS
             diagramBlockTable = db.getDiagramBlockTable();
             logicLevelsTable = db.getLogicLevelsTable();
             connectionTable = db.getConnectionTable();
+            cardGateTable = db.getCardGateTable();
+
+            //  Populate the Polarity Combo Box.
+
+            polarityComboBox.Items.Add("*");
+            polarityComboBox.Items.Add("+");
+            polarityComboBox.Items.Add("-");
+            polarityComboBox.SelectedIndex = 0;
 
             //  Clear out any old entries.
 
@@ -80,24 +89,51 @@ namespace IBM1410SMS
             foreach(Cardtype ct in cardTypeList) {
                 cardTypeComboBox.Items.Add(ct.type);
             }
+
+
         }
 
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+            if(cardTypeComboBox.SelectedIndex < 0) {
+                return;
+            }
+
+            currentCardType = cardTypeList[cardTypeComboBox.SelectedIndex];
+
+            // (Re) populate the Card Gate List.
+
+            List<Cardgate> gateList = cardGateTable.getWhere("WHERE cardtype = '" +
+                currentCardType.idCardType + "' ORDER BY cardgate.number");
+            cardGateComboBox.Items.Clear();
+            foreach(Cardgate gate in gateList) {
+                cardGateComboBox.Items.Add(gate);
+            }
+
+        }
+
+        private void reportButton_Click(object sender, EventArgs e) {
+
             cardTypeUsageEntry usageEntry;
+            Cardgate currentGate = null;
 
             List<cardTypeUsageEntry> cardTypeUsageList;
             List<Connection> connectionList;
             List<string> pinList;
 
-            //  When the card type selection changes (re) populate the report.
-
-            //  Get the card type
-
             if(cardTypeComboBox.SelectedIndex < 0) {
                 return;
             }
+
+            reportButton.Enabled = false;
+
+            //  See if the user wants to restrict it by gate number
+
+            if(cardGateComboBox.SelectedIndex >= 0) {
+                currentGate = (Cardgate) cardGateComboBox.SelectedItem;
+            }
+
 
             cardTypeUsageList = new List<cardTypeUsageEntry>();
             currentCardType = cardTypeList[cardTypeComboBox.SelectedIndex];
@@ -113,13 +149,67 @@ namespace IBM1410SMS
             diagramBlockList = diagramBlockTable.getWhere(
                 "WHERE cardType='" + currentCardType.idCardType + "'");
 
-            foreach(Diagramblock db in diagramBlockList) {
+            foreach (Diagramblock db in diagramBlockList) {
+
                 usageEntry = new cardTypeUsageEntry();
                 usageEntry.cardType = currentCardType.type;
                 usageEntry.sheet = Helpers.getDiagramPageName(db.diagramPage);
                 usageEntry.coordinate = db.diagramColumn + db.diagramRow.ToString();
                 usageEntry.inputLevel = logicLevelsTable.getByKey(db.inputMode).logicLevel;
                 usageEntry.outputLevel = logicLevelsTable.getByKey(db.outputMode).logicLevel;
+
+                string currentPolarity = (string) polarityComboBox.SelectedItem;
+                bool polaritySelected =
+                    currentPolarity == "*" ? true : false;
+
+                //  Filter by card gate, if selected.
+
+                if(currentGate != null) {
+                    if(db.cardGate != currentGate.idcardGate) {
+                        continue;
+                    }
+                }
+
+                //  Filter by symbol, if enteried
+
+                if(symbolTextBox.Text != null && symbolTextBox.Text.Length > 0 &&
+                    symbolTextBox.Text != db.symbol) {
+                    continue;
+                }
+
+                //  Output pins FROM the block
+
+                usageEntry.pinsOut = "";
+                pinList = new List<string>();
+                connectionList = connectionTable.getWhere(
+                    "WHERE fromDiagramBlock='" + db.idDiagramBlock + "'");
+                foreach (Connection c in connectionList) {
+                    if (c.fromPin != null && c.fromPin.Length > 0 && !pinList.Contains(c.fromPin)) {
+                        pinList.Add(c.fromPin);
+                    }
+                    if (c.fromLoadPin != null && c.fromLoadPin.Length > 0 &&
+                            !pinList.Contains(c.fromLoadPin)) {
+                        pinList.Add(c.fromLoadPin);
+                    }
+                    if(!polaritySelected && 
+                        (c.fromPhasePolarity != null && 
+                        c.fromPhasePolarity == currentPolarity)) {
+                        polaritySelected = true;
+                    }
+                }
+                pinList.Sort();
+                foreach (string s in pinList) {
+                    if (usageEntry.pinsOut.Length > 0) {
+                        usageEntry.pinsOut += ",";
+                    }
+                    usageEntry.pinsOut += s;
+                }
+
+                //  Filter by output polarity, if selected
+
+                if(!polaritySelected) {
+                    continue;
+                }
 
                 //  Input pins TO the block
 
@@ -140,36 +230,14 @@ namespace IBM1410SMS
                     usageEntry.pinsIn += s;
                 }
 
-                //  Output pins FROM the block
-
-                usageEntry.pinsOut = "";
-                pinList = new List<string>();
-                connectionList = connectionTable.getWhere(
-                    "WHERE fromDiagramBlock='" + db.idDiagramBlock + "'");
-                foreach (Connection c in connectionList) {
-                    if (c.fromPin != null && c.fromPin.Length > 0 && !pinList.Contains(c.fromPin)) {
-                        pinList.Add(c.fromPin);
-                    }
-                    if (c.fromLoadPin != null && c.fromLoadPin.Length > 0 && 
-                            !pinList.Contains(c.fromLoadPin)) {
-                        pinList.Add(c.fromLoadPin);
-                    }
-                }
-                pinList.Sort();
-                foreach (string s in pinList) {
-                    if (usageEntry.pinsOut.Length > 0) {
-                        usageEntry.pinsOut += ",";
-                    }
-                    usageEntry.pinsOut += s;
-                }
-
                 cardTypeUsageList.Add(usageEntry);
             }
 
-            if(cardTypeUsageList.Count <= 0) {
+            if (cardTypeUsageList.Count <= 0) {
                 MessageBox.Show("There were no references to card type " +
                     currentCardType.type, "No references found",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
+                reportButton.Enabled = true;
                 return;
             }
 
@@ -190,14 +258,15 @@ namespace IBM1410SMS
             cardTypeUsageDataGridView.Columns["pinsIn"].HeaderText = "In Pins";
             cardTypeUsageDataGridView.Columns["pinsOut"].HeaderText = "Out";
 
-            cardTypeUsageDataGridView.Columns["cardType"].Width = 5*8;
-            cardTypeUsageDataGridView.Columns["sheet"].Width = 10*8;
-            cardTypeUsageDataGridView.Columns["coordinate"].Width = 7*8;
-            cardTypeUsageDataGridView.Columns["inputLevel"].Width = 4*8;
-            cardTypeUsageDataGridView.Columns["outputLevel"].Width = 4*8;
+            cardTypeUsageDataGridView.Columns["cardType"].Width = 5 * 8;
+            cardTypeUsageDataGridView.Columns["sheet"].Width = 10 * 8;
+            cardTypeUsageDataGridView.Columns["coordinate"].Width = 7 * 8;
+            cardTypeUsageDataGridView.Columns["inputLevel"].Width = 4 * 8;
+            cardTypeUsageDataGridView.Columns["outputLevel"].Width = 4 * 8;
             cardTypeUsageDataGridView.Columns["pinsIn"].Width = 12 * 8;
             cardTypeUsageDataGridView.Columns["pinsOut"].Width = 12 * 8;
 
+            reportButton.Enabled = true;
         }
     }
 }
