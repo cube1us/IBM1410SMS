@@ -37,6 +37,8 @@
             this.applyButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.logicFunctionTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.pinsDataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -156,12 +158,32 @@
             this.label4.Size = new System.Drawing.Size(39, 17);
             this.label4.TabIndex = 12;
             this.label4.Text = "Pins";
+            this.label4.Click += new System.EventHandler(this.label4_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(213, 93);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(83, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Logic Function: ";
+            // 
+            // logicFunctionTextBox
+            // 
+            this.logicFunctionTextBox.Location = new System.Drawing.Point(302, 90);
+            this.logicFunctionTextBox.Name = "logicFunctionTextBox";
+            this.logicFunctionTextBox.ReadOnly = true;
+            this.logicFunctionTextBox.Size = new System.Drawing.Size(100, 20);
+            this.logicFunctionTextBox.TabIndex = 14;
             // 
             // EditCardGatePinsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(516, 425);
+            this.Controls.Add(this.logicFunctionTextBox);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);
@@ -193,5 +215,7 @@
         private System.Windows.Forms.Button applyButton;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox logicFunctionTextBox;
     }
 }

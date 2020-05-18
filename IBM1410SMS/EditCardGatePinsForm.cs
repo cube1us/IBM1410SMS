@@ -53,6 +53,7 @@ namespace IBM1410SMS
         Table<Volumeset> volumeSetTable;
         Table<Cardtype> cardTypeTable;
         Table<Gatepin> gatePinTable;
+        Table<Logicfunction> logicFunctionTable;
 
         List<Volumeset> volumeSetList;
         List<Volume> volumeList;
@@ -62,6 +63,7 @@ namespace IBM1410SMS
         List<Gatepin> deletedPinsList;
         List<Gatepin> gatePinsList;
         List<validGatePin> gatePinComboBoxList;
+        List<Logicfunction> logicFunctionList;
 
         BindingList<Gatepin> gatePinsBindingList;
 
@@ -77,6 +79,11 @@ namespace IBM1410SMS
             volumeSetTable = db.getVolumeSetTable();
             cardTypeTable = db.getCardTypeTable();
             gatePinTable = db.getGatePinTable();
+            logicFunctionTable = db.getLogicFunctionTable();
+
+            //  Get a list of all of the logic functions for convenience
+
+            logicFunctionList = logicFunctionTable.getAll();
 
             //  Build a list of valid gate pins for the combo box, and
             //  also add a null entry for when the combo box is first 
@@ -439,6 +446,9 @@ namespace IBM1410SMS
             }
 
             currentCardGate = cardGatesList[cardGatesComboBox.SelectedIndex];
+            Logicfunction function = logicFunctionList.Find(
+                x => x.idLogicFunction == currentCardGate.logicFunction);
+            logicFunctionTextBox.Text = function != null ? function.name : "?UNKNOWN?";
             populatePins(currentCardGate);
         }
 
@@ -650,6 +660,10 @@ namespace IBM1410SMS
 
                 populatePins(currentCardGate);
             }
+        }
+
+        private void label4_Click(object sender, EventArgs e) {
+
         }
     }            
 }
