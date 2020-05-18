@@ -64,6 +64,8 @@ namespace IBM1410SMS
             public List<PinDetail> pinList { get; set; }  = new List<PinDetail>();
             public int gateNumber = 0;
             public string cardTypeName = "";
+            public bool countedPositiveOuput = false;
+            public bool countedNegativeOuput = false;
         }
 
         //  Class to store information about a given card slot as used
@@ -368,6 +370,8 @@ namespace IBM1410SMS
                     BlockDetail detail = new BlockDetail();
                     detail.diagramBlock = diagramBlock;
                     detail.page = pageDict[dp.page];
+                    detail.countedPositiveOuput = false;
+                    detail.countedNegativeOuput = false;
                     diagramBlockDict.Add(diagramBlock.idDiagramBlock, detail);
 
                     CardSlotInfo cardSlot = Helpers.getCardSlotInfo(
@@ -1038,20 +1042,39 @@ namespace IBM1410SMS
                     }
 
                     //  Increment the counter that tracks  usage by card type: gate number
-                    //  (but skip Extension blocks)
+                    //  (but skip Extension blocks) -- but a given diagram block can only
+                    //  have, at most, one of each.
 
                     if(fromDetail.diagramBlock.symbol != "E" ||
                         fromDetail.diagramBlock.extendedTo == 0) {
-                        string cardTypeGateUsageKey = fromDetail.cardTypeName + ":" +
-                                fromDetail.gateNumber.ToString();
-                        CardTypeGateDetail cardTypeGateDetail =
-                            cardTypeGateUsageDict[cardTypeGateUsageKey];
-                        string usageKey = fromDetail.diagramBlock.symbol + ":" + polarity;
-                        if (!cardTypeGateDetail.usage.ContainsKey(usageKey)) {
-                            cardTypeGateDetail.usage.Add(usageKey, 1);
-                        }
-                        else {
-                            ++cardTypeGateDetail.usage[usageKey];
+
+                        //  Only count the + or - output from this logic block if we
+                        //  have not already done so.
+
+                        if((pinDetail.negative && !fromDetail.countedNegativeOuput) ||
+                            (pinDetail.positive && !fromDetail.countedPositiveOuput)) {
+
+                            string usageKey = fromDetail.diagramBlock.symbol + ":" + polarity;
+                            string cardTypeGateUsageKey = fromDetail.cardTypeName + ":" +
+                                    fromDetail.gateNumber.ToString();
+                            CardTypeGateDetail cardTypeGateDetail =
+                                cardTypeGateUsageDict[cardTypeGateUsageKey];
+                            if (!cardTypeGateDetail.usage.ContainsKey(usageKey)) {
+                                cardTypeGateDetail.usage.Add(usageKey, 1);
+                            }
+                            else {
+                                ++cardTypeGateDetail.usage[usageKey];
+                            }
+
+                            //  Flag the + or - output from this logic block so we dont'
+                            //  count it again later.
+
+                            if(pinDetail.negative) {
+                                fromDetail.countedNegativeOuput = true;
+                            }
+                            else {
+                                fromDetail.countedPositiveOuput = true;
+                            }
                         }
                     }
                 }
