@@ -32,5 +32,6 @@ namespace IBM1410SMS
 		[MyColumn] public int flipped { get; set; }
 		[MyColumn] public string notes { get; set; }
 		[MyColumn] public int noHDLGeneration { get; set; }
+		[MyColumn] public int checkExempt { get; set; }
 	}
 }

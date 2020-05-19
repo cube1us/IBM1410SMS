@@ -28,5 +28,6 @@ namespace IBM1410SMS
 		[MyColumn] public int inputLevel { get; set; }
 		[MyColumn] public int outputLevel { get; set; }
 		[MyColumn] public int? componentValue { get; set; }
+		[MyColumn] public int noOutExempt { get; set; }
 	}
 }

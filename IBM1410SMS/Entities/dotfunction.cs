@@ -19,5 +19,6 @@ namespace IBM1410SMS
 		[MyColumn] public string diagramRowTop { get; set; }
 		[MyColumn] public int diagramColumnToLeft { get; set; }
 		[MyColumn] public string logicFunction { get; set; }
+		[MyColumn] public int checkExempt { get; set; }
 	}
 }

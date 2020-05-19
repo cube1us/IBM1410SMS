@@ -17,5 +17,7 @@ namespace IBM1410SMS
 		[MyColumn(Key=true)] public int idPanel { get; set; }
 		[MyColumn] public string panel { get; set; }
 		[MyColumn] public int gate { get; set; }
+		[MyColumn] public int maxColumn { get; set; }
+		[MyColumn] public string validRows { get; set; }
 	}
 }
