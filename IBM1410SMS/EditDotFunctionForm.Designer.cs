@@ -47,6 +47,7 @@
             this.connectionsDataGridView = new System.Windows.Forms.DataGridView();
             this.label6 = new System.Windows.Forms.Label();
             this.addInputOutputButton = new System.Windows.Forms.Button();
+            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.connectionsDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -251,7 +252,7 @@
             // addInputOutputButton
             // 
             this.addInputOutputButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.addInputOutputButton.Location = new System.Drawing.Point(325, 159);
+            this.addInputOutputButton.Location = new System.Drawing.Point(216, 159);
             this.addInputOutputButton.Name = "addInputOutputButton";
             this.addInputOutputButton.Size = new System.Drawing.Size(115, 23);
             this.addInputOutputButton.TabIndex = 27;
@@ -259,11 +260,23 @@
             this.addInputOutputButton.UseVisualStyleBackColor = true;
             this.addInputOutputButton.Click += new System.EventHandler(this.addOutputButton_Click);
             // 
+            // exemptCheckBox
+            // 
+            this.exemptCheckBox.AutoSize = true;
+            this.exemptCheckBox.Location = new System.Drawing.Point(383, 165);
+            this.exemptCheckBox.Name = "exemptCheckBox";
+            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
+            this.exemptCheckBox.TabIndex = 28;
+            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
+            this.toolTip1.SetToolTip(this.exemptCheckBox, "Select to suppress error messages for this DOT Function in validation reports");
+            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditDotFunctionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(592, 398);
+            this.Controls.Add(this.exemptCheckBox);
             this.Controls.Add(this.addInputOutputButton);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.connectionsDataGridView);
@@ -313,5 +326,6 @@
         private System.Windows.Forms.DataGridView connectionsDataGridView;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button addInputOutputButton;
+        private System.Windows.Forms.CheckBox exemptCheckBox;
     }
 }

@@ -103,6 +103,7 @@ namespace IBM1410SMS
                 dotFunction.diagramRowTop = diagramRow;
                 dotFunction.diagramColumnToLeft = diagramColumn;
                 dotFunction.logicFunction = "A";
+                dotFunction.checkExempt = 0;
                 deleteButton.Visible = false;
             }
             else {
@@ -115,6 +116,8 @@ namespace IBM1410SMS
             else {
                 orRadioButton.Select();
             }
+
+            exemptCheckBox.Checked = (dotFunction.checkExempt != 0);
 
             currentDotFunction = dotFunction;
 
@@ -393,6 +396,7 @@ namespace IBM1410SMS
 
             currentDotFunction.logicFunction =
                 andRadioButton.Checked ? "A" : "O";
+            currentDotFunction.checkExempt = exemptCheckBox.Checked ? 1 : 0;
             if(currentDotFunction.idDotFunction == 0) {
                 action = "Added";
                 currentDotFunction.idDotFunction = IdCounter.incrementCounter();

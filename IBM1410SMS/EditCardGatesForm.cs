@@ -439,6 +439,17 @@ namespace IBM1410SMS
             cardGatesDataGridView.Columns.Remove("outputLevel");
             cardGatesDataGridView.Columns.Insert(12, outputLevelColumn);
 
+            //  And the No Ouput Exempt Column
+
+            DataGridViewCheckBoxColumn noOutputExemptColumn =
+                new DataGridViewCheckBoxColumn();
+            noOutputExemptColumn.DataPropertyName = "noOutExempt";
+            noOutputExemptColumn.HeaderText = "No Out Exempt";
+            noOutputExemptColumn.TrueValue = 1;
+            noOutputExemptColumn.FalseValue = 0;
+            noOutputExemptColumn.Width = 6 * 8;
+            cardGatesDataGridView.Columns.Remove("noOutExempt");
+            cardGatesDataGridView.Columns.Insert(13, noOutputExemptColumn);
         }
 
         private void volumeComboBox_SelectedIndexChanged(object sender, EventArgs e) {

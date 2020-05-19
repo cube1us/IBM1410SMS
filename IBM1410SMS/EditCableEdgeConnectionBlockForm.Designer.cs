@@ -67,6 +67,8 @@
             this.selectDestRowLabel = new System.Windows.Forms.Label();
             this.destinationColumnTextBox = new System.Windows.Forms.TextBox();
             this.selectDestColumnLabel = new System.Windows.Forms.Label();
+            this.doNotCrossCheckConnectorsCheckBox = new System.Windows.Forms.CheckBox();
+            this.doNotCrossCheckEdgeConnectionCheckBox = new System.Windows.Forms.CheckBox();
             this.applyButton = new System.Windows.Forms.Button();
             this.deleteButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
@@ -75,8 +77,6 @@
             this.destinationSeparatorLabel = new System.Windows.Forms.Label();
             this.destinationLabel = new System.Windows.Forms.Label();
             this.explicitDestinationCheckBox = new System.Windows.Forms.CheckBox();
-            this.doNotCrossCheckConnectorsCheckBox = new System.Windows.Forms.CheckBox();
-            this.doNotCrossCheckEdgeConnectionCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // diagramRowTextBox
@@ -378,8 +378,8 @@
             this.cardColumnTextBox.TabIndex = 85;
             this.toolTip1.SetToolTip(this.cardColumnTextBox, "The column of the card slot that contains the card associated with this cable/edg" +
         "e connection block");
-            this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             this.cardColumnTextBox.Leave += new System.EventHandler(this.cardColumnTextBox_Leave);
+            this.cardColumnTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.cardColumnTextBox_Validating);
             // 
             // label7
             // 
@@ -501,7 +501,7 @@
             this.destinationColumnTextBox.TabIndex = 126;
             this.toolTip1.SetToolTip(this.destinationColumnTextBox, "The column of the card slot of the destination for this cable/edge connection blo" +
         "ck");
-            this.destinationColumnTextBox.TextChanged += new System.EventHandler(this.destinationColumnTextBox_TextChanged);
+            this.destinationColumnTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.destinationColumnTextBox_Validating);
             // 
             // selectDestColumnLabel
             // 
@@ -512,6 +512,29 @@
             this.selectDestColumnLabel.TabIndex = 125;
             this.selectDestColumnLabel.Text = "Card Column:";
             this.toolTip1.SetToolTip(this.selectDestColumnLabel, "The column of the card slot for the destination of this cable/edge connection");
+            // 
+            // doNotCrossCheckConnectorsCheckBox
+            // 
+            this.doNotCrossCheckConnectorsCheckBox.AutoSize = true;
+            this.doNotCrossCheckConnectorsCheckBox.Location = new System.Drawing.Point(186, 240);
+            this.doNotCrossCheckConnectorsCheckBox.Name = "doNotCrossCheckConnectorsCheckBox";
+            this.doNotCrossCheckConnectorsCheckBox.Size = new System.Drawing.Size(105, 17);
+            this.doNotCrossCheckConnectorsCheckBox.TabIndex = 136;
+            this.doNotCrossCheckConnectorsCheckBox.Text = "No Conn. Check";
+            this.toolTip1.SetToolTip(this.doNotCrossCheckConnectorsCheckBox, "Select to inhibit checking this blocks connection with its destination");
+            this.doNotCrossCheckConnectorsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // doNotCrossCheckEdgeConnectionCheckBox
+            // 
+            this.doNotCrossCheckEdgeConnectionCheckBox.AutoSize = true;
+            this.doNotCrossCheckEdgeConnectionCheckBox.Location = new System.Drawing.Point(297, 240);
+            this.doNotCrossCheckEdgeConnectionCheckBox.Name = "doNotCrossCheckEdgeConnectionCheckBox";
+            this.doNotCrossCheckEdgeConnectionCheckBox.Size = new System.Drawing.Size(102, 17);
+            this.doNotCrossCheckEdgeConnectionCheckBox.TabIndex = 137;
+            this.doNotCrossCheckEdgeConnectionCheckBox.Text = "No Edge Check";
+            this.toolTip1.SetToolTip(this.doNotCrossCheckEdgeConnectionCheckBox, "Select to inihibit cross checks between this block and the ALD Diagram  Edge Conn" +
+        "ector Location lists");
+            this.doNotCrossCheckEdgeConnectionCheckBox.UseVisualStyleBackColor = true;
             // 
             // applyButton
             // 
@@ -590,29 +613,6 @@
             this.explicitDestinationCheckBox.Text = "Explicit Destination";
             this.explicitDestinationCheckBox.UseVisualStyleBackColor = true;
             this.explicitDestinationCheckBox.CheckedChanged += new System.EventHandler(this.explicitDestinationCheckBox_CheckedChanged);
-            // 
-            // doNotCrossCheckConnectorsCheckBox
-            // 
-            this.doNotCrossCheckConnectorsCheckBox.AutoSize = true;
-            this.doNotCrossCheckConnectorsCheckBox.Location = new System.Drawing.Point(186, 240);
-            this.doNotCrossCheckConnectorsCheckBox.Name = "doNotCrossCheckConnectorsCheckBox";
-            this.doNotCrossCheckConnectorsCheckBox.Size = new System.Drawing.Size(105, 17);
-            this.doNotCrossCheckConnectorsCheckBox.TabIndex = 136;
-            this.doNotCrossCheckConnectorsCheckBox.Text = "No Conn. Check";
-            this.toolTip1.SetToolTip(this.doNotCrossCheckConnectorsCheckBox, "Select to inhibit checking this blocks connection with its destination");
-            this.doNotCrossCheckConnectorsCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // doNotCrossCheckEdgeConnectionCheckBox
-            // 
-            this.doNotCrossCheckEdgeConnectionCheckBox.AutoSize = true;
-            this.doNotCrossCheckEdgeConnectionCheckBox.Location = new System.Drawing.Point(297, 240);
-            this.doNotCrossCheckEdgeConnectionCheckBox.Name = "doNotCrossCheckEdgeConnectionCheckBox";
-            this.doNotCrossCheckEdgeConnectionCheckBox.Size = new System.Drawing.Size(102, 17);
-            this.doNotCrossCheckEdgeConnectionCheckBox.TabIndex = 137;
-            this.doNotCrossCheckEdgeConnectionCheckBox.Text = "No Edge Check";
-            this.toolTip1.SetToolTip(this.doNotCrossCheckEdgeConnectionCheckBox, "Select to inihibit cross checks between this block and the ALD Diagram  Edge Conn" +
-        "ector Location lists");
-            this.doNotCrossCheckEdgeConnectionCheckBox.UseVisualStyleBackColor = true;
             // 
             // EditCableEdgeConnectionBlockForm
             // 

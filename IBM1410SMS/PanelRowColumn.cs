@@ -50,6 +50,7 @@ namespace IBM1410SMS
         public int maxCol { get; set; }
 
         public bool validCoordinate {get;}
+        public string validRows { get; set; }
 
         public PanelRowColumn() {
 
@@ -59,7 +60,7 @@ namespace IBM1410SMS
         //  the range from  parameters directly.
 
         public PanelRowColumn(Panel panel, string minRow, string maxRow,
-            int minCol, int maxCol) {
+            int minCol, int maxCol, string validRows) {
 
 
             //  First, copy the info from the specified entity.
@@ -103,6 +104,7 @@ namespace IBM1410SMS
             this.maxRow = maxRow;
             this.minCol = minCol;
             this.maxCol = maxCol;
+            this.validRows = validRows;
             validCoordinate = true;
         }
 
@@ -116,6 +118,7 @@ namespace IBM1410SMS
             Table<Cardslot> cardSlotTable = db.getCardSlotTable();
             List<Cardslot> cardSlotList = cardSlotTable.getWhere(
                 "WHERE panel='" + panel.idPanel + "'");
+            List<string> validRowsSorted;
 
 
             idPanel = panel.idPanel;
@@ -159,10 +162,21 @@ namespace IBM1410SMS
 
             }
 
+            if(panel.validRows != null) {
+                validRowsSorted = new List<string>(
+                    panel.validRows.Split(new char[] { ',' }));
+                validRowsSorted.Sort();
+            }
+            else {
+                validRowsSorted = new List<string>();
+            }
+
+            validRows = String.Join(",",validRowsSorted);
+
             //  Now, make sure that they were all valid, so we don't
             //  have a GIGO issue...
 
-            if(String.Compare(minRow,"ZZ",false) == 0) {
+            if (String.Compare(minRow,"ZZ",false) == 0) {
                 throw new ArgumentOutOfRangeException(
                     String.Format("No valid minimum Row value in cardslot table " +
                     "for panel ID {0}", panel.idPanel));

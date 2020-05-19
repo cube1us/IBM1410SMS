@@ -253,6 +253,8 @@ namespace IBM1410SMS
             panelsDataGridView.Columns["minCol"].Width = 10 * 6;
             panelsDataGridView.Columns["maxCol"].HeaderText = "max " + columnLabel.Substring(0, 3);
             panelsDataGridView.Columns["maxCol"].Width = 10 * 6;
+            panelsDataGridView.Columns["validRows"].HeaderText = "Valid " + rowLabel + "s";
+            panelsDataGridView.Columns["validRows"].Width = 30 * 8;
         }
 
 
@@ -599,6 +601,9 @@ namespace IBM1410SMS
 
                         Panel panel = new Panel();
                         panel.panel = prc.panel;
+                        panel.validRows = prc.validRows;
+                        panel.maxColumn = prc.maxCol;
+                        panel.validRows = "";       // User has to fill this in.
                         if (prc.idPanel == 0) {
                             panel.idPanel = IdCounter.incrementCounter();
                             panel.gate = currentMachineGate.idGate;
@@ -611,6 +616,7 @@ namespace IBM1410SMS
                         }
                         else { // modified
                             panel.idPanel = prc.idPanel;
+                            panel.validRows = prc.validRows;
                             panel.gate = prc.gate;
                             panelTable.update(panel);
                             message += panelLabel + " " + panel.panel +

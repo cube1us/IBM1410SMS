@@ -119,7 +119,7 @@
             this.panelsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.panelsDataGridView.Location = new System.Drawing.Point(26, 142);
             this.panelsDataGridView.Name = "panelsDataGridView";
-            this.panelsDataGridView.Size = new System.Drawing.Size(403, 150);
+            this.panelsDataGridView.Size = new System.Drawing.Size(605, 150);
             this.panelsDataGridView.TabIndex = 9;
             this.toolTip1.SetToolTip(this.panelsDataGridView, "Enter Panels Here");
             this.panelsDataGridView.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.panelsDataGridView_CellValidating);
@@ -152,7 +152,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(460, 386);
+            this.ClientSize = new System.Drawing.Size(662, 386);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.panelsDataGridView);

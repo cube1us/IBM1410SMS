@@ -92,7 +92,7 @@
             this.cardGatesDataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.cardGatesDataGridView.Location = new System.Drawing.Point(15, 106);
             this.cardGatesDataGridView.Name = "cardGatesDataGridView";
-            this.cardGatesDataGridView.Size = new System.Drawing.Size(698, 269);
+            this.cardGatesDataGridView.Size = new System.Drawing.Size(735, 269);
             this.cardGatesDataGridView.TabIndex = 4;
             this.cardGatesDataGridView.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.cardGatesDataGridView_CellValidating);
             this.cardGatesDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.cardGatesDataGridView_CellValueChanged);
@@ -135,7 +135,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(725, 428);
+            this.ClientSize = new System.Drawing.Size(762, 428);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);

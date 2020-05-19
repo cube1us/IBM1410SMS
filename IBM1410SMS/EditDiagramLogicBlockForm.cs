@@ -236,6 +236,7 @@ namespace IBM1410SMS
                 currentDiagramBlock.notes = "";
                 currentDiagramBlock.flipped = 0;
                 currentDiagramBlock.noHDLGeneration = 0;
+                currentDiagramBlock.checkExempt = 0;
 
                 if(cardLocation != null ) {
                     currentDiagramBlock.cardSlot = cardLocation.cardSlot;
@@ -438,6 +439,7 @@ namespace IBM1410SMS
             diagramBlockTitleTextBox.Text = currentDiagramBlock.title;
             symbolTextBox.Text = currentDiagramBlock.symbol;
             flippedCheckBox.Checked = (currentDiagramBlock.flipped == 1);
+            exemptCheckBox.Checked = (currentDiagramBlock.checkExempt == 1);
             noHDLGen.Checked = (currentDiagramBlock.noHDLGeneration == 1);
             blockConfigurationTextBox.Text = currentDiagramBlock.blockConfiguration;
             notesTextBox.Text =
@@ -853,6 +855,7 @@ namespace IBM1410SMS
             currentDiagramBlock.notes = notesTextBox.Text;
             currentDiagramBlock.flipped = flippedCheckBox.Checked ? 1 : 0;
             currentDiagramBlock.noHDLGeneration = noHDLGen.Checked ? 1 : 0;
+            currentDiagramBlock.checkExempt = exemptCheckBox.Checked ? 1 : 0;
 
             //  Tell the user what the update will actually do...
 
@@ -942,6 +945,7 @@ namespace IBM1410SMS
                         extensionBlock.notes = "";
                         extensionBlock.flipped = currentDiagramBlock.flipped;
                         extensionBlock.noHDLGeneration = currentDiagramBlock.noHDLGeneration;
+                        extensionBlock.checkExempt = currentDiagramBlock.checkExempt;
                         diagramBlockTable.insert(extensionBlock);
                     }
                     message += action + 
@@ -1092,7 +1096,8 @@ namespace IBM1410SMS
                 currentDiagramBlock.blockConfiguration != blockConfigurationTextBox.Text ||
                 currentDiagramBlock.notes != notesTextBox.Text ||
                 (currentDiagramBlock.noHDLGeneration == 1) != noHDLGen.Checked ||
-                (currentDiagramBlock.flipped == 1) != flippedCheckBox.Checked
+                (currentDiagramBlock.flipped == 1) != flippedCheckBox.Checked ||
+                (currentDiagramBlock.checkExempt == 1) != exemptCheckBox.Checked
                 );
         }
 

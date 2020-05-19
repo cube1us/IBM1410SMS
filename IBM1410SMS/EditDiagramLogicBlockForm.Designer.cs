@@ -81,6 +81,7 @@
             this.label20 = new System.Windows.Forms.Label();
             this.editConnectionsButton = new System.Windows.Forms.Button();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
+            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -656,11 +657,23 @@
             this.cardColumnTextBox.TabIndex = 85;
             this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
             // 
+            // exemptCheckBox
+            // 
+            this.exemptCheckBox.AutoSize = true;
+            this.exemptCheckBox.Location = new System.Drawing.Point(470, 365);
+            this.exemptCheckBox.Name = "exemptCheckBox";
+            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
+            this.exemptCheckBox.TabIndex = 117;
+            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
+            this.toolTip1.SetToolTip(this.exemptCheckBox, "Check to suppress report error messages for this block");
+            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditDiagramLogicBlockForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(696, 470);
+            this.Controls.Add(this.exemptCheckBox);
             this.Controls.Add(this.noHDLGen);
             this.Controls.Add(this.notesTextBox);
             this.Controls.Add(this.label22);
@@ -782,5 +795,6 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.TextBox notesTextBox;
         private System.Windows.Forms.CheckBox noHDLGen;
+        private System.Windows.Forms.CheckBox exemptCheckBox;
     }
 }

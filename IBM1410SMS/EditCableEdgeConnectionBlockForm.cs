@@ -75,6 +75,9 @@ namespace IBM1410SMS
         List<CardSlotInfo> impliedDestinationDestinations = new List<CardSlotInfo>();
         List<Cableimplieddestinations> impliedDestinationsRules = 
             new List<Cableimplieddestinations>();
+        List<string> sourceValidRows = new List<string>();
+        List<string> destValidRows = new List<string>();
+
 
         char[] impliedDestinationDelimeters = { ',' };
         string[] cableConnectorCardTypes = { "CONN", "CABL" };
@@ -212,10 +215,10 @@ namespace IBM1410SMS
                 Console.WriteLine("Diagram machine Key = " + machine.idMachine);
             }
 
-            foreach (string row in Helpers.validRows) {
-                cardRowComboBox.Items.Add(row);
-                destinationRowComboBox.Items.Add(row);
-            }
+            // foreach (string row in Helpers.validHelpers.validRows) {
+            //    cardRowComboBox.Items.Add(row);
+            //    destinationRowComboBox.Items.Add(row);
+            // }
 
             //  If the cable/edge connection block object passed to us is null, create
             //  one, and fill in as much as we can from the card location
@@ -482,8 +485,23 @@ namespace IBM1410SMS
             else {
                 panelComboBox.SelectedItem = panelList[0];
             }
-            currentPanel = (Panel)panelComboBox.SelectedItem;
 
+            currentPanel = (Panel)panelComboBox.SelectedItem;
+            if(currentPanel.validRows != null) {
+                sourceValidRows = new List<string>(
+                    currentPanel.validRows.Split(new char[] { ',' }));
+            }
+            else {
+                sourceValidRows = new List<string>(Helpers.validRows);
+            }
+            cardRowComboBox.Items.Clear();
+            foreach (string row in sourceValidRows) {
+                cardRowComboBox.Items.Add(row);
+            }
+            if(cardRowComboBox.Items.IndexOf(currentCardSlotInfo.row) < 0 ) {
+                cardRowComboBox.Items.Add(currentCardSlotInfo.row);
+            }
+            cardRowComboBox.SelectedItem = currentCardSlotInfo.row;
         }
 
         //  Destination panel
@@ -508,6 +526,22 @@ namespace IBM1410SMS
             }
             currentDestinationPanel = (Panel)destinationPanelComboBox.SelectedItem;
 
+            if(currentDestinationPanel.validRows != null) {
+                destValidRows = new List<string>(
+                    currentDestinationPanel.validRows.Split(new char[] { ',' }));
+            }
+            else {
+                destValidRows = new List<string>(Helpers.validRows);
+            }
+            destinationRowComboBox.Items.Clear();
+            foreach (string row in destValidRows) {
+                destinationRowComboBox.Items.Add(row);
+            }
+            if(destinationRowComboBox.Items.IndexOf(
+                currentDestinationCardSlotInfo.row) < 0) {
+                destinationRowComboBox.Items.Add(currentDestinationCardSlotInfo.row);
+            }
+            destinationRowComboBox.SelectedItem = currentDestinationCardSlotInfo.row;
         }
 
         //  Routine to populate the card type combo box - we do it in two places.
@@ -554,7 +588,9 @@ namespace IBM1410SMS
                     ecoTagList[ecoTagList.Count > 1 ? 1 : 0];
             }
 
-            index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
+            // index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
+            // index = sourceValidRows.IndexOf(currentCardSlotInfo.row);
+            index = cardRowComboBox.SelectedIndex;
             if (index < 0) {
                 index = 0;
             }
@@ -591,7 +627,10 @@ namespace IBM1410SMS
 
             //  Fill in the destination row and column
 
-            index = Array.IndexOf(Helpers.validRows, currentDestinationCardSlotInfo.row);
+            // index = Array.IndexOf(
+            //    Helpers.validRows, currentDestinationCardSlotInfo.row);
+            // index = destValidRows.IndexOf(currentDestinationCardSlotInfo.row);
+            index = destinationRowComboBox.SelectedIndex;
             if (index < 0) {
                 index = 0;
             }
@@ -857,11 +896,18 @@ namespace IBM1410SMS
             drawCableEdgeConnectionBox();
         }
 
-        private void cardColumnTextBox_TextChanged(object sender, EventArgs e) {
-            int v;
+        private void cardColumnTextBox_Validating(object sender, CancelEventArgs e) {
+            int v = 0;
             if (cardColumnTextBox.Text.Length > 0 &&
                 !int.TryParse(cardColumnTextBox.Text, out v)) {
                 MessageBox.Show("Card Column must be numeric!", "Invalid Card Column");
+                e.Cancel = true;
+                cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
+            }
+            else if (v <= 0 || v > currentPanel.maxColumn) {
+                MessageBox.Show("Card Column must be 0 < column <= " +
+                    currentPanel.maxColumn.ToString());
+                e.Cancel = true;
                 cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
             }
             // drawCableEdgeConnectionBox();  Moved to method below.
@@ -878,14 +924,21 @@ namespace IBM1410SMS
             drawCableEdgeConnectionBox();
         }
 
-
-        private void destinationColumnTextBox_TextChanged(object sender, EventArgs e) {
-            int v;
+        private void destinationColumnTextBox_Validating(object sender, CancelEventArgs e) {
+            int v = 0;
             if (destinationColumnTextBox.Text.Length > 0 &&
                 !int.TryParse(destinationColumnTextBox.Text, out v)) {
                 MessageBox.Show("Destination Column must be numeric!", "Invalid Destination Column");
+                e.Cancel = true;
                 destinationColumnTextBox.Text = currentDestinationCardSlotInfo.column.ToString("D2");
             }
+            else if (v <= 0 || v > currentPanel.maxColumn) {
+                MessageBox.Show("Destination Column must be 0 < column <= " +
+                    currentPanel.maxColumn.ToString());
+                cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
+                e.Cancel = true;
+            }
+
             drawCableEdgeConnectionBox();
         }
 
@@ -916,8 +969,9 @@ namespace IBM1410SMS
 
             if (cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
                 !int.TryParse(cardColumnTextBox.Text, out column) ||
-                column < 1 || column > 99) {
-                MessageBox.Show("Card Column must be present, and be 1-99",
+                column < 1 || column > currentPanel.maxColumn) {
+                MessageBox.Show("Card Column must be present, and be 1-" +
+                    currentPanel.maxColumn.ToString(),
                     "Invalid Card Column",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 cardColumnTextBox.Focus();
@@ -928,8 +982,10 @@ namespace IBM1410SMS
                 (destinationColumnTextBox.Text == null || 
                     destinationColumnTextBox.Text.Length == 0 ||
                     !int.TryParse(destinationColumnTextBox.Text, out destinationColumn) ||
-                    destinationColumn < 1 || destinationColumn > 99)) {
-                MessageBox.Show("Destination Card Column must be present, and be 1-99",
+                    destinationColumn < 1 || 
+                    destinationColumn > currentDestinationPanel.maxColumn)) {
+                MessageBox.Show("Destination Card Column must be present, and be 1-" +
+                    currentDestinationPanel.maxColumn.ToString(),
                     "Invalid Destination Card Column",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 destinationColumnTextBox.Focus();
@@ -1320,5 +1376,6 @@ namespace IBM1410SMS
             csInfo.column = impliedDestination.column;
 
         }
+
     }
 }

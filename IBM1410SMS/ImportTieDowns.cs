@@ -439,6 +439,8 @@ namespace IBM1410SMS
                         " to gate " + gateName +
                         " of frame " + frameName + " of machine " +
                         currentMachineName);
+                    p.maxColumn = 1;
+                    p.validRows = "";
                     panelKey = p.idPanel;
                 }
 

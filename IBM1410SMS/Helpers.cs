@@ -200,6 +200,8 @@ namespace IBM1410SMS
                     panelTable.insert(newPanel);
                     message += " Database ID=" + newPanel.idPanel;
                     panelKey = newPanel.idPanel;
+                    newPanel.maxColumn = 1;
+                    newPanel.validRows = "";
                 }
                 message += "\n";
             }
