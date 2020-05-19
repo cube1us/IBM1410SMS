@@ -70,6 +70,7 @@
             this.label22 = new System.Windows.Forms.Label();
             this.notesTextBox = new System.Windows.Forms.TextBox();
             this.noHDLGen = new System.Windows.Forms.CheckBox();
+            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
             this.flippedCheckBox = new System.Windows.Forms.CheckBox();
             this.label19 = new System.Windows.Forms.Label();
             this.blockConfigurationTextBox = new System.Windows.Forms.TextBox();
@@ -81,7 +82,6 @@
             this.label20 = new System.Windows.Forms.Label();
             this.editConnectionsButton = new System.Windows.Forms.Button();
             this.cardColumnTextBox = new System.Windows.Forms.TextBox();
-            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -549,6 +549,17 @@
             this.toolTip1.SetToolTip(this.noHDLGen, "Select to inhibit HDL generation for this logic block");
             this.noHDLGen.UseVisualStyleBackColor = true;
             // 
+            // exemptCheckBox
+            // 
+            this.exemptCheckBox.AutoSize = true;
+            this.exemptCheckBox.Location = new System.Drawing.Point(470, 365);
+            this.exemptCheckBox.Name = "exemptCheckBox";
+            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
+            this.exemptCheckBox.TabIndex = 117;
+            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
+            this.toolTip1.SetToolTip(this.exemptCheckBox, "Check to suppress report error messages for this block");
+            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            // 
             // flippedCheckBox
             // 
             this.flippedCheckBox.AutoSize = true;
@@ -655,18 +666,7 @@
             this.cardColumnTextBox.Name = "cardColumnTextBox";
             this.cardColumnTextBox.Size = new System.Drawing.Size(42, 20);
             this.cardColumnTextBox.TabIndex = 85;
-            this.cardColumnTextBox.TextChanged += new System.EventHandler(this.cardColumnTextBox_TextChanged);
-            // 
-            // exemptCheckBox
-            // 
-            this.exemptCheckBox.AutoSize = true;
-            this.exemptCheckBox.Location = new System.Drawing.Point(470, 365);
-            this.exemptCheckBox.Name = "exemptCheckBox";
-            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
-            this.exemptCheckBox.TabIndex = 117;
-            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
-            this.toolTip1.SetToolTip(this.exemptCheckBox, "Check to suppress report error messages for this block");
-            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            this.cardColumnTextBox.Validating += new System.ComponentModel.CancelEventHandler(this.cardColumnTextBox_Validating);
             // 
             // EditDiagramLogicBlockForm
             // 

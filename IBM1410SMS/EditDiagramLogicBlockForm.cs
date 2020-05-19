@@ -73,6 +73,8 @@ namespace IBM1410SMS
         List<Cardgate> cardGateList;
         List<Logicfunction> logicFunctionList;
 
+        List<string> validRows;
+
         string machinePrefix;
         string frameLabel = "Frame";
         string gateLabel = "Gate";
@@ -207,9 +209,9 @@ namespace IBM1410SMS
                 Console.WriteLine("Diagram machine Key = " + machine.idMachine);
             }
 
-            foreach (string row in Helpers.validRows) {
-                cardRowComboBox.Items.Add(row);
-            }
+            // foreach (string row in Helpers.validRows) {
+                // cardRowComboBox.Items.Add(row);
+            //}
 
             //  If the diagram block object passed to us is null, create
             //  one, and fill in as much as we can from the card location
@@ -378,7 +380,22 @@ namespace IBM1410SMS
                 panelComboBox.SelectedItem = panelList[0];
             }
             currentPanel = (Panel)panelComboBox.SelectedItem;
+            populateCardRowComboBox();
+        }
 
+        void populateCardRowComboBox() {
+            validRows = new List<string>(
+                currentPanel.validRows.Split(new char[] { ',' }));
+            if (!validRows.Contains(currentCardSlotInfo.row)) {
+                validRows.Add(currentCardSlotInfo.row);
+            }
+            validRows.Sort();
+            cardRowComboBox.Items.Clear();
+            foreach (string row in validRows) {
+                cardRowComboBox.Items.Add(row);
+            }
+
+            cardRowComboBox.SelectedItem = currentCardSlotInfo.row;
         }
 
         void populateCardGateComboBox(Cardtype cardType) {
@@ -487,7 +504,8 @@ namespace IBM1410SMS
                 outputModeComboBox.SelectedItem = outputLogicLevelList[0];
             }
 
-            index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
+            // index = Array.IndexOf(Helpers.validRows, currentCardSlotInfo.row);
+            index = cardRowComboBox.SelectedIndex;
             if(index < 0) {
                 index = 0;
             }
@@ -705,6 +723,7 @@ namespace IBM1410SMS
                     currentCardSlotInfo.panelName = currentPanel.panel;
                     modifiedMachineGatePanelFrame = true;
                 }
+                populateCardRowComboBox();
                 drawLogicbox();
             }
         }
@@ -737,15 +756,23 @@ namespace IBM1410SMS
             drawLogicbox();
         }
 
-        private void cardColumnTextBox_TextChanged(object sender, EventArgs e) {
-            int v;
+        private void cardColumnTextBox_Validating(object sender, CancelEventArgs e) {
+            int v = 0;
             if (cardColumnTextBox.Text.Length > 0 &&
-                !int.TryParse(cardColumnTextBox.Text,out v)) {
+                !int.TryParse(cardColumnTextBox.Text, out v)) {
                 MessageBox.Show("Card Column must be numeric!", "Invalid Card Column");
+                e.Cancel = true;
+            }
+            if (v <= 0 || v > currentPanel.maxColumn) {
+                MessageBox.Show("Card Column must be in range 0 < column <= " +
+                    currentPanel.maxColumn.ToString());
+                e.Cancel = true;
+            }
+            if (e.Cancel) {
                 cardColumnTextBox.Text = currentCardSlotInfo.column.ToString("D2");
             }
             drawLogicbox();
-            if(!populatingDialog) {
+            if (!populatingDialog) {
                 modifiedColumn = true;
             }
         }
@@ -795,8 +822,9 @@ namespace IBM1410SMS
 
             if (cardColumnTextBox.Text == null || cardColumnTextBox.Text.Length == 0 ||
                 !int.TryParse(cardColumnTextBox.Text, out column) || 
-                column < 1 || column > 99) {
-                MessageBox.Show("Card " + columnLabel + " must be present, and be 1-99",
+                column < 1 || column > currentPanel.maxColumn) {
+                MessageBox.Show("Card " + columnLabel + " must be present, and be " +
+                    "1-" + currentPanel.maxColumn.ToString(),
                     "Invalid Card " + columnLabel,
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 cardColumnTextBox.Focus();
@@ -1154,5 +1182,6 @@ namespace IBM1410SMS
             toolTip1.SetToolTip(cardTypeComboBox, message);
             toolTip1.SetToolTip(cardTypeLabel, message);
         }
+
     }
 }
