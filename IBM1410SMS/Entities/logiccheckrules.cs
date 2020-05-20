@@ -20,10 +20,10 @@ namespace IBM1410SMS
 		[MyColumn] public string logicFunction { get; set; }
 		[MyColumn] public string diagramBlockSymbol { get; set; }
 		[MyColumn] public string logicBlockType { get; set; }
-		[MyColumn] public char char1 { get; set; }
-		[MyColumn] public char char2 { get; set; }
-		[MyColumn] public char lastChar { get; set; }
-		[MyColumn] public char outputPolarity { get; set; }
+		[MyColumn] public string char1 { get; set; }
+		[MyColumn] public string char2 { get; set; }
+		[MyColumn] public string lastChar { get; set; }
+		[MyColumn] public string outputPolarity { get; set; }
 		[MyColumn] public string comment { get; set; }
 	}
 }
