@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace IBM1410SMS
 {
@@ -74,6 +75,7 @@ namespace IBM1410SMS
         class CardGateDetail
         {
             public List<string> pageUsage = new List<string>();
+            public int height = 0;
         }
        
         class CardSlotTypeDetail
@@ -368,6 +370,7 @@ namespace IBM1410SMS
                 if (diagramPageDict.TryGetValue(diagramBlock.diagramPage, out dp)) {
 
                     BlockDetail detail = new BlockDetail();
+                    Cardtype cardType;
                     detail.diagramBlock = diagramBlock;
                     detail.page = pageDict[dp.page];
                     detail.countedPositiveOuput = false;
@@ -379,7 +382,8 @@ namespace IBM1410SMS
                     cardSlotString = cardSlot.ToString();
 
                     CardSlotTypeDetail cardSlotTypeDetail;
-                    string cardTypeType = cardTypeDict[diagramBlock.cardType].type;
+                    cardType = cardTypeDict[diagramBlock.cardType];
+                    string cardTypeType = cardType.type;
                     if (!cardSlotUsageDict.TryGetValue(cardSlotString,
                             out cardSlotTypeDetail)) {
                         cardSlotTypeDetail = new CardSlotTypeDetail();
@@ -412,6 +416,8 @@ namespace IBM1410SMS
                         out cardGateDetail)) {
                         cardGateDetail = new CardGateDetail();
                         cardGateDetail.pageUsage = new List<string>();
+                        cardGateDetail.height = Math.Max(cardType.height,
+                            cardGateDetail.height);
                         cardSlotGateDict.Add(cardGateKey, cardGateDetail);
                     }
 
@@ -429,16 +435,22 @@ namespace IBM1410SMS
                     string cardTypeGateUsageKey = cardTypeType + ":" + cardGateNumber;
                     if(!cardTypeGateUsageDict.ContainsKey(cardTypeGateUsageKey)) {
                         CardTypeGateDetail cardTypeGateDetail = new CardTypeGateDetail();
-                        cardTypeGateDetail.logicFunction =
-                            logicFunctionDict[cardGate.logicFunction];
+                        cardTypeGateDetail.logicFunction = "INVALID";
+                        logicFunctionDict.TryGetValue(cardGate.logicFunction,
+                            out cardTypeGateDetail.logicFunction);
+                        // cardTypeGateDetail.logicFunction =
+                        //    logicFunctionDict[cardGate.logicFunction];
                         cardTypeGateDetail.usage = new Dictionary<string, int>();
                         cardTypeGateUsageDict.Add(cardTypeGateUsageKey, cardTypeGateDetail);
                     }
                 }
             }
 
-            //  Report any cases where a given card gate appears twice in the
-            //  ALD's, and that any cases where the card type isn't the same.
+            //  Report any cases where a given card gate appears more than
+            //  expected.  This happens if the gate appears on more than one
+            //  page, or if the count exceeds the number of card slots (the
+            //  card type's "height") -- since a multi-slot card shows up as 
+            //  multiple blocks on an ALD.
 
             logMessage("*** Begin Duplicate Card Slot:Gate usage Report on " +
                  DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss"));
@@ -449,7 +461,9 @@ namespace IBM1410SMS
                 CardGateDetail cardGateDetail = cardSlotGateDict[cardSlotGate];
                 bool reportPages = false;
 
-                if(cardGateDetail.pageUsage.Count != 1) {
+
+                if(cardGateDetail.pageUsage.Distinct().Count() > 1 ||
+                    cardGateDetail.pageUsage.Count > cardGateDetail.height) {
                     logMessage("Unexpected card gate use count of " +
                         cardGateDetail.pageUsage.Count.ToString() + 
                         " for cardslot:gate of " + cardSlotGate);
@@ -1418,20 +1432,15 @@ namespace IBM1410SMS
 
                     //  Note if this block has no inputs or no outputs (except that
                     //  if a diagram block is symbol "L" for load, or "LAMP", 
-                    //  or "R" for resistor, no outputs is OK)
+                    //  or "R" for resistor, no outputs is OK -- in which case the
+                    //  relevant card gates should be marked as no output exempt
+                    //  using the card gate editor.)
 
                     if(inputsCount == 0) {
                         logMessage("NO inputs to logic block at " + blockInfo);
                     }
 
-                    //  Maybe the following should look at the card/gate characteristics,
-                    //  instead of the ALD symbol??  Or have a flag for this?
-
-                    if(outputsCount == 0 && detail.diagramBlock.symbol != "L"  &&
-                        detail.diagramBlock.symbol != "LAMP"  &&
-                        detail.diagramBlock.symbol != "R" &&
-                        detail.diagramBlock.symbol != "CAP"  &&
-                        detail.diagramBlock.symbol != "LSS") {
+                    if(outputsCount == 0 && gate.noOutExempt == 0) {
                         logMessage("NO outputs from logic block at " + blockInfo);
                     }
 
@@ -1517,37 +1526,6 @@ namespace IBM1410SMS
                             break;
                     }
 
-                    //  For certain cases, check the symbol against the logic function.
-                    //  +A/-O should correspond to NAND circuitry logic, and
-                    //  -A/+O should correspond to NOR circuitry logic.
-                    //  (If the above seesm backwards, it is because, at least for 
-                    //  the IBM 1410, the inverter is assumed to be present w/r/t the
-                    //  symbol)
-                    //
-                    //  FURTHERMORE, if the logic block output has a - sense (i.e.,
-                    //  the output line departs from the bottom of the block) it
-                    //  reverses things (removes the implied invert - yeah, it is
-                    //  that backwards, at least if, on the IBM 1410, you consider
-                    //  0V a logic 1 and -V a logic 0.
-
-                    //      TODO:  Implement checks using logicCheckTable
-
-                    //if( logicFunction != "Special" && 
-                    //    (logicBlockSymbol != "DLY" || logicFunction != "DELAY") && (
-
-                    //    (andBlock && firstChar == "+" && logicFunction != "NAND") ||
-                    //    (andBlock && firstChar == "-" && logicFunction != "NOR" ) ||
-                    //    (orBlock && firstChar == "+" && logicFunction != "NOR"  ) ||
-                    //    (orBlock && firstChar == "-" && logicFunction != "NAND" ) ||
-                    //    (inverter && logicFunction != "NOT" && 
-                    //        logicFunction != "NOR" && logicFunction != "NAND")    ||
-                    //    (driver && secondChar == "I" && logicFunction != "NOT" )  ||
-                    //    (driver && secondChar != "I" && logicFunction != "EQUAL"))
-                    //                                                                ) {
-                    //    logMessage("Logic Block Symbol / logicFunction mismatch: " +
-                    //        "Symbol: " + logicBlockSymbol + " vs. Function: " +
-                    //        logicFunction + ": " + blockInfo);
-                    //}
 
                     //  Check this block against a table of valid configurations.
                     //  A "*" in the table matches anything
