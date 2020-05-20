@@ -54,6 +54,10 @@ namespace IBM1410SMS
 
         //  List of valid possible first/last row names: letters, no I, or O.
 
+        //  NOTE:  Do NOT use this array for validation during editing.  
+        //  Instead, use the validrows column of the panel table.  This array 
+        //  is only used when creating new card slots in various placies.
+
         internal static string[] validRows = new string[] { "A", "B", "C", "D", "E", "F", "G",
             "H", "J", "K", "L", "M", "N", "P", "Q", "R", "S", "T", "U", "V", "W",
             "X", "Y", "Z"};

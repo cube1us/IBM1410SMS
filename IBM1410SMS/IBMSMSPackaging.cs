@@ -9,8 +9,12 @@ using System.Collections;
 namespace IBM1410SMS
 {
 
-    //  Class to containe SMS package (frame/gate, panel, row and column constraings)
+    //  Class to contain SMS package (frame/gate, panel, row and column constraints)
     //  Someday, maybe, this could load from a database.
+
+    //  NOTE:  Currently one should NOT use this class during editing validation.
+    //  Instead, use the information in the panels table instead.  Use THIS class
+    //  only for the Report* classes for validating interconnects.
 
     class IBMSMSPackaging {
 
