@@ -62,6 +62,7 @@ namespace IBM1410SMS
         private Table<Cableedgeconnectionblock> cableEdgeConnectionBlockTable;
         private Table<Cableedgeconnectionecotag> cableEdgeConnectionECOTagTable;
         private Table<Cableimplieddestinations> cableImpliedDestinationsTable;
+        private Table<Logiccheckrules> logicCheckRulesTable;
 
         //  This is the constructor.  It CANNOT do ANYTHING, because it
         //  is statically initialized.
@@ -127,8 +128,7 @@ namespace IBM1410SMS
             cableEdgeConnectionBlockTable = new Table<Cableedgeconnectionblock>(connection);
             cableEdgeConnectionECOTagTable = new Table<Cableedgeconnectionecotag>(connection);
             cableImpliedDestinationsTable = new Table<Cableimplieddestinations>(connection);
-
-
+            logicCheckRulesTable = new Table<Logiccheckrules>(connection);
 
             return (true);
         }
@@ -313,6 +313,10 @@ namespace IBM1410SMS
 
         public Table<Cableimplieddestinations> getCableImpliedDestinationsTable() {
             return cableImpliedDestinationsTable;
+        }
+
+        public Table<Logiccheckrules> getLogicCheckRulesTable() {
+            return logicCheckRulesTable;
         }
     }
 }

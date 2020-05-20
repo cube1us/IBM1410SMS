@@ -177,6 +177,7 @@
     <Compile Include="Entities\cableimplieddestinations.cs" />
     <Compile Include="Entities\connection.cs" />
     <Compile Include="Entities\dotfunction.cs" />
+    <Compile Include="Entities\logiccheckrules.cs" />
     <Compile Include="Entities\parameters.cs" />
     <Compile Include="Entities\sheetedgeinformation.cs" />
     <Compile Include="GenerateGroupHDLForm.cs">
