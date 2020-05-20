@@ -94,6 +94,7 @@ namespace IBM1410SMS
             public Dictionary<string, int> usage;
         }
 
+/*
         //  Table to allow matching the symbol on a logic block and its output sense
         //  (top of block is +, bottom of block is -) against the logic function
         //  defined in the card gate table.  (Eventually this is maybe moved to
@@ -119,6 +120,7 @@ namespace IBM1410SMS
 
         //  TODO: The following should probably really be in a database, as it
         //  would vary by machine.
+
 
         LogicCheckEntry[] logicCheckTable = new LogicCheckEntry[]
         {
@@ -157,6 +159,7 @@ namespace IBM1410SMS
              new LogicCheckEntry("Trigger",  "TV",  "*",   "T", "*"),
              new LogicCheckEntry("*",        "E",   "*",   "*", "*"),   // Don't check extended blocks
         };
+*/
 
         DBSetup db = DBSetup.Instance;
 
@@ -173,6 +176,7 @@ namespace IBM1410SMS
         Table<Gatepin> gatePinTable;
         Table<Cardslot> cardSlotTable;
         Table<Logicfunction> logicFunctionTable;
+        Table<Logiccheckrules> logicCheckRulesTable;
 
         List<Machine> machineList;
 
@@ -191,7 +195,9 @@ namespace IBM1410SMS
         Dictionary<int,Sheetedgeinformation> sheetEdgeDict = null;
         Dictionary<string,CardGateDetail> cardSlotGateDict = null;
         Dictionary<string, CardSlotTypeDetail> cardSlotUsageDict = null;
-   
+
+        List<Logiccheckrules> logicCheckRulesList = null;
+
         Machine currentMachine = null;
         Boolean reporting = false;          //  If true, the working label will blink
 
@@ -217,6 +223,7 @@ namespace IBM1410SMS
             gatePinTable = db.getGatePinTable();
             cardSlotTable = db.getCardSlotTable();
             logicFunctionTable = db.getLogicFunctionTable();
+            logicCheckRulesTable = db.getLogicCheckRulesTable();
 
             machineList = machineTable.getAll();
 
@@ -326,6 +333,12 @@ namespace IBM1410SMS
             ArrayList sortedPages = null;
 
             List<DotDetail> dotDetalList = new List<DotDetail>();
+
+            //  Time to build the list of logic check rules.
+
+            logicCheckRulesList = logicCheckRulesTable.getWhere(
+                "WHERE machineName = '" + currentMachine.name +
+                "' ORDER BY priority");
 
             //  Build a hash of the pages related to this machine
 
@@ -1530,13 +1543,19 @@ namespace IBM1410SMS
                     //  Check this block against a table of valid configurations.
                     //  A "*" in the table matches anything
 
-                    LogicCheckEntry foundEntry = null;
-                    foreach(LogicCheckEntry entry in logicCheckTable) {
-                        if ((entry.logicFunction == "*" || entry.logicFunction == logicFunction) &&
-                            (entry.symbol == "*" || entry.symbol == logicBlockSymbol) &&
-                            (entry.blockType == "*" || entry.blockType == blockType) &&
-                            (entry.firstChar == "*" || entry.firstChar == firstChar) &&
-                            (entry.outputSense == "*" || entry.outputSense == outputSense)) {
+                    // LogicCheckEntry foundEntry = null;
+                    // foreach(LogicCheckEntry entry in logicCheckTable) {
+                    Logiccheckrules foundEntry = null;
+                    foreach(Logiccheckrules entry in logicCheckRulesList) { 
+                        if ((entry.logicFunction == "*" || 
+                            entry.logicFunction == logicFunction) &&
+                            (entry.diagramBlockSymbol == "*" || 
+                            entry.diagramBlockSymbol == logicBlockSymbol) &&
+                            (entry.logicBlockType == "*" || 
+                            entry.logicBlockType == blockType) &&
+                            (entry.char1 == "*" || entry.char1 == firstChar) &&
+                            (entry.outputPolarity == "*" || 
+                            entry.outputPolarity == outputSense)) {
                             foundEntry = entry;
                             break;
                         }
