@@ -374,6 +374,12 @@
     <Compile Include="ReportEdgeConnectionsForm.Designer.cs">
       <DependentUpon>ReportEdgeConnectionsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="ReportQuerySignalsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportQuerySignalsForm.Designer.cs">
+      <DependentUpon>ReportQuerySignalsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="ReportSignalsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -513,6 +519,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ReportEdgeConnectionsForm.resx">
       <DependentUpon>ReportEdgeConnectionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportQuerySignalsForm.resx">
+      <DependentUpon>ReportQuerySignalsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ReportSignalsForm.resx">
       <DependentUpon>ReportSignalsForm.cs</DependentUpon>

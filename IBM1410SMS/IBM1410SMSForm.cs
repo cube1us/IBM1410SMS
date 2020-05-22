@@ -246,5 +246,11 @@ namespace IBM1410SMS
                 new ReportConnectionErrorsForm();
             ReportConnectionErrorsForm.ShowDialog();
         }
+
+        private void signalQueryToolStripMenuItem_Click(object sender, EventArgs e) {
+            ReportQuerySignalsForm ReportQuerySignalsForm =
+                new ReportQuerySignalsForm();
+            ReportQuerySignalsForm.ShowDialog();
+        }
     }
 }
