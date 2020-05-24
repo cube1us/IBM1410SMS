@@ -30,11 +30,13 @@ namespace IBM1410SMS
 {
     class GenerateHDL
     {
+
         GenerateHDLLogic generator;
 
         Page page;
         String directory;
-        String logFileName = "";
+        String logPathName = "";
+        String outPathName = "";
         String LatchPrefix = "Latch";
 
         Table<Diagrampage> diagramPageTable;
@@ -60,18 +62,17 @@ namespace IBM1410SMS
 
         // string VHDLEntityName;
 
-        StreamWriter outFile;
-        StreamWriter logFile;
-
         bool needsClock = false;
+        bool generateTestBench = false;
 
         int temp_errors = 0;
 
 
-        public GenerateHDL(Page page, string directory) {
+        public GenerateHDL(Page page, string directory, bool generateTestBench) {
 
             this.page = page;
             this.directory = directory;
+            this.generateTestBench = generateTestBench;
             diagramPageTable = db.getDiagramPageTable();
             diagramBlockTable = db.getDiagramBlockTable();
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
@@ -88,8 +89,11 @@ namespace IBM1410SMS
             List<Dotfunction> dotFunctions;
             List<int> ignoredConnectionIDs = new List<int>();
 
+            //  TODO: Eventually, the class chosen here would depend on what
+            //  flavor of HDL the user chose.
+
             generator = new GenerateHDLLogicVHDL(
-                page);
+                page, generateTestBench);
 
             //VHDLEntityName =
             //    "ALD_" +
@@ -99,21 +103,97 @@ namespace IBM1410SMS
             // outFile = new StreamWriter(Path.Combine(directory, VHDLEntityName + ".vhdl"), false);
             // logFileName = Path.Combine(directory, VHDLEntityName + ".log");
 
-            outFile = new StreamWriter(Path.Combine(directory, 
-                generator.getHDLEntityName() + "." + 
-                generator.generateHDLExtension()), false);
-            logFileName = Path.Combine(directory, 
+            logPathName = Path.Combine(directory,
                 generator.getHDLEntityName() + ".log");
+            outPathName = Path.Combine(directory,
+                    generator.getHDLEntityName() + "." +
+                    generator.generateHDLExtension());
 
-            logFile = new StreamWriter(logFileName, false);
+            try {
+                generator.logFile = new StreamWriter(logPathName, false);
+            }
+            catch(Exception e) {
+                return (1);
+            }
 
-            generator.outFile = outFile;
-            generator.logFile = logFile;
-            
+            try {
+                generator.outFile = new StreamWriter(outPathName, false);
+            }
+            catch (Exception e) {
+                logMessage("Cannot open output file " + outPathName +
+                    ", aborting");
+                return (1);
+            }
+
             int errors = 0;
+            generator.outputStreams.Add(generator.outFile);
 
             logMessage("Generating HDL for page " + page.name +
                 " " + page.title);
+
+            //  Is there a template (include, if you will) file to use?
+            //  (Is used for both entity and its test bench, if any)
+
+            string templatePath = Path.Combine(directory,
+                generator.templateName + "." + generator.generateHDLExtension());
+            try {
+                generator.templateFile = new StreamReader(templatePath);
+            }
+            catch (Exception e) {
+                logMessage("Unable to open template file " + templatePath +
+                    ", using internally generated defaults");
+                generator.templateFile = null;
+            }
+
+            //  Are we generating or updating a test bench?  If so,
+            //  read it in and save the "interesting" parts, if any,
+            //  and open the test bench file for writing.
+
+            generator.savedTestBenchLines = new List<string>();
+
+            if (generateTestBench) {
+
+                string testBenchFileName = generator.getHDLEntityName() +
+                    generator.testBenchSuffix + "." + generator.generateHDLExtension();
+                string testBenchPathName = Path.Combine(directory, testBenchFileName);
+
+                try {
+                    StreamReader oldTestBenchFile = new StreamReader(testBenchPathName);
+                    string testBenchLine;
+                    bool saving = false;
+                    while((testBenchLine = oldTestBenchFile.ReadLine()) != null) {
+                        if(testBenchLine.Contains(GenerateHDLLogic.testBenchUserStart)) {
+                            saving = true;
+                        }
+                        if (saving) {
+                            generator.savedTestBenchLines.Add(testBenchLine);
+                        }
+                        if(testBenchLine.Contains(GenerateHDLLogic.testBenchUserEnd)) {
+                            saving = false;
+                        }
+                    }
+                    oldTestBenchFile.Close();
+                    logMessage("Old test bench file " + testBenchFileName +
+                        generator.savedTestBenchLines.Count.ToString() +
+                        " lines preserved.");
+
+                }
+                catch (Exception e) {
+                    logMessage("No existing test bench file file " + templatePath +
+                        ", using internally generated default test bench code");
+                }
+
+                try {
+                    generator.testBenchFile = new StreamWriter(testBenchPathName);
+                    generator.outputStreams.Add(generator.testBenchFile);
+                }
+                catch(Exception e) {
+                    logMessage("Unable to create or open test bench file " +
+                        testBenchPathName + " for output.  Test Bench skipped.");
+                    generator.testBenchFile = null;
+                }
+            }
+
 
             List<Diagrampage> diagramList = diagramPageTable.getWhere(
                 "WHERE diagrampage.page='" + page.idPage + "'");
@@ -124,16 +204,14 @@ namespace IBM1410SMS
                     page.name + " (Database ID " + page.idPage + ")");
                 ++errors;
                 if (diagramList.Count < 1) {
-                    logFile.Close();
-                    outFile.Close();
+                    closeFiles();
                     return (errors);
                 }
             }
 
             if(diagramList[0].noHDLGeneration == 1) {
-                logMessage("Note:  page is marked for no HDL generation - skipped");
-                logFile.Close();
-                outFile.Close();
+                logMessage("Note: page is marked for no HDL generation - skipped");
+                closeFiles();
                 return (errors);
             }
 
@@ -175,8 +253,7 @@ namespace IBM1410SMS
             //  If there were any messages so far, return with them.
 
             if (errors > 0) {
-                logFile.Close();
-                outFile.Close();
+                closeFiles();
                 return (errors);
             }
 
@@ -1124,7 +1201,7 @@ namespace IBM1410SMS
                 }
             }
 
-            outFile.WriteLine();
+            generator.outFile.WriteLine();
 
             //  Now do those signal assignments
 
@@ -1167,7 +1244,7 @@ namespace IBM1410SMS
                 }
             }
 
-            outFile.WriteLine();
+            generator.outFile.WriteLine();
 
             //  Finally, generate the use of any D Flip Flops required due to latches.
 
@@ -1184,8 +1261,7 @@ namespace IBM1410SMS
 
             generator.generateHDLArchitectureSuffix();
 
-            outFile.Close();
-            logFile.Close();
+            closeFiles();
 
             return (errors);
         }
@@ -1358,12 +1434,23 @@ namespace IBM1410SMS
         //}
 
         public string getLogfileName() {
-            return logFileName;
+            return logPathName;
         }
 
         private void logMessage(string message) {
-            logFile.WriteLine(message);
-            logFile.Flush();
+            generator.logFile.WriteLine(message);
+            generator.logFile.Flush();
+        }
+
+        private void closeFiles() {
+            generator.outFile.Close();
+            generator.logFile.Close();
+            if(generator.templateFile != null) {
+                generator.templateFile.Close();
+            }
+            if(generator.testBenchFile != null) {
+                generator.testBenchFile.Close();
+            }
         }
 
         //private string generateOutputPinName(LogicBlock block, Connection connection,

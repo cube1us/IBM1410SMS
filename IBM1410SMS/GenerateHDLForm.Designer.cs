@@ -38,6 +38,7 @@
             this.directoryTextBox = new System.Windows.Forms.TextBox();
             this.selectFolderButton = new System.Windows.Forms.Button();
             this.generateButton = new System.Windows.Forms.Button();
+            this.testBenchCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // volumeSetComboBox
@@ -157,11 +158,23 @@
             this.generateButton.UseVisualStyleBackColor = true;
             this.generateButton.Click += new System.EventHandler(this.generateButton_Click);
             // 
+            // testBenchCheckBox
+            // 
+            this.testBenchCheckBox.AutoSize = true;
+            this.testBenchCheckBox.Location = new System.Drawing.Point(327, 63);
+            this.testBenchCheckBox.Name = "testBenchCheckBox";
+            this.testBenchCheckBox.Size = new System.Drawing.Size(174, 17);
+            this.testBenchCheckBox.TabIndex = 137;
+            this.testBenchCheckBox.Text = "Generate / Update Test Bench";
+            this.toolTip1.SetToolTip(this.testBenchCheckBox, "Select to generate or update a test bench for page(s) specified");
+            this.testBenchCheckBox.UseVisualStyleBackColor = true;
+            // 
             // GenerateHDLForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(692, 263);
+            this.Controls.Add(this.testBenchCheckBox);
             this.Controls.Add(this.generateButton);
             this.Controls.Add(this.selectFolderButton);
             this.Controls.Add(this.directoryTextBox);
@@ -194,5 +207,6 @@
         private System.Windows.Forms.TextBox directoryTextBox;
         private System.Windows.Forms.Button selectFolderButton;
         private System.Windows.Forms.Button generateButton;
+        private System.Windows.Forms.CheckBox testBenchCheckBox;
     }
 }

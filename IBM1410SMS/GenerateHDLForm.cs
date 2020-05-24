@@ -40,7 +40,6 @@ namespace IBM1410SMS
         Table<Volume> volumeTable;
         Table<Page> pageTable;
 
-
         List<Machine> machineList;
         List<Volumeset> volumeSetList;
         List<Volume> volumeList;
@@ -104,6 +103,11 @@ namespace IBM1410SMS
 
             directoryTextBox.Text = Parms.getParmValue("generate output directory");
 
+            //  Populate the Test Bench check box
+
+            string testBench = Parms.getParmValue("generate page test bench");
+            testBenchCheckBox.Checked = (testBench == "Y");
+
             populatingDialog = false;
         }
 
@@ -122,6 +126,8 @@ namespace IBM1410SMS
         private void generateButton_Click(object sender, EventArgs e) {
 
             int generated = 0;
+            string testBench = "N";
+
             List<string> pagePatterns = pagesTextBox.Text.Split(
                 new char[] { ',', ' ' },
                 StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -132,6 +138,9 @@ namespace IBM1410SMS
             Parms.setParmValue("volume set", currentVolumeSet.idVolumeSet.ToString());
             Parms.setParmValue("volume", currentVolume.idVolume.ToString());
             Parms.setParmValue("generate output directory", directoryTextBox.Text);
+
+            testBench = testBenchCheckBox.Checked ? "Y" : "N";
+            Parms.setParmValue("generate page test bench", testBench);
 
             //  And then proceed.
 
@@ -145,7 +154,8 @@ namespace IBM1410SMS
                 foreach (Page page in pages) {
 
                     ++generated;
-                    GenerateHDL gen = new GenerateHDL(page, directoryTextBox.Text);
+                    GenerateHDL gen = new GenerateHDL(page, directoryTextBox.Text,
+                        testBenchCheckBox.Checked);
                     int errors = gen.generateHDL();
 
                     Form ImporterLogDisplayDialog =

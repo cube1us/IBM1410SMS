@@ -34,22 +34,38 @@ namespace IBM1410SMS
 {
     public abstract class GenerateHDLLogic
     {
+
+        public const string testBenchUserStart = "START USER TEST BENCH";
+        public const string testBenchUserEnd = "END USER TEST BENCH";
+
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
+        public StreamWriter testBenchFile { get; set; }
+        public StreamReader templateFile { get; set; }
+        public List<StreamWriter> outputStreams { get; set; } =
+            new List<StreamWriter>();
+
+        public List<string> savedTestBenchLines { get; set; }
         public List<LogicBlock> logicBlocks { get; set; }
         protected Page page { get; set; }
         public bool needsDFlipFlop { get; set; }
+        public bool generateTestBench { get; set; }
 
         protected string LatchPrefix { get; set; } = "Latch";
         protected string SystemClockName { get; set; } = "FPGA_CLK";
+        public string testBenchSuffix { get; set; } = "_tb";
+        public string templateName { get; set; } = "HDLTemplate";
 
         Regex replacePeriods = new Regex("\\.");
         Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
 
         public GenerateHDLLogic(
-            Page page) {
+            Page page, bool generateTestBench) {
 
             this.page = page;
+            this.generateTestBench = generateTestBench;
+            testBenchFile = null;
+            templateFile = null;
         }
 
         //  Method to return the proper extension to use.
@@ -84,7 +100,8 @@ namespace IBM1410SMS
             List<Sheetedgeinformation> sheetInputsList,
             List<Sheetedgeinformation> sheetOutputsList);
 
-        //  Method to generate "architecture" prefix, if required.  Returns number of errors.
+        //  Method to generate "architecture" prefix, if required.  
+        //  Returns number of errors.
 
         public abstract int generateHDLArchitecturePrefix();
 
