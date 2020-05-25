@@ -244,6 +244,13 @@ namespace IBM1410SMS
 
         public override void generateHDLArchitectureSuffix() {
 
+            //  Insert any saved lines (or newly generated template lines) into the
+            //  test bench, if any.
+
+            foreach(string line in savedTestBenchLines) {
+                testBenchFile.WriteLine(line);
+            }
+
             foreach (StreamWriter writer in outputStreams) {
                 outFile.WriteLine();
                 outFile.WriteLine("end;");
@@ -281,9 +288,15 @@ namespace IBM1410SMS
             else {
                 while ((templateLine = templateFile.ReadLine()) != null) {
                     foreach (StreamWriter stream in outputStreams) {
-                        outFile.WriteLine(templateLine);
+                        stream.WriteLine(templateLine);
                     }
                 }
+
+                foreach (StreamWriter stream in outputStreams) {
+                    stream.WriteLine(templateLine);
+                    stream.WriteLine();
+                }
+
                 templateFile.Close();
             }
 
@@ -306,6 +319,7 @@ namespace IBM1410SMS
             List<Sheetedgeinformation> sheetOutputsList) {
 
             bool firstOutput = true;
+            this.needsClock = needsClock;
 
             //  Generate the Entity declaration for both the page and the test bench
 
@@ -514,10 +528,10 @@ namespace IBM1410SMS
             return (errors);
         }
 
-        private void generateVHDLArchitectureSuffix() {
-            outFile.WriteLine();
-            outFile.WriteLine("end;");
-        }
+        //private void generateVHDLArchitectureSuffix() {
+        //    outFile.WriteLine();
+        //    outFile.WriteLine("end;");
+        //}
 
 
     }

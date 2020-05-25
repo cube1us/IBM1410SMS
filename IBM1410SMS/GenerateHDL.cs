@@ -30,14 +30,18 @@ namespace IBM1410SMS
 {
     class GenerateHDL
     {
+        const string LatchPrefix = "Latch";
+        const string TestBenchTemplate = "TestBenchTemplate";
+        const string TestBenchFPGAClock = "TestBenchFPGAClock";
+        const string TestBenchFPGAClockTag = "<FPGA CLOCK>";
 
         GenerateHDLLogic generator;
 
         Page page;
-        String directory;
-        String logPathName = "";
-        String outPathName = "";
-        String LatchPrefix = "Latch";
+        string directory;
+        string logPathName = "";
+        string outPathName = "";
+
 
         Table<Diagrampage> diagramPageTable;
         Table<Diagramblock> diagramBlockTable;
@@ -129,7 +133,7 @@ namespace IBM1410SMS
             generator.outputStreams.Add(generator.outFile);
 
             logMessage("Generating HDL for page " + page.name +
-                " " + page.title);
+                " " + page.title + " at " + DateTime.Now.ToString());
 
             //  Is there a template (include, if you will) file to use?
             //  (Is used for both entity and its test bench, if any)
@@ -183,6 +187,7 @@ namespace IBM1410SMS
                         ", using internally generated default test bench code");
                 }
 
+
                 try {
                     generator.testBenchFile = new StreamWriter(testBenchPathName);
                     generator.outputStreams.Add(generator.testBenchFile);
@@ -193,7 +198,6 @@ namespace IBM1410SMS
                     generator.testBenchFile = null;
                 }
             }
-
 
             List<Diagrampage> diagramList = diagramPageTable.getWhere(
                 "WHERE diagrampage.page='" + page.idPage + "'");
@@ -1019,8 +1023,11 @@ namespace IBM1410SMS
             //  "rollup generator" does not have to worry about whether or
             //  not a given page needs a clock.  If that causes problems later,
             //  then the likely alternative would be to add a "needsClock"
-            //  column to the diagramPage table when the needs is identified
-            //  (and allow manual setting/clearing in the associated dialog)
+            //  column to the diagramPage table when the need is identified
+            //  (and allow manual setting/clearing in the associated dialog),
+            //  or for the rolloup generator to sort throughall of the logic blocks
+            //  involved on the page before calling this page.
+           
 
             needsClock = true;
 
@@ -1258,6 +1265,76 @@ namespace IBM1410SMS
 
                 errors += generator.generateHDLDFlipFlop(block);
             }
+
+            //  If there is a test bench to be generated, and if there are no saved lines, 
+            //  fill up with our defaults.
+
+            if (generateTestBench && generator.savedTestBenchLines.Count == 0) {
+
+                string testBenchTemplateFileName = TestBenchTemplate + "." +
+                    generator.generateHDLExtension();
+                string testBenchTemplatePathName = Path.Combine(directory,
+                    testBenchTemplateFileName);
+
+                string testBenchFPGAClockFileName = TestBenchFPGAClock + "." +
+                    generator.generateHDLExtension();
+                string testBenchFGPAClockPathName = Path.Combine(directory,
+                    testBenchFPGAClockFileName);
+
+                StreamReader testBenchTemplateStream = null;
+                StreamReader testBenchFPGAClockStream = null;
+
+                try {
+                    testBenchTemplateStream = new StreamReader(
+                        testBenchTemplatePathName);
+                }
+                catch (Exception e) {
+                    logMessage("Unable to open the Test Bench Template File: " +
+                        e.ToString());
+                }
+
+                try {
+                    testBenchFPGAClockStream = new StreamReader(
+                        testBenchFGPAClockPathName);
+                }
+                catch (Exception e) {
+                    logMessage("Unable to open the Test Bench Clock Template File: " +
+                        e.ToString());
+                }
+
+                //  Read the default template file.  If we see a line with the
+                //  FPGA clock tag, replace that with the FPGA Clock Template
+
+                if (testBenchTemplateStream != null) {
+                    string line;
+                    while ((line = testBenchTemplateStream.ReadLine()) != null) {
+
+                        //  Replace the FPGA clock tag with the appropriate template,
+                        //  but only an the FPGA clock is actually required.
+
+                        if (needsClock && line.Contains(TestBenchFPGAClockTag) &&
+                            testBenchFPGAClockStream != null) {
+                            while ((line = testBenchFPGAClockStream.ReadLine())
+                                != null) {
+                                generator.savedTestBenchLines.Add(line);
+                            }
+                        }
+                        else {
+                            //  Add other lines directly
+                            generator.savedTestBenchLines.Add(line);
+                        }
+                    }
+                }
+
+                if (testBenchTemplateStream != null) {
+                    testBenchTemplateStream.Close();
+                }
+                if (testBenchFPGAClockStream != null) {
+                    testBenchFPGAClockStream.Close();
+                }
+
+            }
+
 
             generator.generateHDLArchitectureSuffix();
 

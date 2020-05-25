@@ -48,8 +48,10 @@ namespace IBM1410SMS
         public List<string> savedTestBenchLines { get; set; }
         public List<LogicBlock> logicBlocks { get; set; }
         protected Page page { get; set; }
+
         public bool needsDFlipFlop { get; set; }
         public bool generateTestBench { get; set; }
+        public bool needsClock { get; set; }
 
         protected string LatchPrefix { get; set; } = "Latch";
         protected string SystemClockName { get; set; } = "FPGA_CLK";
@@ -66,6 +68,7 @@ namespace IBM1410SMS
             this.generateTestBench = generateTestBench;
             testBenchFile = null;
             templateFile = null;
+            needsClock = false;
         }
 
         //  Method to return the proper extension to use.
