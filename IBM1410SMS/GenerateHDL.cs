@@ -177,14 +177,14 @@ namespace IBM1410SMS
                         }
                     }
                     oldTestBenchFile.Close();
-                    logMessage("Old test bench file " + testBenchFileName +
+                    logMessage("Old test bench file " + testBenchFileName + " " +
                         generator.savedTestBenchLines.Count.ToString() +
                         " lines preserved.");
 
                 }
                 catch (Exception e) {
-                    logMessage("No existing test bench file file " + templatePath +
-                        ", using internally generated default test bench code");
+                    logMessage("No existing test bench file " + testBenchPathName +
+                        ", generating default test bench code.");
                 }
 
 
@@ -1290,7 +1290,7 @@ namespace IBM1410SMS
                 }
                 catch (Exception e) {
                     logMessage("Unable to open the Test Bench Template File: " +
-                        e.ToString());
+                        e.GetType().Name + ", file " + testBenchTemplatePathName);
                 }
 
                 try {
@@ -1299,7 +1299,7 @@ namespace IBM1410SMS
                 }
                 catch (Exception e) {
                     logMessage("Unable to open the Test Bench Clock Template File: " +
-                        e.ToString());
+                        e.GetType().Name + ", file " + testBenchFGPAClockPathName);
                 }
 
                 //  Read the default template file.  If we see a line with the

@@ -41,13 +41,13 @@
             this.logTextBox.Multiline = true;
             this.logTextBox.Name = "logTextBox";
             this.logTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.logTextBox.Size = new System.Drawing.Size(457, 332);
+            this.logTextBox.Size = new System.Drawing.Size(984, 321);
             this.logTextBox.TabIndex = 0;
             // 
             // okButton
             // 
             this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.okButton.Location = new System.Drawing.Point(15, 449);
+            this.okButton.Location = new System.Drawing.Point(15, 438);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 1;
@@ -67,7 +67,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(394, 449);
+            this.cancelButton.Location = new System.Drawing.Point(394, 438);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 3;
@@ -79,7 +79,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(481, 484);
+            this.ClientSize = new System.Drawing.Size(1008, 473);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.logFileNameLabel);
             this.Controls.Add(this.okButton);
