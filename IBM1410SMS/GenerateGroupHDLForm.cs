@@ -111,7 +111,18 @@ namespace IBM1410SMS
             //  Populate the output directory button, if we have one in the parms
 
             directoryTextBox.Text = Parms.getParmValue("generate output directory");
+
+            //  Populate the pattern of pages we last used.
+
             pagesTextBox.Text = Parms.getParmValue("generate group page patterns");
+
+            //  Populate the test bench check boxes
+
+            string testBench = Parms.getParmValue("generate group test bench");
+            generateTestBenchCheckBox.Checked = (testBench == "Y");
+
+            // testBench = Parms.getParmValue("generate group pages test bench");
+            // generatePageTestBenchCheckBox.Checked = (testBench == "Y");
 
             populatingDialog = false;
 
@@ -190,6 +201,10 @@ namespace IBM1410SMS
             Parms.setParmValue("volume", currentVolume.idVolume.ToString());
             Parms.setParmValue("generate output directory", directoryTextBox.Text);
             Parms.setParmValue("generate group page patterns", pagesTextBox.Text);
+            Parms.setParmValue("generate group test bench",
+                generateTestBenchCheckBox.Checked ? "Y" : "N");
+            // Parms.setParmValue("generate group pages test bench",
+            //    generatePageTestBenchCheckBox.Checked ? "Y" : "N");
 
             //  And then proceed.
 
@@ -240,7 +255,7 @@ namespace IBM1410SMS
 
             GenerateGroupHDL gen = new GenerateGroupHDL(
                 currentMachine, diagramPageList, pageNames, outputFileNameTextBox.Text,
-                directoryTextBox.Text);
+                directoryTextBox.Text, generateTestBenchCheckBox.Checked);
 
             int errors = gen.generateGroupHDL();
 

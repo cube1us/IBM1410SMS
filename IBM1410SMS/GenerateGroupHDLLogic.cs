@@ -34,18 +34,27 @@ using System.Text.RegularExpressions;
 
 namespace IBM1410SMS
 {
-    public abstract class GenerateGroupHDLLogic
-    {
+    public abstract class GenerateGroupHDLLogic {
         protected Regex replacePeriods = new Regex("\\.");
         protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
 
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
+        public StreamWriter testBenchFile { get; set; }
+        public StreamReader templateFile { get; set; }
+        public List<StreamWriter> outputStreams { get; set; } =
+            new List<StreamWriter>();
+
+        public List<string> savedTestBenchLines { get; set; }
+        public bool generateTestBench { get; set; }
+        public bool generatePageTestBench { get; set; }
 
         //  Method to return the proper extension to use, and clock name.
 
         public abstract string generateHDLExtension();
         protected string SystemClockName { get; set; } = "FPGA_CLK";
+        public string testBenchSuffix { get; set; } = "_tb";
+        public string templateName { get; set; } = "HDLTemplate";
 
         //  Methods for specific HDL pieces...
 
@@ -59,6 +68,13 @@ namespace IBM1410SMS
         public abstract void generatePageEntity(string pageName, string pageTitle,
             List<string> inputs, List<string> outputs, List<string> bufferSignals,
             bool needsClock);
+
+        public GenerateGroupHDLLogic(bool generateTestBench) {
+            this.generateTestBench = generateTestBench;
+            this.generatePageTestBench = generatePageTestBench;
+            testBenchFile = null;
+            templateFile = null;
+        }
 
         //  Method to produce the name to use for a signal.  
         //  It is hoped/presumed that this one will be HDL language independent.

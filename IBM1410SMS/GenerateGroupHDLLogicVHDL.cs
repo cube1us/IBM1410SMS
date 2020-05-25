@@ -29,6 +29,11 @@ namespace IBM1410SMS
 
         string bufferPrefix = "XX_";
 
+        public GenerateGroupHDLLogicVHDL(bool generateTestBench) :
+            base(generateTestBench) {
+
+        }
+
         public override string generateHDLExtension() {
             return ("vhdl");
         }

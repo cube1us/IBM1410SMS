@@ -40,6 +40,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.outputFileNameTextBox = new System.Windows.Forms.TextBox();
             this.generateButton = new System.Windows.Forms.Button();
+            this.generateTestBenchCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // selectFolderButton
@@ -178,11 +179,22 @@
             this.generateButton.UseVisualStyleBackColor = true;
             this.generateButton.Click += new System.EventHandler(this.generateButton_Click);
             // 
+            // generateTestBenchCheckBox
+            // 
+            this.generateTestBenchCheckBox.AutoSize = true;
+            this.generateTestBenchCheckBox.Location = new System.Drawing.Point(385, 194);
+            this.generateTestBenchCheckBox.Name = "generateTestBenchCheckBox";
+            this.generateTestBenchCheckBox.Size = new System.Drawing.Size(174, 17);
+            this.generateTestBenchCheckBox.TabIndex = 149;
+            this.generateTestBenchCheckBox.Text = "Generate / Update Test Bench";
+            this.generateTestBenchCheckBox.UseVisualStyleBackColor = true;
+            // 
             // GenerateGroupHDLForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(653, 310);
+            this.Controls.Add(this.generateTestBenchCheckBox);
             this.Controls.Add(this.outputFileNameTextBox);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.generateButton);
@@ -219,5 +231,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox outputFileNameTextBox;
+        private System.Windows.Forms.CheckBox generateTestBenchCheckBox;
     }
 }

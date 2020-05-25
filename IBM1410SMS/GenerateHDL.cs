@@ -125,7 +125,7 @@ namespace IBM1410SMS
             }
             catch (Exception e) {
                 logMessage("Cannot open output file " + outPathName +
-                    ", aborting");
+                    ", aborting: " + e.GetType().Name);
                 return (1);
             }
 

@@ -36,27 +36,35 @@ namespace IBM1410SMS
         string outFileName;
         string logFileName;
 
+        bool generateTestBench;
+        // bool generatePagesTestBench;
+
         Table<Diagrampage> diagramPageTable;
         Table<Sheetedgeinformation> sheetEdgeInformationTable;
         Table<Page> pageTable;
 
         DBSetup db = DBSetup.Instance;
 
-        StreamWriter outFile;
-        StreamWriter logFile;
+        GenerateGroupHDLLogic generator;
+
+        // StreamWriter outFile;
+        // StreamWriter logFile;
 
         public GenerateGroupHDL(
             Machine machine,
             List<Diagrampage> diagramPageList,
             List<string> pageNames, 
             string outFileName, 
-            string directory) {
+            string directory,
+            bool generateTestBench) {
 
             this.machine = machine;
             this.diagramPageList = diagramPageList;
             this.pageNames = pageNames;
             this.directory = directory;
             this.outFileName = outFileName;
+            this.generateTestBench = generateTestBench;
+            // this.generatePagesTestBench = generatePagesTestBench;
 
             diagramPageTable = db.getDiagramPageTable();
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
@@ -65,7 +73,11 @@ namespace IBM1410SMS
 
         public int generateGroupHDL() {
 
-            GenerateGroupHDLLogicVHDL generator = new GenerateGroupHDLLogicVHDL();
+
+            //  TODO: Eventually, the class chosen here would depend on what
+            //  flavor of HDL the user chose.
+
+            generator = new GenerateGroupHDLLogicVHDL(generateTestBench);
 
             List<string> inputList = new List<string>();
             List<string> outputList = new List<string>();
@@ -80,16 +92,29 @@ namespace IBM1410SMS
             int errors = 0;
 
             logFileName = Path.Combine(directory, outFileName + ".log");
+            string outPathName = Path.Combine(directory, outFileName +
+                    "." + generator.generateHDLExtension());
 
-            outFile = new StreamWriter(Path.Combine(directory, outFileName + 
-                "." + generator.generateHDLExtension()),false);
-            logFile = new StreamWriter(Path.Combine(logFileName), false);
+            try {
+                generator.logFile = new StreamWriter(Path.Combine(logFileName), false);
+            }
+            catch(Exception e) {
+                return (1);
+            }
 
-            generator.outFile = outFile;
-            generator.logFile = logFile;
+            try {
+                generator.outFile = new StreamWriter(outPathName, false);
+            }
+            catch (Exception e) {
+                generator.logMessage("Cannot open output file " +  outPathName +
+                    ", aborting: " + e.GetType().Name);
+                return (1);
+            }
+
+            errors = 0;
 
             generator.logMessage("Generating HDL for group named " + outFileName +
-                " containing pages: ");
+                "at " + DateTime.Now.ToString() + " containing pages: ");
             string temp = "";
             foreach(string pageName in pageNames) {
                 if(temp.Length + pageName.Length > 60) {
@@ -102,6 +127,70 @@ namespace IBM1410SMS
                 generator.logMessage(temp);
             }
 
+            //  Is there a template (include, if you will) file to use?
+            //  (Is used for both entity and its test bench, if any)
+
+            string templatePath = Path.Combine(directory,
+                generator.templateName + "." + generator.generateHDLExtension());
+            try {
+                generator.templateFile = new StreamReader(templatePath);
+            }
+            catch (Exception e) {
+                generator.logMessage("Unable to open template file " + templatePath +
+                    ", " + e.GetType().Name + ", using internally generated defaults");
+                generator.templateFile = null;
+            }
+
+            //  Are we generating or updating a test bench?  If so,
+            //  read it in and save the "interesting" parts, if any,
+            //  and open the test bench file for writing.
+
+            generator.savedTestBenchLines = new List<string>();
+
+            if (generateTestBench) {
+
+                string testBenchFileName = outFileName +
+                    generator.testBenchSuffix + "." + generator.generateHDLExtension();
+                string testBenchPathName = Path.Combine(directory, testBenchFileName);
+
+                try {
+                    StreamReader oldTestBenchFile = new StreamReader(testBenchPathName);
+                    string testBenchLine;
+                    bool saving = false;
+                    while ((testBenchLine = oldTestBenchFile.ReadLine()) != null) {
+                        if (testBenchLine.Contains(GenerateHDLLogic.testBenchUserStart)) {
+                            saving = true;
+                        }
+                        if (saving) {
+                            generator.savedTestBenchLines.Add(testBenchLine);
+                        }
+                        if (testBenchLine.Contains(GenerateHDLLogic.testBenchUserEnd)) {
+                            saving = false;
+                        }
+                    }
+                    oldTestBenchFile.Close();
+                    generator.logMessage("Old test bench file " + testBenchFileName + " " +
+                        generator.savedTestBenchLines.Count.ToString() +
+                        " lines preserved.");
+
+                }
+                catch (Exception e) {
+                    generator.logMessage("No existing test bench file " + testBenchPathName +
+                        ", " + e.GetType().Name + " , generating default test bench code.");
+                }
+
+
+                try {
+                    generator.testBenchFile = new StreamWriter(testBenchPathName);
+                    generator.outputStreams.Add(generator.testBenchFile);
+                }
+                catch (Exception e) {
+                    generator.logMessage("Unable to create or open test bench file " +
+                        testBenchPathName + " for output.  Test Bench skipped. " +
+                        e.GetType().Name);
+                    generator.testBenchFile = null;
+                }
+            }
 
             //  Get lists of all of the input and output signals for all of the pages
             //  together.
@@ -225,7 +314,7 @@ namespace IBM1410SMS
 
             //  (This issue cannot crop up with input signals that originate outside
             //  the group, as such a signal would necessarily not originate from any
-            //  entity inside the grou).
+            //  entity inside the group).
 
             generator.logMessage("Removing " + removedInputSignals.Count +
                 " input signals that originate inside the group...");
@@ -317,12 +406,21 @@ namespace IBM1410SMS
 
             generator.generateHDLArchitectureSuffix();
 
-            //  Close out the file and logs, and return.
+            //  Close out the files and logs, and return.
 
-            outFile.Close();
-            logFile.Close();
-
+            closeFiles();
             return (errors);
+        }
+
+        public void closeFiles() {
+            generator.outFile.Close();
+            generator.logFile.Close();
+            if (generator.templateFile != null) {
+                generator.templateFile.Close();
+            }
+            if (generator.testBenchFile != null) {
+                generator.testBenchFile.Close();
+            }
         }
 
         public string getLogfileName() {
