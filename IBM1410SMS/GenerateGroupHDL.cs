@@ -29,6 +29,10 @@ namespace IBM1410SMS
 {
     class GenerateGroupHDL
     {
+        const string TestBenchTemplate = "TestBenchTemplate";
+        const string TestBenchFPGAClock = "TestBenchFPGAClock";
+        const string TestBenchFPGAClockTag = "<FPGA CLOCK>";
+
         Machine machine;
         List<Diagrampage> diagramPageList;
         List<string> pageNames;
@@ -46,6 +50,10 @@ namespace IBM1410SMS
         DBSetup db = DBSetup.Instance;
 
         GenerateGroupHDLLogic generator;
+
+        //  TODO:  For now, forcing needsclock to true - maybe change later.
+
+        bool needsClock = true;
 
         // StreamWriter outFile;
         // StreamWriter logFile;
@@ -111,6 +119,7 @@ namespace IBM1410SMS
                 return (1);
             }
 
+            generator.outputStreams.Add(generator.outFile);
             errors = 0;
 
             generator.logMessage("Generating HDL for group named " + outFileName +
@@ -397,10 +406,80 @@ namespace IBM1410SMS
                     " (" + thisPage.title + ")");
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
-                    pageInputNames, pageOutputNames, bufferSignals, true);
+                    pageInputNames, pageOutputNames, bufferSignals, needsClock);
 
 
             }
+
+            //  If there is a test bench to be generated, and if there are no saved lines, 
+            //  fill up with our defaults.
+
+            if (generateTestBench && generator.savedTestBenchLines.Count == 0) {
+
+                string testBenchTemplateFileName = TestBenchTemplate + "." +
+                    generator.generateHDLExtension();
+                string testBenchTemplatePathName = Path.Combine(directory,
+                    testBenchTemplateFileName);
+
+                string testBenchFPGAClockFileName = TestBenchFPGAClock + "." +
+                    generator.generateHDLExtension();
+                string testBenchFGPAClockPathName = Path.Combine(directory,
+                    testBenchFPGAClockFileName);
+
+                StreamReader testBenchTemplateStream = null;
+                StreamReader testBenchFPGAClockStream = null;
+
+                try {
+                    testBenchTemplateStream = new StreamReader(
+                        testBenchTemplatePathName);
+                }
+                catch (Exception e) {
+                    generator.logMessage("Unable to open the Test Bench Template File: " +
+                        e.GetType().Name + ", file " + testBenchTemplatePathName);
+                }
+
+                try {
+                    testBenchFPGAClockStream = new StreamReader(
+                        testBenchFGPAClockPathName);
+                }
+                catch (Exception e) {
+                    generator.logMessage("Unable to open the Test Bench Clock Template File: " +
+                        e.GetType().Name + ", file " + testBenchFGPAClockPathName);
+                }
+
+                //  Read the default template file.  If we see a line with the
+                //  FPGA clock tag, replace that with the FPGA Clock Template
+
+                if (testBenchTemplateStream != null) {
+                    string line;
+                    while ((line = testBenchTemplateStream.ReadLine()) != null) {
+
+                        //  Replace the FPGA clock tag with the appropriate template,
+                        //  but only an the FPGA clock is actually required.
+
+                        if (needsClock && line.Contains(TestBenchFPGAClockTag) &&
+                            testBenchFPGAClockStream != null) {
+                            while ((line = testBenchFPGAClockStream.ReadLine())
+                                != null) {
+                                generator.savedTestBenchLines.Add(line);
+                            }
+                        }
+                        else {
+                            //  Add other lines directly
+                            generator.savedTestBenchLines.Add(line);
+                        }
+                    }
+                }
+
+                if (testBenchTemplateStream != null) {
+                    testBenchTemplateStream.Close();
+                }
+                if (testBenchFPGAClockStream != null) {
+                    testBenchFPGAClockStream.Close();
+                }
+
+            }
+
 
             //  Generate anything needed at the end
 
