@@ -405,6 +405,119 @@ namespace IBM1410SMS
                 logicBlocks.Add(newBlock);
             }
 
+            //
+            //  Check for cases where another gate and a trigger's output connect 
+            //  These serve as DC SETS or DC RESETS depending upon which trigger
+            //  output the connec too - by dragging one output to logic 1, the
+            //  other necessarily goes to logic 1.
+            //
+
+            //  So, process the logic blocks, looking for DOT functions. 
+            //  If the DOT function has exactly two inputs, BOTH must be from
+            //  diagram blocks, and one of those inputs is the output of a trigger 
+            //  (Logic Function is Trigger).
+            //
+            //  At least for now, it must also have exactly ONE OUTPUT connection
+            //
+            //  Then do the following:
+            //      1.  Locate the Trigger ("T") and the Non Trigger ("N") logic blocks
+            //      2.  For gate N, identify its pin "P".
+            //      3.  For gate T, identify its pin "T".
+            //      3.  Change gate N output to be to the trigger pin T_DOT  
+            //          (the HDL for the trigger must support this "extra" pin, 
+            //          which will be OR'd to the DC Set or DC Reset input, depending 
+            //          on the pin.)
+            //      4.  Add this input to the trigger as pin T_DOT from gate N pin P.
+            //  Mark the DOT function Logic BLock for removal after the loop is complete.
+
+            foreach (LogicBlock logicBlock in logicBlocks) {
+
+                //  If it isn't a DOT function, or does not have 2 inputs, or exactly 
+                //  one output, ignore it.
+
+                if (!logicBlock.isDotFunction() || logicBlock.inputConnections.Count != 2
+                    || logicBlock.outputConnections.Count != 1) {
+                    continue;
+                }
+
+                string dotFunctionCoord = logicBlock.dot.diagramColumnToLeft.ToString() +
+                    logicBlock.dot.diagramRowTop;
+
+                int triggerCount = 0;
+                LogicBlock triggerBlock = null;
+                LogicBlock nonTriggerBlock = null;
+
+                //  Remember the eventual output.
+
+                Connection dotFunctionOuputConection = logicBlock.outputConnections[0];
+
+                //  Is exactly one of the logic blocks a Trigger?
+
+                foreach (Connection connection in logicBlock.inputConnections) {
+
+                    //  If the connection isn't from a diagram block, we are done here.
+
+                    if (connection.fromDiagramBlock == 0) {
+                        triggerCount = 0;
+                        break;
+                    }
+
+                    //  Find the corresponding logic block.  Is it a Trigger?
+
+                    LogicBlock lb = logicBlocks.Find(x => x.gate.idDiagramBlock ==
+                        connection.fromDiagramBlock);
+
+                    if (lb == null) {
+                        logMessage("ERROR Processing DOT Function at " + dotFunctionCoord +
+                            " Connection id " + connection.idConnection.ToString() +
+                            " Reference to Diagram Block " + connection.fromDiagramBlock +
+                            " Could not be found in logicBlocks list.");
+                        ++errors;
+                        triggerCount = 0;
+                        break;
+                    }
+
+                    if (lb.logicFunction == "Trigger") {
+                        ++triggerCount;
+                        triggerBlock = lb;
+                    }
+                    else {
+                        nonTriggerBlock = lb;
+                    }
+                }
+
+                //  Is the trigger count 0?  If so, we are done here....
+
+                if (triggerCount == 0) {
+                    continue;
+                }
+
+                //  We SHOULD now have a trigger Count of 1, and triggerBlock and
+                //  nonTriggerBlock set.
+
+                if (triggerCount > 1) {
+                    logMessage("ERROR Processing DOT Function at " + dotFunctionCoord +
+                            " has inputs from > 1 Trigger -- aborting Trigger processing.");
+                    continue;
+                }
+
+                if (triggerBlock == null || nonTriggerBlock == null) {
+                    logMessage("INTERNAL ERROR:  DOT Function Trigger processing: " +
+                        "Either triggerBlock or nonTriggerBlock is NULL");
+                    continue;
+                }
+
+                //  Log the special case
+
+                logMessage("DOT Function at " + dotFunctionCoord + " has one output from " +
+                    " a Trigger, one output from Non-Trigger");
+
+                //  Here is where the real work gets done...
+
+                //  TODO:  Left off HERE.
+            }
+
+
             //  Find the Gate type logic blocks that we want to ignore, and capture the
             //  associated connection IDs.
 
@@ -451,6 +564,7 @@ namespace IBM1410SMS
                         }
                     }
                 }
+
 
                 //  Check each output connection for the existence of a latch.
                 //  Originally, it checked only two levels deep, but I immediately
@@ -1343,172 +1457,7 @@ namespace IBM1410SMS
             return (errors);
         }
 
-        //  It occurs to me that generateVHDL.... should be methods of a subclass of 
-        //  generateHDL, and the subclass selected at the beginning of all of this.
-
-        //private void generateVHDLNand(List<string> inputs, string output) {
-        //    outFile.WriteLine("\t" + output + " <= NOT(" +
-        //        string.Join(" AND ", inputs) + " );");
-        //}
-
-        //private void generateVHDLNor(List<string> inputs, string output) {
-        //    outFile.WriteLine("\t" + output + " <= NOT(" +
-        //        string.Join(" OR ", inputs) + " );");
-        //}
-
-        //private void generateVHDLOr(List<string> inputs, string output) {
-        //    outFile.WriteLine("\t" + output + " <= " +
-        //        string.Join(" OR ", inputs) + ";");
-        //}
-
-        //private void generateVHDLNot(List<string> inputs, string output) {
-        //    outFile.WriteLine("\t" + output + " <= NOT " + inputs[0] + ";");
-        //}
-
-        //private void generateVHDLEqual(List<string> inputs, string output) {
-        //    outFile.WriteLine("\t" + output + " <= " + inputs[0] + ";");
-        //}
-
-        //private void generateVHDLSignalAssignment(string blockOutput, string outputSignal) {
-        //    outFile.WriteLine("\t" + outputSignal + " <= " + blockOutput + ";");
-        //}
-
-        //  Routine to generate the statements for a D Flip Flop used on a latch
-        //  output
-
-        //private int generateVHDLDFlipFlop(LogicBlock block) {
-
-        //    int temp_errors = 0;
-        //    string outputPinName =
-        //        generateOutputPinName(block, block.outputConnections[0], out temp_errors);
-
-        //    outFile.WriteLine("\t" + LatchPrefix + "_" + block.getCoordinate() + ": " +
-        //        "work.DFlipFlop port map (");
-        //    outFile.WriteLine("\t\tC => " + VHDLSystemClockName + ",");
-        //    outFile.WriteLine("\t\tD => " + outputPinName + "_" + LatchPrefix + ",");
-        //    outFile.WriteLine("\t\tQ => " + outputPinName + ",");
-        //    outFile.WriteLine("\t\tQBar => OPEN );");
-        //    outFile.WriteLine();
-        //    return (temp_errors);
-        //}
-
-        ////  Class to generate HDL prefix information - standard intro comments,
-        ////  library declarations, etc.
-
-        //private void generateVHDLPrefix() {
-        //    outFile.WriteLine("-- VHDL for IBM SMS ALD page " + page.name);
-        //    outFile.WriteLine("-- Title: " + page.title);
-        //    outFile.WriteLine("-- IBM Machine Name " + Helpers.getMachineFromPage(page));
-        //    outFile.WriteLine("-- Generated by GenerateHDL");
-        //    outFile.WriteLine();
-        //    outFile.WriteLine("library IEEE;");
-        //    outFile.WriteLine("use IEEE.STD_LOGIC_1164.ALL;");
-        //    outFile.WriteLine();
-        //    if(needsDFlipFlop) {
-        //        outFile.WriteLine("use work.DflipFlop.all;");
-        //        outFile.WriteLine();
-        //    }
-        //}
-
-        //private void generateVHDLEntity() {
-
-        //    outFile.WriteLine("entity " + VHDLEntityName + " is");
-        //    outFile.WriteLine("\tPort (");
-        //    if(needsClock) {
-        //        outFile.WriteLine("\t\t" + 
-        //            VHDLSystemClockName + ":\t\t in STD_LOGIC;");
-        //    }
-        //    foreach(Sheetedgeinformation signal in sheetInputsList) {
-        //        outFile.WriteLine("\t\t" + generateSignalName(signal.signalName) +
-        //            ":\t in STD_LOGIC;");
-        //    }
-
-        //    bool firstOutput = true;
-        //    foreach(Sheetedgeinformation signal in sheetOutputsList) {
-        //        if(!firstOutput) {
-        //            outFile.WriteLine(";");
-        //        }
-        //        firstOutput = false;
-        //        //  Write out signal WITHOUT the ";" so that the LAST one doesn't have one
-        //        outFile.Write("\t\t" + generateSignalName(signal.signalName) +
-        //            ":\t out STD_LOGIC");
-        //    }
-
-        //    //  Write out the trailing );
-        //    outFile.WriteLine(");");
-
-        //    outFile.WriteLine("end " + VHDLEntityName + ";");
-        //    outFile.WriteLine();
-        //}
-
-        //private int generateVHDLArchitecturePrefix() {
-
-        //    int errors = 0;
-        //    int temp_errors = 0;
-
-        //    outFile.WriteLine("architecture Behavioral of " + VHDLEntityName +
-        //        " is ");
-        //    outFile.WriteLine();
-        //    foreach(LogicBlock block in logicBlocks) {
-
-        //        if(block.ignore) {
-        //            continue;
-        //        }
-
-        //        List<string> processedPins = new List<string>();
-
-        //        foreach (Connection connection in block.outputConnections) {
-
-        //            //  A DOT function can only have one output "pin"
-
-        //            if(block.isDotFunction()) {
-        //                outFile.WriteLine("\tsignal " + 
-        //                    generateOutputPinName(block,connection,out temp_errors) +
-        //                    ": STD_LOGIC;");
-        //                errors += temp_errors;
-        //                break;
-        //            }
-
-
-        //            //  Only gates from here on...
-
-        //            //  First handle un-pinned, intra card connections.  They are
-        //            //  always unique input/output, so no need to remember them.
-
-        //            if(connection.fromPin == "--") {
-        //                outFile.WriteLine("\tsignal " +
-        //                    generateOutputPinName(block,connection,out temp_errors) +
-        //                    ": STD_LOGIC;");
-        //            }
-        //            else {
-        //                //  Connection is from an ordinary pin.
-        //                //  Signa is delcared only once for each gate output pin
-
-        //                if (processedPins.Contains(connection.fromPin)) {
-        //                    continue;
-        //                }
-
-        //                processedPins.Add(connection.fromPin);
-        //                outFile.WriteLine("\tsignal " +
-        //                    generateOutputPinName(block, connection, out temp_errors) +
-        //                    ": STD_LOGIC;");
-        //            }
-
-        //            errors += temp_errors;
-        //        }
-        //    }
-
-        //    outFile.WriteLine();
-        //    outFile.WriteLine("begin");
-        //    outFile.WriteLine();
-
-        //    return (errors);
-        //}
-
-        //private void generateVHDLArchitectureSuffix() {
-        //    outFile.WriteLine();
-        //    outFile.WriteLine("end;");
-        //}
+        
 
         public string getLogfileName() {
             return logPathName;
