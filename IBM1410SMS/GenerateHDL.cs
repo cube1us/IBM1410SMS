@@ -430,20 +430,20 @@ namespace IBM1410SMS
             //      4.  Add this input to the trigger as pin T_DOT from gate N pin P.
             //  Mark the DOT function Logic BLock for removal after the loop is complete.
 
+            List<LogicBlock> dotFunctionLogicBlocksToRemove = new List<LogicBlock>();
             foreach (LogicBlock logicBlock in logicBlocks) {
 
                 //  If it isn't a DOT function, or does not have 2 inputs, or exactly 
-                //  one output, ignore it.
+                //  one output that is to a Gate (i.e., a Diagram Block), ignore it.
 
                 if (!logicBlock.isDotFunction() || logicBlock.inputConnections.Count != 2
-                    || logicBlock.outputConnections.Count != 1) {
+                    || logicBlock.outputConnections.Count != 1 ||
+                    logicBlock.outputConnections[0].toDiagramBlock == 0) {
                     continue;
                 }
-
-                string dotFunctionCoord = logicBlock.dot.diagramColumnToLeft.ToString() +
-                    logicBlock.dot.diagramRowTop;
-
+            
                 int triggerCount = 0;
+                string triggerPin = "";
                 LogicBlock triggerBlock = null;
                 LogicBlock nonTriggerBlock = null;
 
@@ -468,7 +468,8 @@ namespace IBM1410SMS
                         connection.fromDiagramBlock);
 
                     if (lb == null) {
-                        logMessage("ERROR Processing DOT Function at " + dotFunctionCoord +
+                        logMessage("ERROR Processing DOT Function at " + 
+                            logicBlock.getCoordinate() +
                             " Connection id " + connection.idConnection.ToString() +
                             " Reference to Diagram Block " + connection.fromDiagramBlock +
                             " Could not be found in logicBlocks list.");
@@ -480,6 +481,7 @@ namespace IBM1410SMS
                     if (lb.logicFunction == "Trigger") {
                         ++triggerCount;
                         triggerBlock = lb;
+                        triggerPin = connection.fromPin;                        
                     }
                     else {
                         nonTriggerBlock = lb;
@@ -496,27 +498,137 @@ namespace IBM1410SMS
                 //  nonTriggerBlock set.
 
                 if (triggerCount > 1) {
-                    logMessage("ERROR Processing DOT Function at " + dotFunctionCoord +
-                            " has inputs from > 1 Trigger -- aborting Trigger processing.");
+                    logMessage("ERROR Processing DOT Function at " +
+                        logicBlock.getCoordinate() +
+                        " has inputs from > 1 Trigger -- aborting Trigger processing.");
                     continue;
                 }
 
-                if (triggerBlock == null || nonTriggerBlock == null) {
+                //  Next, track down the gate that is the output to this DOT function
+
+                LogicBlock destinationBlock = logicBlocks.Find(x => x.gate.idDiagramBlock ==
+                    logicBlock.outputConnections[0].toDiagramBlock);
+
+                if (triggerBlock == null || nonTriggerBlock == null || destinationBlock == null) {
                     logMessage("INTERNAL ERROR:  DOT Function Trigger processing: " +
-                        "Either triggerBlock or nonTriggerBlock is NULL");
+                        "triggerBlock, nonTriggerBlock or destinationBlock is NULL");
                     continue;
                 }
-
+                
                 //  Log the special case
 
-                logMessage("DOT Function at " + dotFunctionCoord + " has one output from " +
-                    " a Trigger, one output from Non-Trigger");
+                logMessage("DOT Function at " + logicBlock.getCoordinate() + 
+                    " has one output from a Trigger, one output from Non-Trigger");
+                logMessage("   Trigger block pin " + triggerPin + " located at " +
+                    triggerBlock.getCoordinate() + ", Non-trigger is located at " +
+                    nonTriggerBlock.getCoordinate() + " Output is to " + 
+                    destinationBlock.getCoordinate());
 
                 //  Here is where the real work gets done...
 
-                //  TODO:  Left off HERE.
+                Connection nonTriggerBlockConnection = null;
+                Connection triggerBlockConnection = null;
+                Connection destinationBlockConnection = null;
+
+                //  First find the trigger and non-trigger output connections to this DOT function,
+                //  and the destination gate's connection FROM this DOT function.
+
+                foreach(Connection connection in nonTriggerBlock.outputConnections) {
+                    if(connection.toDotFunction == logicBlock.dot.idDotFunction) {
+                        nonTriggerBlockConnection = connection;
+                    }
+                }
+
+                if(nonTriggerBlockConnection == null) {
+                    logMessage("   ERROR:  Could not find corresponding connection to this " +
+                        "DOT Function from logic block at " + nonTriggerBlock.getCoordinate());
+                    continue;
+                }
+
+                foreach(Connection connection in triggerBlock.outputConnections) {
+                    if(connection.toDotFunction == logicBlock.dot.idDotFunction) {
+                        triggerBlockConnection = connection;
+                    }
+                }
+
+                if (triggerBlockConnection == null) {
+                    logMessage("   ERROR:  Could not find corresponding connection to this " +
+                        "DOT Function from logic block at " + triggerBlock.getCoordinate());
+                    continue;
+                }
+
+                foreach(Connection connection in destinationBlock.inputConnections) {
+                    if(connection.fromDotFunction == logicBlock.dot.idDotFunction) {
+                        destinationBlockConnection = connection;
+                    }
+                }
+
+                if (destinationBlockConnection == null) {
+                    logMessage("   ERROR:  Could not find corresponding connection from this " +
+                        "DOT Function to logic block at " + destinationBlock.getCoordinate());
+                    continue;
+                }
+
+                if(nonTriggerBlockConnection.to != "D" || 
+                    nonTriggerBlockConnection.toDotFunction != logicBlock.dot.idDotFunction ||
+                    triggerBlockConnection.to != "D" ||
+                    triggerBlockConnection.toDotFunction != logicBlock.dot.idDotFunction ||
+                    destinationBlockConnection.from != "D" ||
+                    destinationBlockConnection.fromDotFunction != logicBlock.dot.idDotFunction) {
+                    logMessage("   ERROR: Verification of Trigger/DOT Function connections FAILED.");
+                    continue;
+                }
+
+                //
+                //  Derive a faux pin on the trigger block to use as an input.  It MUST
+                //  be defined on the gate, but should be one that cannot actually ever
+                //  happen.  In the current application these are restricted to single cards,
+                //  so pick the corresponding letter that corresponds to a double card's
+                //  second half (S-8) using Valid pins to calculate it.
+                //
+
+                string fauxPin = Helpers.validPins[
+                    Array.IndexOf(Helpers.validPins, triggerPin[0]) +
+                    Array.IndexOf(Helpers.validPins,'S')].ToString();
+
+                logMessage("   Using Trigger faux pin " + fauxPin + " as input side of pin " +
+                    triggerPin);
+
+                //  
+                //  Change the non-trigger block's output to point to a faux input pin on
+                //  the trigger block, and add a reference to it as an input on the trigger block.
+                //
+
+                nonTriggerBlockConnection.toDotFunction = 0;
+                nonTriggerBlockConnection.toDiagramBlock = triggerBlock.gate.idDiagramBlock;
+                nonTriggerBlockConnection.toPin = fauxPin;
+                nonTriggerBlockConnection.to = "P";
+                triggerBlock.inputConnections.Add(nonTriggerBlockConnection);
+
+                //
+                //  Change the trigger block's output to point where the DOT function output
+                //  points, and change the destination gate's input to be the trigger block's
+                //  output.
+                //
+
+                triggerBlockConnection.toDotFunction = 0;
+                triggerBlockConnection.toDiagramBlock = destinationBlock.gate.idDiagramBlock;
+                triggerBlockConnection.to = "P";
+                destinationBlockConnection.fromDotFunction = 0;
+                destinationBlockConnection.fromDiagramBlock = triggerBlock.gate.idDiagramBlock;
+                destinationBlockConnection.from = "P";
+                destinationBlockConnection.fromPin = triggerPin;
+
+                //  Mark the dot functiont to be removed
+
+                dotFunctionLogicBlocksToRemove.Add(logicBlock);
             }
 
+            //  Finally remove any logic blocks marked for removal before proceeding.
+
+            foreach (LogicBlock lb in dotFunctionLogicBlocksToRemove) {
+                logicBlocks.Remove(lb);
+            }
 
             //  Find the Gate type logic blocks that we want to ignore, and capture the
             //  associated connection IDs.

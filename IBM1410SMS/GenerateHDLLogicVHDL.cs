@@ -118,7 +118,12 @@ namespace IBM1410SMS
                 }
                 else {
 
-                    mapPin = block.pins.Find(x => x.pin == connection.toPin).mapPin;
+                    mapPin = null;
+                    Gatepin gatePin = null;
+
+                    if((gatePin = block.pins.Find(x => x.pin == connection.toPin)) != null) {
+                        mapPin = gatePin.mapPin;
+                    }
 
                     if (mapPin == null || mapPin.Length == 0) {
                         logMessage("ERROR:  Special gate for block at " +
