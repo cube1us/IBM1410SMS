@@ -62,7 +62,7 @@ namespace IBM1410SMS
         Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
 
         List<String> ignoredBlockSymbols = new List<string>()
-            {"L", "R", "LAMP", "CAP" };
+            {"L", "R", /* "LAMP", */ "CAP" };
 
         // string VHDLEntityName;
 
@@ -1239,6 +1239,25 @@ namespace IBM1410SMS
                         }
                     }
                 }
+
+                //  Lamps get special handling - we generate a special signal name to add to the
+                //  outputs list.
+
+                if(block.logicFunction == "Lamp") {
+                    string signalName = "LAMP_" + Helpers.getCardSlotInfo(
+                        block.gate.cardSlot).ToSmallString();
+                    Sheetedgeinformation lampEdge = new Sheetedgeinformation();
+                    lampEdge.idSheetEdgeInformation = -1;
+                    lampEdge.signalName = signalName;
+                    lampEdge.rightSide = 1;
+                    lampEdge.leftSide = 0;
+                    lampEdge.row = block.gate.diagramRow;
+                    sheetOutputsList.Add(lampEdge);
+
+                    logMessage("Added LAMP signal " + signalName);
+                }
+
+
             }
 
             //generateVHDLPrefix();
@@ -1359,7 +1378,6 @@ namespace IBM1410SMS
 
                 }
 
-
                 //  For now, while debugging, just display the block, output name(s) and
                 //  input name(s)
 
@@ -1381,11 +1399,12 @@ namespace IBM1410SMS
 
                 //  Actual generate is here...
 
-                if (block.outputConnections.Count <= 0) {
+                if (block.logicFunction != "Lamp" && 
+                    block.outputConnections.Count <= 0) {
                     logMessage("\tERROR: Block has no outputs.");
                     ++errors;
                 }
-                else if (outputNames.Count < 1) {
+                else if (block.logicFunction != "Lamp" && outputNames.Count < 1) {
                     logMessage("\tERROR:  No output names found.");
                 }
                 else if (inputNames.Count <= 0) {
@@ -1393,9 +1412,11 @@ namespace IBM1410SMS
                     ++errors;
                 }
                 else if ((block.logicFunction == "NOT" || 
-                        block.logicFunction == "EQUAL") 
+                        block.logicFunction == "EQUAL" ||
+                        block.logicFunction == "Lamp")
                         && inputNames.Count > 1) {
-                    logMessage("\tError: NOT or EQUAL function cannot have more than one input.");
+                    logMessage("\tError: NOT, EQUAL or Lamp function cannot have more " +
+                        "than one input.");
                     ++errors;
                 }
                 else if(uniqueOutputNames.Count > 1 &&
@@ -1418,6 +1439,10 @@ namespace IBM1410SMS
                 else if (block.logicFunction == "EQUAL") {
                     //  These are usually DOT functions...
                     generator.generateHDLEqual(inputNames, outputNames[0]);
+                }
+                else if (block.logicFunction == "Lamp" && inputNames.Count == 1) {
+                    generator.generateHDLEqual(inputNames,
+                        "LAMP_" + Helpers.getCardSlotInfo(block.gate.cardSlot).ToSmallString());
                 }
                 else if (block.logicFunction == "NOR") {
                     generator.generateHDLNor(inputNames, outputNames[0]);

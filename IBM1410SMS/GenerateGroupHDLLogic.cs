@@ -88,6 +88,10 @@ namespace IBM1410SMS
             else if (signal.Substring(0, 1) == "-") {
                 outString = "M" + signal.Substring(1);
             }
+            else {
+                outString = signal;
+            }
+
             outString = outString.Replace(" ", "_");
             outString = outString.Replace(".", "_DOT_");
             outString = outString.Replace("+", "_OR_");

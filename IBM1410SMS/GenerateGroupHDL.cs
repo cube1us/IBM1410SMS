@@ -46,6 +46,9 @@ namespace IBM1410SMS
         Table<Diagrampage> diagramPageTable;
         Table<Sheetedgeinformation> sheetEdgeInformationTable;
         Table<Page> pageTable;
+        Table<Diagramblock> diagramBlockTable;
+        Table<Cardgate> cardGateTable;
+        Table<Logicfunction> logicFunctionTable;
 
         DBSetup db = DBSetup.Instance;
 
@@ -77,6 +80,9 @@ namespace IBM1410SMS
             diagramPageTable = db.getDiagramPageTable();
             sheetEdgeInformationTable = db.getSheetEdgeInformationTable();
             pageTable = db.getPageTable();
+            diagramBlockTable = db.getDiagramBlockTable();
+            cardGateTable = db.getCardGateTable();
+            logicFunctionTable = db.getLogicFunctionTable();
         }
 
         public int generateGroupHDL() {
@@ -338,6 +344,24 @@ namespace IBM1410SMS
                 }
             }
 
+            //
+            //  Lamps are output signals too - but they don't appear in the database
+            //  so spin all the sheets looking for lamps.
+            //
+
+            foreach(Diagrampage page in diagramPageList) {
+
+                int tempErrors = 0;
+                List<string> lampNames = getLampNames(page, out tempErrors);
+                foreach (string lamp in lampNames) {
+                    generator.logMessage("Page " + Helpers.getDiagramPageName(page.idDiagramPage) +
+                        " generates Lamp Output " + lamp);
+                    outputList.Add(lamp);
+                }
+                errors += tempErrors;
+
+            }
+
             //  The signals (wires for Verilog fans) will be any signal in the
             //  orignal full list that is not in what remains of either the input
             //  or the output list.
@@ -397,12 +421,22 @@ namespace IBM1410SMS
                         "GenerateGroupHDL: Cannot find page for diagram page with " +
                         "database key of " + page.idDiagramPage + "referring to page " +
                         "with key of " + page.page);
+                    ++errors;
                     continue;
                 }
 
+                //  Search the page for LAMPS (yes, again...)
+
+                int tempErrors = 0;
+                List<string> lampNames = getLampNames(page, out tempErrors);
+                foreach(string lamp in lampNames) {
+                    pageOutputNames.Add(lamp);
+                }
+                errors += tempErrors;
+
                 //  Generate the page entity.  For now, just force needsClock to true.
 
-                generator.logMessage("Generating HDL for page " + thisPage.name +
+                generator.logMessage("Generating HDL associated with page " + thisPage.name +
                     " (" + thisPage.title + ")");
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
@@ -489,6 +523,54 @@ namespace IBM1410SMS
 
             closeFiles();
             return (errors);
+        }
+
+        public List<string> getLampNames(Diagrampage page, out int errors) {
+            errors = 0;
+            List<string> outputList = new List<string>();
+
+            List<Diagramblock> logicBlocks = diagramBlockTable.getWhere(
+                "WHERE diagramPage = '" + page.idDiagramPage + "' " +
+                "ORDER BY diagramRow ASC, diagramColumn DESC");
+
+            foreach (Diagramblock block in logicBlocks) {
+
+                string pageCoordinate = Helpers.getDiagramPageName(page.idDiagramPage) +
+                        " coordinate " + block.diagramColumn.ToString() +
+                        block.diagramRow;
+
+                Cardgate cardGate = cardGateTable.getByKey(block.cardGate);
+                if (cardGate == null || cardGate.idcardGate == 0) {
+                    generator.logMessage("ERROR:  Invalid Card Gate Key (" +
+                        block.cardGate + ") for DiagramBlock " +
+                        "on page " + pageCoordinate);
+                    ++errors;
+                    continue;
+                }
+
+                Logicfunction logicFunction = logicFunctionTable.getByKey(
+                    cardGate.logicFunction);
+                if (logicFunction == null || logicFunction.idLogicFunction == 0) {
+                    generator.logMessage("ERROR:  Invalid Logic Function Key (" +
+                        cardGate.logicFunction + "), Gate Key (" + cardGate.idcardGate +
+                        ") for DiagramBlock " + "on page " + pageCoordinate);
+                    ++errors;
+                    continue;
+                }
+
+                //  Whew.  Now, is it a Lamp?
+
+                if (logicFunction.name != "Lamp") {
+                    continue;
+                }
+
+                //  Yes.  Fudge up a signal and add it to the list.
+
+                outputList.Add("LAMP_" +
+                    Helpers.getCardSlotInfo(block.cardSlot).ToSmallString());
+            }
+
+            return (outputList);
         }
 
         public void closeFiles() {

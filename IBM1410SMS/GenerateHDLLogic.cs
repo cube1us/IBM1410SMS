@@ -126,6 +126,13 @@ namespace IBM1410SMS
                 return ("OUT_DOT_" + block.getCoordinate());
             }
 
+            //  Lamps get special handling as well - the output pin name is always
+            //  OUT_LAMP_<coordinate>
+
+            if(block.logicFunction == "Lamp") {
+                return ("OUT_LAMP_" + block.getCoordinate());
+            }
+
             //  A -- connection is named OUT_From_NoPin
 
             if (connection.fromPin == "--") {
@@ -172,6 +179,10 @@ namespace IBM1410SMS
             else if (signal.Substring(0, 1) == "-") {
                 outString = "M" + signal.Substring(1);
             }
+            else {
+                outString = signal;
+            }
+
             outString = outString.Replace(" ", "_");
             outString = outString.Replace(".", "_DOT_");
             outString = outString.Replace("+", "_OR_");
