@@ -1324,6 +1324,29 @@ namespace IBM1410SMS
                             ++errors;
                             continue;
                         }
+
+                        //  Issue a warning if this sheet edge signal is to a DOT function,
+                        //  and the signal is an input to more than one sheet.
+
+                        if(inputConnection.toDotFunction != 0) {
+                            List<Sheetedgeinformation> signals = sheetEdgeInformationTable.getWhere(
+                                "WHERE signalName = '" + edge.signalName + "' AND diagramPage <> " +
+                                edge.diagramPage.ToString());
+                            if(signals.Count > 0) {
+                                logMessage("WARNING: Input connection from " +
+                                    "edge connection named " + edge.signalName +
+                                    " to a DOT function on page " +
+                                    Helpers.getDiagramPageName(edge.diagramPage) +
+                                    " coordinate " + block.getCoordinate() +
+                                    " is also used as input to other page(s):");
+                                string message = "";
+                                foreach(Sheetedgeinformation signal in signals) {
+                                    message += Helpers.getDiagramPageName(signal.diagramPage) + " ";
+                                }
+                                logMessage("    " + message);
+                            }
+                        }
+
                         inputNames.Add(generator.generateSignalName(edge.signalName));
                     }
 
