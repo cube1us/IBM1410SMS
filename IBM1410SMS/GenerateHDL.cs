@@ -696,9 +696,11 @@ namespace IBM1410SMS
 
                 //  We don't check for latches on triggers or single shots, 
                 //  since they will already be generated as or with flip flops 
-                //  (and therefore we will need a clock input)
+                //  (and therefore we will need a clock input).  Same for
+                //  oscillators, which also have a clock.
 
-                if (block.gate.symbol == "T" || block.gate.symbol == "SS") {
+                if (block.gate.symbol == "T" || block.gate.symbol == "SS" ||
+                    block.HDLname == "Oscillator") {
                     needsClock = true;
                     continue;
                 }
@@ -1471,7 +1473,8 @@ namespace IBM1410SMS
                     generator.generateHDLNor(inputNames, outputNames[0]);
                 }
                 else if (block.logicFunction == "Special" ||
-                    block.logicFunction == "Trigger") {
+                    block.logicFunction == "Trigger" ||
+                    block.HDLname == "Oscillator") {
                     errors += 
                         generator.generateHDLSpecial(block, inputNames, outputNames);
                 }

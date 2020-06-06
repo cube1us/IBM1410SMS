@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Text.RegularExpressions;
+
 using MySQLFramework;
 
 namespace IBM1410SMS
@@ -98,11 +100,46 @@ namespace IBM1410SMS
 
             outFile.WriteLine();
             outFile.WriteLine("\t" + block.HDLname + "_" + block.getCoordinate() + ": " +
-                "entity " + block.HDLname + " port map (");
+                "entity " + block.HDLname);
+
+            //  If this is an oscillator, use the title to figure out the frequency,
+            //  and include a generic map for that frequency in KHZ
+
+            if(block.HDLname == "Oscillator" && block.gate.title.Length > 0) {
+                string pattern = @"^([0-9\.]+)\s*(kc|khz|mc|mhz)$";
+                Match match = Regex.Match(block.gate.title,pattern,RegexOptions.IgnoreCase);
+                if (!match.Success || match.Groups.Count != 3) {
+                    logMessage(block.logicFunction + " at " +
+                        block.getCoordinate() + " unable to decode title of " +
+                        block.gate.title);
+                    ++temp_errors;
+                }
+                else {
+                    double freq = 0.0f;
+                    double multiplier =
+                         (match.Groups[2].Captures[0].Value.Substring(0, 1).ToUpper() == "M" ?
+                            1.0e3 : 1.0);                   
+                    double.TryParse(match.Groups[1].Captures[0].Value, out freq);
+                    if(freq < 1.0) {
+                        logMessage("\tERROR" + block.HDLname + " at " +
+                            block.getCoordinate() + " unable to parse frequency of " +
+                            match.Groups[1].Captures[0].Value + " from title of " + block.gate.title);
+                        ++temp_errors;
+                    }
+                    else {
+                        freq = freq * multiplier;
+                        logMessage("\tINFO: " + block.HDLname + " at " + block.getCoordinate() +
+                            " frequency: " + freq.ToString() + " KHz");
+                        outFile.WriteLine("\t    generic map(FREQUENCY => " + freq.ToString() + ")");
+                    }
+                }
+            }
+                
+            outFile.WriteLine("\t    port map (");
             
             //  If this is a trigger, give it a clock
 
-            if(block.logicFunction == "Trigger") {
+            if(block.logicFunction == "Trigger" || block.HDLname == "Oscillator") {
                 outFile.WriteLine("\t\tFPGA_CLK => FPGA_CLK,");
             }
 
