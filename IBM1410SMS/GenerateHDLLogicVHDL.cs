@@ -127,10 +127,18 @@ namespace IBM1410SMS
                         ++temp_errors;
                     }
                     else {
+                        string clockPeriod = Parms.getParmValue("fpgaclockperiod");
+                        if(clockPeriod.Length == 0) {
+                            logMessage("\tWARNING:  Parm table fpgaclockperiod not set.  Using 10 ns");
+                            clockPeriod = "10";
+                            ++temp_errors;
+                        }
                         freq = freq * multiplier;
                         logMessage("\tINFO: " + block.HDLname + " at " + block.getCoordinate() +
-                            " frequency: " + freq.ToString() + " KHz");
-                        outFile.WriteLine("\t    generic map(FREQUENCY => " + freq.ToString() + ")");
+                            " frequency: " + freq.ToString() + " KHz, Clock Period is " +
+                            clockPeriod + " ns");
+                        outFile.WriteLine("\t    generic map(FREQUENCY => " + freq.ToString() + 
+                            ", CLOCKPERIOD => " + clockPeriod + ")");
                     }
                 }
             }
