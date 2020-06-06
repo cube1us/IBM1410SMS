@@ -86,11 +86,15 @@ namespace IBM1410SMS
             cardTypeList = cardTypeTable.getWhere(
                 "WHERE idCardType != '0' ORDER BY type");
 
-            foreach(Cardtype ct in cardTypeList) {
+            Cardtype anyCard = new Cardtype();
+            anyCard.idCardType = 0;
+            anyCard.name = "ANY TYPE";
+            anyCard.type = "ALL";
+            cardTypeList.Insert(0, anyCard);
+
+            foreach (Cardtype ct in cardTypeList) {
                 cardTypeComboBox.Items.Add(ct.type);
             }
-
-
         }
 
         private void cardTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -145,14 +149,16 @@ namespace IBM1410SMS
             cardTypeUsageDataGridView.Refresh();
 
             //  Then find all of the diagram blocks that refer to this card type.
+            //  The first entry in the list (ANY TYPE) means ignore the type.
 
             diagramBlockList = diagramBlockTable.getWhere(
-                "WHERE cardType='" + currentCardType.idCardType + "'");
+                currentCardType.idCardType == 0 ?
+                "" : "WHERE cardType='" + currentCardType.idCardType + "'");
 
             foreach (Diagramblock db in diagramBlockList) {
 
                 usageEntry = new cardTypeUsageEntry();
-                usageEntry.cardType = currentCardType.type;
+                usageEntry.cardType = Helpers.getCardTypeType(db.cardType);
                 usageEntry.sheet = Helpers.getDiagramPageName(db.diagramPage);
                 usageEntry.coordinate = db.diagramColumn + db.diagramRow.ToString();
                 usageEntry.inputLevel = logicLevelsTable.getByKey(db.inputMode).logicLevel;
