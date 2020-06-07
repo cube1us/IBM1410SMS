@@ -36,7 +36,7 @@ namespace IBM1410SMS
 {
     public abstract class GenerateGroupHDLLogic {
         protected Regex replacePeriods = new Regex("\\.");
-        protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
+        protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-|\\*");
 
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
