@@ -142,12 +142,62 @@ namespace IBM1410SMS
                     }
                 }
             }
-                
+
+            //  If this is a Delay, it gets implemented as a shift register.
+            //  The title should have the delay, otherwise one can fall back on
+            //  the component value, as many of these are fixed delays (a few are
+            //  configurable)
+
+            if (block.HDLname.Contains("ShiftRegister") && block.gate.title.Length > 0) {
+                string pattern = @"^([0-9\.]+)\s*(us|ns)$";
+
+                Match match = Regex.Match(block.gate.title, pattern, RegexOptions.IgnoreCase);
+                if (!match.Success || match.Groups.Count != 3) {
+                    logMessage(block.logicFunction + " at " +
+                        block.getCoordinate() + " unable to decode title of " +
+                        block.gate.title);
+                    ++temp_errors;
+                }
+                else {
+                    double delay = 0.0f;
+                    double multiplier =
+                         (match.Groups[2].Captures[0].Value.Substring(0, 1).ToUpper() == "U" ?
+                            1.0e3 : 1.0);
+                    string number = match.Groups[1].Captures[0].Value;
+                    if(number.Substring(0,1) == ".") {
+                        number = "0" + number;
+                    }
+                    double.TryParse(number, out delay);
+                    if (delay == 0.0) {
+                        logMessage("\tERROR: " + block.HDLname + " at " +
+                            block.getCoordinate() + " unable to parse delay time of " +
+                            match.Groups[1].Captures[0].Value + " from title of " + block.gate.title);
+                        ++temp_errors;
+                    }
+                    else {
+                        string clockPeriod = Parms.getParmValue("fpgaclockperiod");
+                        if (clockPeriod.Length == 0) {
+                            logMessage("\tWARNING:  Parm table fpgaclockperiod not set.  Using 10 ns");
+                            clockPeriod = "10";
+                            ++temp_errors;
+                        }
+                        int intDelay = (int)(delay * multiplier);
+                        logMessage("\tINFO: " + block.HDLname + " at " + block.getCoordinate() +
+                            " Delay: " + intDelay.ToString() + " ns, Clock Period is " +
+                            clockPeriod + " ns");
+                        outFile.WriteLine("\t    generic map( DELAY => " + intDelay.ToString() +
+                            ", CLOCKPERIOD => " + clockPeriod + ")");
+                    }
+                }
+            }
+
+
             outFile.WriteLine("\t    port map (");
             
-            //  If this is a trigger, give it a clock
+            //  If this block needs it, give it a clock.
 
-            if(block.logicFunction == "Trigger" || block.HDLname == "Oscillator") {
+            if(block.logicFunction == "Trigger" || block.HDLname == "Oscillator" ||
+                block.HDLname == "ShiftRegister") {
                 outFile.WriteLine("\t\tFPGA_CLK => FPGA_CLK,");
             }
 

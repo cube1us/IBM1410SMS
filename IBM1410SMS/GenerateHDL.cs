@@ -324,7 +324,8 @@ namespace IBM1410SMS
                             newBlock.logicFunction = fun.name;                            
 
                             if(newBlock.logicFunction == "Special" ||
-                                newBlock.logicFunction == "Trigger") {
+                                newBlock.logicFunction == "Trigger"  ||
+                                newBlock.logicFunction == "DELAY") {
                                 if(gate.HDLname == null || gate.HDLname.Length == 0) {
                                     logMessage("Error: Logic function is " +
                                         newBlock.logicFunction + " but there is no " +
@@ -697,10 +698,10 @@ namespace IBM1410SMS
                 //  We don't check for latches on triggers or single shots, 
                 //  since they will already be generated as or with flip flops 
                 //  (and therefore we will need a clock input).  Same for
-                //  oscillators, which also have a clock.
+                //  oscillators and shift registers (delays) which also have a clock.
 
                 if (block.gate.symbol == "T" || block.gate.symbol == "SS" ||
-                    block.HDLname == "Oscillator") {
+                    block.HDLname == "Oscillator" || block.HDLname.Contains("ShiftRegister")) {
                     needsClock = true;
                     continue;
                 }
@@ -1474,13 +1475,34 @@ namespace IBM1410SMS
                 }
                 else if (block.logicFunction == "Special" ||
                     block.logicFunction == "Trigger" ||
-                    block.HDLname == "Oscillator") {
+                    block.HDLname == "Oscillator") { 
                     errors += 
                         generator.generateHDLSpecial(block, inputNames, outputNames);
                 }
+                else if(block.HDLname.Contains("ShiftRegister")) {
+
+                    //  Special case:  If delay says "NOTE" then we treat it as
+                    //  an EQUAL or a NOT (if it is InvShiftRegister))
+
+                    if(block.gate.title.Contains("NOTE")) {
+                        logMessage("\tWARNING: Delay Block with a time of NOTE. " +
+                            "EQUAL or NOT will be generated.");
+                        if(block.HDLname == "ShiftRegister") {
+                            generator.generateHDLEqual(inputNames, outputNames[0]);
+                        }
+                        else {
+                            generator.generateHDLNot(inputNames, outputNames[0]);
+                        }
+                    }
+                    else {
+                        generator.generateHDLSpecial(block, inputNames, outputNames);
+                    }
+
+                }
                 else {
                     logMessage("\tERROR:  GenerateHDL does not (yet) know how to generate " +
-                        " the listed block.");
+                        "the listed block with logic function " +
+                        block.logicFunction + " and HDLName of " + block.HDLname);
                     ++errors;
                 }
             }
