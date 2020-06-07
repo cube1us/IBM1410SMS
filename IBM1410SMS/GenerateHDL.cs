@@ -834,140 +834,6 @@ namespace IBM1410SMS
 
             //  END OF LATCH CHECK.
 
-            //  Next, look at the output connections ONLY, and if there is an output to an edge,
-            //  keep only the first one.  Also, the pin for connecting to a given edge must be
-            //  consistent.  Also, if a connection is from pin M to the same logic block ignore it.
-
-            foreach (LogicBlock block in logicBlocks) {
-                if (block.ignore) {
-                    continue;
-                }
-
-                List<EdgeOutput> edges = new List<EdgeOutput>();
-
-                foreach (Connection connection in block.outputConnections) {
-
-                    //  Ignore connections from pin M that come back to me...
-
-                    if(connection.fromPin == "M" && connection.toDiagramBlock ==
-                        block.gate.idDiagramBlock) {
-                        ignoredConnectionIDs.Add(connection.idConnection);
-                        logMessage("Ignoring Pin M connection from/to block at " +
-                            block.getCoordinate());
-                        continue;
-                    }
-
-                    if (connection.toEdgeSheet != 0) {
-                        Sheetedgeinformation edge = sheetEdgeInformationTable.getByKey(
-                            connection.toEdgeSheet);
-                        if (edge == null || edge.idSheetEdgeInformation != connection.toEdgeSheet) {
-                            logMessage("Error: During sheet edge merge, " +
-                                "Cannot look up sheet edge information for " +
-                                "diagram block at " + block.getCoordinate() +
-                                ", connection database key " + connection.idConnection +
-                                ", edge database key " + connection.toEdgeSheet);
-                            ++errors;
-                            continue;
-                        }
-
-                        if (edge.rightSide == 0) {
-                            logMessage("Error:  During sheet edge merge, " +
-                                "Output from pin " + connection.fromPin +
-                                "connects a side edge connection " +
-                                "named " + edge.signalName +
-                                " that is not marked right side, from " +
-                                " logic block at " + block.getCoordinate() +
-                                ", connection database ID " + connection.idConnection);
-                            ++errors;
-                            break;
-                        }
-
-                        //  Do we already have an entry with this signal name or for this pin?
-                        //  If so, check them for consistency.
-
-                        EdgeOutput outputSignal = edges.Find(x => x.signalName == edge.signalName);
-                        EdgeOutput outputPin = edges.Find(x => x.pin == connection.fromPin);
-
-                        if (outputSignal != null) {
-
-                            if (outputSignal.pin != connection.fromPin) {
-                                logMessage("Error:  During sheet edge merge, " +
-                                    "Logic block at " + block.getCoordinate() +
-                                    " outputs to signal " + edge.signalName + "" +
-                                    " on more than one pin: " + outputSignal.pin +
-                                    " vs. " + connection.fromPin);
-                                ++errors;
-                            }
-
-                            //  So, same signal, same pin.  We can delete this one.
-
-                            else {
-                                ignoredConnectionIDs.Add(connection.idConnection);
-                            }
-
-                        }
-
-                        else if (outputPin != null) {
-
-                            //  If we get here, we already know the signal is different,
-                            //  but just to be safe, we check again.
-
-                            if (outputPin.signalName != edge.signalName) {
-                                logMessage("During sheet edge merge, " +
-                                    "Logic block at " + block.getCoordinate() +
-                                    " pin " + outputPin.pin +
-                                    " outputs to two different signal names: " +
-                                    edge.signalName + " vs. " + outputPin.signalName);
-                                ++errors;
-                            }
-                        }
-
-                        else {
-                            outputSignal = new EdgeOutput();
-                            outputSignal.signalName = edge.signalName;
-                            outputSignal.pin = connection.fromPin;
-                            edges.Add(outputSignal);
-                        }
-                    }
-                }
-            }
-
-            //  Now go back and delete any of those connections from any of the blocks
-            //  (including DOT Function blocks).  We can skip the blocks marked
-            //  ignored.
-
-            foreach (LogicBlock block in logicBlocks) {
-
-                String blockType = block.isGate() ? "Gate" : "DOT Function";
-
-                if (block.ignore) {
-                    continue;
-                }
-
-                int removedInputs = 0;
-                int removedOutputs = 0;
-
-                foreach (int connectionID in ignoredConnectionIDs) {
-                    removedInputs +=
-                        block.inputConnections.RemoveAll(x => x.idConnection == connectionID);
-                    removedOutputs +=
-                        block.outputConnections.RemoveAll(x => x.idConnection == connectionID);
-                }
-
-                if (removedInputs > 0) {
-                    logMessage("Removed " + removedInputs + " inputs to " +
-                        (block.type == "G" ? "Gate" : "Dot Function") +
-                        " at " + block.getCoordinate() +
-                        " from ignored block(s)");
-                }
-                if (removedOutputs > 0) {
-                    logMessage("Removed " + removedOutputs + " outputs from " +
-                        (block.type == "G" ? "Gate" : "Dot Function") +
-                        " at " + block.getCoordinate() +
-                        " to ignored block(s)");
-                }
-
-            }
 
             //  Next, merge any extension blocks together.  They should point to
             //  each other, and if one is identified as a latch, then the merged
@@ -1110,6 +976,140 @@ namespace IBM1410SMS
 
                     extension.ignore = true;
                 }
+            }
+
+            //  Next, look at the output connections ONLY, and if there is an output to an edge,
+            //  keep only the first one.  Also, the pin for connecting to a given edge must be
+            //  consistent.  Also, if a connection is from pin M to the same logic block ignore it.
+
+            foreach (LogicBlock block in logicBlocks) {
+                if (block.ignore) {
+                    continue;
+                }
+
+                List<EdgeOutput> edges = new List<EdgeOutput>();
+
+                foreach (Connection connection in block.outputConnections) {
+
+                    //  Ignore connections from pin M that come back to me...
+
+                    if (connection.fromPin == "M" && connection.toDiagramBlock ==
+                        block.gate.idDiagramBlock) {
+                        ignoredConnectionIDs.Add(connection.idConnection);
+                        logMessage("Ignoring Pin M connection from/to block at " +
+                            block.getCoordinate());
+                        continue;
+                    }
+
+                    if (connection.toEdgeSheet != 0) {
+                        Sheetedgeinformation edge = sheetEdgeInformationTable.getByKey(
+                            connection.toEdgeSheet);
+                        if (edge == null || edge.idSheetEdgeInformation != connection.toEdgeSheet) {
+                            logMessage("Error: During sheet edge merge, " +
+                                "Cannot look up sheet edge information for " +
+                                "diagram block at " + block.getCoordinate() +
+                                ", connection database key " + connection.idConnection +
+                                ", edge database key " + connection.toEdgeSheet);
+                            ++errors;
+                            continue;
+                        }
+
+                        if (edge.rightSide == 0) {
+                            logMessage("Error:  During sheet edge merge, " +
+                                "Output from pin " + connection.fromPin +
+                                "connects a side edge connection " +
+                                "named " + edge.signalName +
+                                " that is not marked right side, from " +
+                                " logic block at " + block.getCoordinate() +
+                                ", connection database ID " + connection.idConnection);
+                            ++errors;
+                            break;
+                        }
+
+                        //  Do we already have an entry with this signal name or for this pin?
+                        //  If so, check them for consistency.
+
+                        EdgeOutput outputSignal = edges.Find(x => x.signalName == edge.signalName);
+                        EdgeOutput outputPin = edges.Find(x => x.pin == connection.fromPin);
+
+                        if (outputSignal != null) {
+
+                            if (outputSignal.pin != connection.fromPin) {
+                                logMessage("Error:  During sheet edge merge, " +
+                                    "Logic block at " + block.getCoordinate() +
+                                    " outputs to signal " + edge.signalName + "" +
+                                    " on more than one pin: " + outputSignal.pin +
+                                    " vs. " + connection.fromPin);
+                                ++errors;
+                            }
+
+                            //  So, same signal, same pin.  We can delete this one.
+
+                            else {
+                                ignoredConnectionIDs.Add(connection.idConnection);
+                            }
+
+                        }
+
+                        else if (outputPin != null) {
+
+                            //  If we get here, we already know the signal is different,
+                            //  but just to be safe, we check again.
+
+                            if (outputPin.signalName != edge.signalName) {
+                                logMessage("WARNING: During sheet edge merge, " +
+                                    "Logic block at " + block.getCoordinate() +
+                                    " pin " + outputPin.pin +
+                                    " outputs to two different signal names: " +
+                                    edge.signalName + " vs. " + outputPin.signalName);
+                            }
+                        }
+
+                        else {
+                            outputSignal = new EdgeOutput();
+                            outputSignal.signalName = edge.signalName;
+                            outputSignal.pin = connection.fromPin;
+                            edges.Add(outputSignal);
+                        }
+                    }
+                }
+            }
+
+            //  Now go back and delete any of those connections from any of the blocks
+            //  (including DOT Function blocks).  We can skip the blocks marked
+            //  ignored.
+
+            foreach (LogicBlock block in logicBlocks) {
+
+                String blockType = block.isGate() ? "Gate" : "DOT Function";
+
+                if (block.ignore) {
+                    continue;
+                }
+
+                int removedInputs = 0;
+                int removedOutputs = 0;
+
+                foreach (int connectionID in ignoredConnectionIDs) {
+                    removedInputs +=
+                        block.inputConnections.RemoveAll(x => x.idConnection == connectionID);
+                    removedOutputs +=
+                        block.outputConnections.RemoveAll(x => x.idConnection == connectionID);
+                }
+
+                if (removedInputs > 0) {
+                    logMessage("Removed " + removedInputs + " inputs to " +
+                        (block.type == "G" ? "Gate" : "Dot Function") +
+                        " at " + block.getCoordinate() +
+                        " from ignored block(s)");
+                }
+                if (removedOutputs > 0) {
+                    logMessage("Removed " + removedOutputs + " outputs from " +
+                        (block.type == "G" ? "Gate" : "Dot Function") +
+                        " at " + block.getCoordinate() +
+                        " to ignored block(s)");
+                }
+
             }
 
             //  Next up:  Check that any connection that goes TO a DOT function
