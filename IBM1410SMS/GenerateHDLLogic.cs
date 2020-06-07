@@ -194,16 +194,28 @@ namespace IBM1410SMS
 
             outString = outString.Replace("__", "_");
 
+            //  Don't end with an underscore...
+
+            if (outString.Substring(outString.Length - 1, 1) == "_") {
+                outString = outString.Substring(0, outString.Length - 1);
+            }
             return (outString);
         }
 
         //  Method to get the HDL entity name
 
         public string getHDLEntityName() {
-            return
-                "ALD_" +
+            string s = "ALD_" +
                 replacePeriods.Replace(page.name, "_") + "_" +
                 replaceTitle.Replace(page.title, "_");
+
+            //  Don't end with an underscore...
+         
+            if(s.Substring(s.Length-1,1) == "_") {
+                s = s.Substring(0, s.Length - 1);
+            }
+
+            return (s);                
         }
 
         public void logMessage(string message) {

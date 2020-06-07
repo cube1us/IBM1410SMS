@@ -103,14 +103,27 @@ namespace IBM1410SMS
 
             outString = outString.Replace("__", "_");
 
+            //  Don't end with an underscore...
+
+            if (outString.Substring(outString.Length - 1, 1) == "_") {
+                outString = outString.Substring(0, outString.Length - 1);
+            }
+
             return (outString);
         }
 
         public string generateHDLEntityName(string pageName, string pageTitle) {
-            return
-                "ALD_" +
+            string s = "ALD_" +
                 replacePeriods.Replace(pageName, "_") + "_" +
                 replaceTitle.Replace(pageTitle, "_");
+
+            //  Don't end with an underscore...
+
+            if (s.Substring(s.Length - 1, 1) == "_") {
+                s = s.Substring(0, s.Length - 1);
+            }
+
+            return (s);
         }
 
         public void logMessage(string message) {
