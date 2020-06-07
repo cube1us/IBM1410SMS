@@ -59,7 +59,7 @@ namespace IBM1410SMS
         public string templateName { get; set; } = "HDLTemplate";
 
         Regex replacePeriods = new Regex("\\.");
-        Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
+        Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-|\\*");
 
         public GenerateHDLLogic(
             Page page, bool generateTestBench) {
