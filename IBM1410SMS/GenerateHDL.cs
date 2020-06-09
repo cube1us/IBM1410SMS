@@ -1396,9 +1396,6 @@ namespace IBM1410SMS
                     }
                 }
 
-                logMessage("DEBUG: Test bench declares template: " +
-                    generator.savedTestBenchDeclLines.Count.ToString() + " lines.");
-
                 if (testBenchDeclStream != null) {
                     testBenchDeclStream.Close();
                 }
