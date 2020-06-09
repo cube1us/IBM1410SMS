@@ -46,6 +46,7 @@ namespace IBM1410SMS
             new List<StreamWriter>();
 
         public List<string> savedTestBenchLines { get; set; }
+        public List<string> savedTestBenchDeclLines { get; set; }
         public bool generateTestBench { get; set; }
         public bool generatePageTestBench { get; set; }
 

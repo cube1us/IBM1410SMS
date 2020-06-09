@@ -162,6 +162,15 @@ namespace IBM1410SMS
                         ": STD_LOGIC;");
                 }
 
+                //  Write out the template or saved user *declaration* lines, which must
+                //  preceed "begin"
+
+                testBenchFile.WriteLine();
+
+                foreach (string line in savedTestBenchDeclLines) {
+                    testBenchFile.WriteLine(line);
+                }
+
                 //  Write out the BEGIN and the instantiation of the unit under test
 
                 testBenchFile.WriteLine();

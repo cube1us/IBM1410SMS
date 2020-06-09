@@ -34,6 +34,8 @@ namespace IBM1410SMS
         const string TestBenchTemplate = "TestBenchTemplate";
         const string TestBenchFPGAClock = "TestBenchFPGAClock";
         const string TestBenchFPGAClockTag = "<FPGA CLOCK>";
+        const string TestBenchDeclares = "TestBenchDeclares";
+
 
         GenerateHDLLogic generator;
 
@@ -154,6 +156,7 @@ namespace IBM1410SMS
             //  and open the test bench file for writing.
 
             generator.savedTestBenchLines = new List<string>();
+            generator.savedTestBenchDeclLines = new List<string>();
 
             if (generateTestBench) {
 
@@ -165,21 +168,37 @@ namespace IBM1410SMS
                     StreamReader oldTestBenchFile = new StreamReader(testBenchPathName);
                     string testBenchLine;
                     bool saving = false;
-                    while((testBenchLine = oldTestBenchFile.ReadLine()) != null) {
+                    bool savingDecl = false;
+
+                    //  "Let us preserve what must be preserved"  (Delores Umbridge)
+
+                    while ((testBenchLine = oldTestBenchFile.ReadLine()) != null) {
                         if(testBenchLine.Contains(GenerateHDLLogic.testBenchUserStart)) {
                             saving = true;
+                        }
+                        else if(testBenchLine.Contains(GenerateHDLLogic.testBenchDeclStart)) {
+                            savingDecl = true;
                         }
                         if (saving) {
                             generator.savedTestBenchLines.Add(testBenchLine);
                         }
+                        else if(savingDecl) {
+                            generator.savedTestBenchDeclLines.Add(testBenchLine);
+                        }
                         if(testBenchLine.Contains(GenerateHDLLogic.testBenchUserEnd)) {
                             saving = false;
                         }
+                        else if(testBenchLine.Contains(GenerateHDLLogic.testBenchDeclEnd)) {
+                            savingDecl = false;
+                        }
                     }
+
                     oldTestBenchFile.Close();
                     logMessage("Old test bench file " + testBenchFileName + " " +
                         generator.savedTestBenchLines.Count.ToString() +
-                        " lines preserved.");
+                        " lines preserved and " +
+                        generator.savedTestBenchDeclLines.Count.ToString() +
+                        " declaration lines preserved");
 
                 }
                 catch (Exception e) {
@@ -1276,8 +1295,114 @@ namespace IBM1410SMS
             //  or for the rolloup generator to sort throughall of the logic blocks
             //  involved on the page before calling this page.
            
-
             needsClock = true;
+
+            //  If there is a test bench to be generated, and if there are no saved lines, 
+            //  fill up with our defaults.
+
+            if (generateTestBench && generator.savedTestBenchLines.Count == 0) {
+
+                string testBenchTemplateFileName = TestBenchTemplate + "." +
+                    generator.generateHDLExtension();
+                string testBenchTemplatePathName = Path.Combine(directory,
+                    testBenchTemplateFileName);
+
+                string testBenchFPGAClockFileName = TestBenchFPGAClock + "." +
+                    generator.generateHDLExtension();
+                string testBenchFGPAClockPathName = Path.Combine(directory,
+                    testBenchFPGAClockFileName);
+
+                StreamReader testBenchTemplateStream = null;
+                StreamReader testBenchFPGAClockStream = null;
+
+                try {
+                    testBenchTemplateStream = new StreamReader(
+                        testBenchTemplatePathName);
+                }
+                catch (Exception e) {
+                    logMessage("Unable to open the Test Bench Template File: " +
+                        e.GetType().Name + ", file " + testBenchTemplatePathName);
+                }
+
+                try {
+                    testBenchFPGAClockStream = new StreamReader(
+                        testBenchFGPAClockPathName);
+                }
+                catch (Exception e) {
+                    logMessage("Unable to open the Test Bench Clock Template File: " +
+                        e.GetType().Name + ", file " + testBenchFGPAClockPathName);
+                }
+
+                //  Read the default template file.  If we see a line with the
+                //  FPGA clock tag, replace that with the FPGA Clock Template
+
+                if (testBenchTemplateStream != null) {
+                    string line;
+                    while ((line = testBenchTemplateStream.ReadLine()) != null) {
+
+                        //  Replace the FPGA clock tag with the appropriate template,
+                        //  but only an the FPGA clock is actually required.
+
+                        if (needsClock && line.Contains(TestBenchFPGAClockTag) &&
+                            testBenchFPGAClockStream != null) {
+                            while ((line = testBenchFPGAClockStream.ReadLine())
+                                != null) {
+                                generator.savedTestBenchLines.Add(line);
+                            }
+                        }
+                        else {
+                            //  Add other lines directly
+                            generator.savedTestBenchLines.Add(line);
+                        }
+                    }
+                }
+
+                if (testBenchTemplateStream != null) {
+                    testBenchTemplateStream.Close();
+                }
+                if (testBenchFPGAClockStream != null) {
+                    testBenchFPGAClockStream.Close();
+                }
+
+            }
+
+            //  Now do the same, but for the test bench user delcarations.
+            //  There is no FPGA Clock tag here, of course.
+
+            if (generateTestBench && generator.savedTestBenchDeclLines.Count == 0) {
+
+                string testBenchDeclFileName = TestBenchDeclares + "." +
+                    generator.generateHDLExtension();
+                string testBenchDeclPathName = Path.Combine(directory,
+                    testBenchDeclFileName);
+
+                StreamReader testBenchDeclStream = null;
+
+                try {
+                    testBenchDeclStream = new StreamReader(
+                        testBenchDeclPathName);
+                }
+                catch (Exception e) {
+                    logMessage("Unable to open the Test Bench Declares Template File: " +
+                        e.GetType().Name + ", file " + testBenchDeclPathName);
+                }
+
+                //  Read the Declarations template file. 
+
+                if (testBenchDeclStream != null) {
+                    string line;
+                    while ((line = testBenchDeclStream.ReadLine()) != null) {
+                        generator.savedTestBenchDeclLines.Add(line);
+                    }
+                }
+
+                logMessage("DEBUG: Test bench declares template: " +
+                    generator.savedTestBenchDeclLines.Count.ToString() + " lines.");
+
+                if (testBenchDeclStream != null) {
+                    testBenchDeclStream.Close();
+                }
+            }
 
             generator.logicBlocks = logicBlocks;
             generator.generateHDLPrefix();
@@ -1565,74 +1690,6 @@ namespace IBM1410SMS
                 errors += generator.generateHDLDFlipFlop(block);
             }
 
-            //  If there is a test bench to be generated, and if there are no saved lines, 
-            //  fill up with our defaults.
-
-            if (generateTestBench && generator.savedTestBenchLines.Count == 0) {
-
-                string testBenchTemplateFileName = TestBenchTemplate + "." +
-                    generator.generateHDLExtension();
-                string testBenchTemplatePathName = Path.Combine(directory,
-                    testBenchTemplateFileName);
-
-                string testBenchFPGAClockFileName = TestBenchFPGAClock + "." +
-                    generator.generateHDLExtension();
-                string testBenchFGPAClockPathName = Path.Combine(directory,
-                    testBenchFPGAClockFileName);
-
-                StreamReader testBenchTemplateStream = null;
-                StreamReader testBenchFPGAClockStream = null;
-
-                try {
-                    testBenchTemplateStream = new StreamReader(
-                        testBenchTemplatePathName);
-                }
-                catch (Exception e) {
-                    logMessage("Unable to open the Test Bench Template File: " +
-                        e.GetType().Name + ", file " + testBenchTemplatePathName);
-                }
-
-                try {
-                    testBenchFPGAClockStream = new StreamReader(
-                        testBenchFGPAClockPathName);
-                }
-                catch (Exception e) {
-                    logMessage("Unable to open the Test Bench Clock Template File: " +
-                        e.GetType().Name + ", file " + testBenchFGPAClockPathName);
-                }
-
-                //  Read the default template file.  If we see a line with the
-                //  FPGA clock tag, replace that with the FPGA Clock Template
-
-                if (testBenchTemplateStream != null) {
-                    string line;
-                    while ((line = testBenchTemplateStream.ReadLine()) != null) {
-
-                        //  Replace the FPGA clock tag with the appropriate template,
-                        //  but only an the FPGA clock is actually required.
-
-                        if (needsClock && line.Contains(TestBenchFPGAClockTag) &&
-                            testBenchFPGAClockStream != null) {
-                            while ((line = testBenchFPGAClockStream.ReadLine())
-                                != null) {
-                                generator.savedTestBenchLines.Add(line);
-                            }
-                        }
-                        else {
-                            //  Add other lines directly
-                            generator.savedTestBenchLines.Add(line);
-                        }
-                    }
-                }
-
-                if (testBenchTemplateStream != null) {
-                    testBenchTemplateStream.Close();
-                }
-                if (testBenchFPGAClockStream != null) {
-                    testBenchFPGAClockStream.Close();
-                }
-
-            }
 
 
             generator.generateHDLArchitectureSuffix();

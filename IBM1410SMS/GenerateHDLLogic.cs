@@ -35,8 +35,10 @@ namespace IBM1410SMS
     public abstract class GenerateHDLLogic
     {
 
-        public const string testBenchUserStart = "START USER TEST BENCH";
-        public const string testBenchUserEnd = "END USER TEST BENCH";
+        public const string testBenchUserStart = "START USER TEST BENCH PROCESS";
+        public const string testBenchUserEnd = "END USER TEST BENCH PROCESS";
+        public const string testBenchDeclStart = "START USER TEST BENCH DECLARATIONS";
+        public const string testBenchDeclEnd = "END USER TEST BENCH DECLARATIONS";
 
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
@@ -46,6 +48,7 @@ namespace IBM1410SMS
             new List<StreamWriter>();
 
         public List<string> savedTestBenchLines { get; set; }
+        public List<string> savedTestBenchDeclLines { get; set; }
         public List<LogicBlock> logicBlocks { get; set; }
         protected Page page { get; set; }
 
