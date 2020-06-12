@@ -171,6 +171,7 @@
     <Compile Include="EditVolumeSetsForm.Designer.cs">
       <DependentUpon>EditVolumeSetsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Entities\bussignals.cs" />
     <Compile Include="Entities\cableedgeconnectionblock.cs" />
     <Compile Include="Entities\cableedgeconnectionecotag.cs" />
     <Compile Include="Entities\cableedgeconnectionpage.cs" />
