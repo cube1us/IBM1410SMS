@@ -30,6 +30,13 @@ namespace IBM1410SMS
     class GenerateGroupHDLLogicVHDL : GenerateGroupHDLLogic
     {
 
+        protected class STD_LOGIC_VECTOR  {
+            public string signalName { get; set; } = "";
+            public string declaration { get; set; } = "";
+            public int highIndex = -1;
+            public int lowIndex = 9999;
+        }
+
         string bufferPrefix = "XX_";
 
         public GenerateGroupHDLLogicVHDL(bool generateTestBench) :
@@ -114,31 +121,30 @@ namespace IBM1410SMS
                 stream.WriteLine("\t    Port (");
                 stream.Write("\t\t" + SystemClockName + ": in STD_LOGIC");
                 foreach (string signal in inputs) {
+
+                    //  if the signal matches the list of bussed signals, it gets special
+                    //  treatment and turns into STD_LOGIC_VECTOR.  It is then "ripped"
+                    //  in instantiations of individual pages to map to the particular
+                    //  bit in the bus.
+
                     List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
+                    string signalName = generateSignalName(signal);
+
                     if (bsList == null || bsList.Count == 0) {
-                        stream.Write(";" + Environment.NewLine + "\t\t" +
-                            generateSignalName(signal) + ": in STD_LOGIC");
+                        stream.Write(";" + Environment.NewLine + "\t\t" + signalName + ": in STD_LOGIC");
                     }
                     else {
-                        int low = 128;
-                        int high = -1;
-                        foreach(Bussignals bs in bsList) {
-                            if(bs.busBit > high) {
-                                high = bs.busBit;
-                            }
-                            if(bs.busBit < low) {
-                                low = bs.busBit;
-                            }
-                        }
-                        stream.Write(";" + Environment.NewLine + "\t\t" +
-                            generateSignalName(signal) + ": in STD_LOGIC_VECTOR (" +
-                            high.ToString() + " downTo " + low.ToString() + ")");
+                        STD_LOGIC_VECTOR stdLogicVector =  generateStdLogicVector(bsList, signalName);
+                        stream.Write(";" + Environment.NewLine + "\t\t" + 
+                            signalName + ": in " + stdLogicVector.declaration);
                     }
                 }
+
                 foreach (string signal in outputs) {
                     stream.Write(";" + Environment.NewLine + "\t\t" +
                         generateSignalName(signal) + ": out STD_LOGIC");
                 }
+
                 stream.WriteLine(");");
             }
 
@@ -163,10 +169,27 @@ namespace IBM1410SMS
 
                 testBenchFile.WriteLine("\tsignal " + SystemClockName + ": STD_LOGIC := '0';");
 
+                //  Here again, bussed signals get special treatent.  Instead of being
+                //  STD_LOGIC, they are STD_LOGIC_VECTOR and are initialized with a 
+
                 foreach (string signal in inputs) {
                     string signalName = generateSignalName(signal);
-                    testBenchFile.WriteLine("\tsignal " + signalName + ": STD_LOGIC := '" + 
-                        (signalName.Substring(0, 1) == "M" ? "1" : "0") + "';");
+                    string initialValue = signalName.Substring(0, 1) == "M" ? "1" : "0";
+
+                    List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
+
+                    if (bsList == null || bsList.Count == 0) {
+                        testBenchFile.WriteLine("\tsignal " + signalName + ": STD_LOGIC := '" +
+                         initialValue + "';");
+                    }
+                    else {
+                        STD_LOGIC_VECTOR stdLogicVector =
+                            generateStdLogicVector(bsList, signalName);
+                        testBenchFile.WriteLine("\tsignal " + signalName + ": " +
+                            stdLogicVector.declaration + ":= \"" +
+                                String.Concat(Enumerable.Repeat(initialValue, stdLogicVector.highIndex -
+                                    stdLogicVector.lowIndex + 1)) + "\";");
+                    }
                 }
 
                 testBenchFile.WriteLine();
@@ -309,6 +332,11 @@ namespace IBM1410SMS
                 }
                 outFile.WriteLine("\t" + generateSignalName(input) + " =>");
                 outFile.Write("\t\t");
+
+                //  Here again, bussed signals get special treatment, and are "ripped" to map
+                //  the signal in the page instantiation to the particular bit int he bussed
+                //  signal.
+
                 Bussignals bs = busSignalsList.Find(x => x.signalName == input);
                 if (bs != null) {
                     outFile.Write(generateSignalName(bs.busName + "(" + bs.busBit.ToString() + ")"));
@@ -334,6 +362,26 @@ namespace IBM1410SMS
             outFile.WriteLine();
             outFile.WriteLine("\t);");
             outFile.WriteLine();
+        }
+
+        //  Routine to generate part of a STD_LOGIC_VECTOR declaration.
+
+        protected STD_LOGIC_VECTOR generateStdLogicVector(List<Bussignals> bsList, string signalName) {
+            STD_LOGIC_VECTOR stdLogicVector = new STD_LOGIC_VECTOR();
+
+            foreach (Bussignals bs in bsList) {
+                if (bs.busBit > stdLogicVector.highIndex) {
+                    stdLogicVector.highIndex = bs.busBit;
+                }
+                if (bs.busBit < stdLogicVector.lowIndex) {
+                    stdLogicVector.lowIndex = bs.busBit;
+                }
+            }
+
+            stdLogicVector.declaration = "STD_LOGIC_VECTOR (" +
+                stdLogicVector.highIndex.ToString() + " downTo " + stdLogicVector.lowIndex.ToString() + ")";
+
+            return (stdLogicVector);
         }
     }
 }
