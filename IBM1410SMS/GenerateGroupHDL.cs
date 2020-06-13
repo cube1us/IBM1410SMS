@@ -50,6 +50,7 @@ namespace IBM1410SMS
         Table<Diagramblock> diagramBlockTable;
         Table<Cardgate> cardGateTable;
         Table<Logicfunction> logicFunctionTable;
+        Table<Bussignals> busSignalsTable;
 
         DBSetup db = DBSetup.Instance;
 
@@ -84,6 +85,7 @@ namespace IBM1410SMS
             diagramBlockTable = db.getDiagramBlockTable();
             cardGateTable = db.getCardGateTable();
             logicFunctionTable = db.getLogicFunctionTable();
+            busSignalsTable = db.getBusSignalsTable();
         }
 
         public int generateGroupHDL() {
@@ -94,7 +96,10 @@ namespace IBM1410SMS
 
             generator = new GenerateGroupHDLLogicVHDL(generateTestBench);
 
+            List<Bussignals> busSignalsList = null;
+
             List<string> inputList = new List<string>();
+            List<string> busInputList = new List<string>();
             List<string> outputList = new List<string>();
 
             List<string> removedInputSignals = new List<string>();
@@ -113,7 +118,7 @@ namespace IBM1410SMS
             try {
                 generator.logFile = new StreamWriter(Path.Combine(logFileName), false);
             }
-            catch(Exception e) {
+            catch (Exception e) {
                 return (1);
             }
 
@@ -121,7 +126,7 @@ namespace IBM1410SMS
                 generator.outFile = new StreamWriter(outPathName, false);
             }
             catch (Exception e) {
-                generator.logMessage("Cannot open output file " +  outPathName +
+                generator.logMessage("Cannot open output file " + outPathName +
                     ", aborting: " + e.GetType().Name);
                 return (1);
             }
@@ -132,16 +137,21 @@ namespace IBM1410SMS
             generator.logMessage("Generating HDL for group named " + outFileName +
                 "at " + DateTime.Now.ToString() + " containing pages: ");
             string temp = "";
-            foreach(string pageName in pageNames) {
-                if(temp.Length + pageName.Length > 60) {
+            foreach (string pageName in pageNames) {
+                if (temp.Length + pageName.Length > 60) {
                     generator.logMessage(temp);
                     temp = "";
                 }
                 temp = temp + (temp.Length == 0 ? "\t" : ", ") + pageName;
             }
-            if(temp.Length > 0) {
+            if (temp.Length > 0) {
                 generator.logMessage(temp);
             }
+
+            //  Read in the bus signal translation data
+
+            busSignalsList = busSignalsTable.getWhere(
+                "ORDER BY busName, busBit");
 
             //  Is there a template (include, if you will) file to use?
             //  (Is used for both entity and its test bench, if any)
@@ -182,7 +192,7 @@ namespace IBM1410SMS
                         if (testBenchLine.Contains(GenerateHDLLogic.testBenchUserStart)) {
                             saving = true;
                         }
-                        else if(testBenchLine.Contains(GenerateHDLLogic.testBenchDeclStart)) {
+                        else if (testBenchLine.Contains(GenerateHDLLogic.testBenchDeclStart)) {
                             savingDecl = true;
                         }
                         if (saving) {
@@ -194,7 +204,7 @@ namespace IBM1410SMS
                         if (testBenchLine.Contains(GenerateHDLLogic.testBenchUserEnd)) {
                             saving = false;
                         }
-                        else if(testBenchLine.Contains(GenerateHDLLogic.testBenchDeclEnd)) {
+                        else if (testBenchLine.Contains(GenerateHDLLogic.testBenchDeclEnd)) {
                             savingDecl = false;
                         }
                     }
@@ -291,7 +301,7 @@ namespace IBM1410SMS
                 }
             }
 
-            //  Now do the same, but for the test bench user delcarations.
+            //  Now do the same, but for the test bench user declarations.
             //  There is no FPGA Clock tag here, of course.
 
             if (generateTestBench && generator.savedTestBenchDeclLines.Count == 0) {
@@ -334,7 +344,7 @@ namespace IBM1410SMS
             generator.logMessage("Building lists of signals on " +
                 diagramPageList.Count + " pages...");
 
-            foreach(Diagrampage page in diagramPageList) {
+            foreach (Diagrampage page in diagramPageList) {
                 List<Sheetedgeinformation> signals =
                     sheetEdgeInformationTable.getWhere(
                         "WHERE diagramPage='" + page.idDiagramPage + "'");
@@ -342,19 +352,19 @@ namespace IBM1410SMS
                 generator.logMessage("Found " + signals.Count +
                     " signals on page " + Helpers.getDiagramPageName(page.idDiagramPage));
 
-                foreach(Sheetedgeinformation signal in signals) {
-                    if(signal.leftSide == 1 &&
+                foreach (Sheetedgeinformation signal in signals) {
+                    if (signal.leftSide == 1 &&
                         !inputList.Contains(signal.signalName)) {
                         inputList.Add(signal.signalName);
                     }
-                    if(signal.rightSide == 1 &&
+                    if (signal.rightSide == 1 &&
                         !outputList.Contains(signal.signalName)) {
                         outputList.Add(signal.signalName);
                     }
-                    if(!allSignals.Contains(signal.signalName)) {
+                    if (!allSignals.Contains(signal.signalName)) {
                         allSignals.Add(signal.signalName);
                     }
-                }                
+                }
             }
 
             generator.logMessage("Found " + inputList.Count +
@@ -368,25 +378,25 @@ namespace IBM1410SMS
 
             generator.logMessage("Determining sources for all input signals...");
 
-            foreach(string signal in inputList) {
+            foreach (string signal in inputList) {
                 bool external = false;
                 List<Sheetedgeinformation> edgeList =
                     sheetEdgeInformationTable.getWhere(
                         "WHERE signalName='" + signal + "'" +
                         " AND rightSide='1'");
-                if(edgeList.Count == 0) {
+                if (edgeList.Count == 0) {
                     generator.logMessage("ERROR:  Cannot find source of signal named " +
                         signal);
                     ++errors;
                 }
-                else if(edgeList.Count > 1) {
+                else if (edgeList.Count > 1) {
                     generator.logMessage("ERROR:  More than one source found for signal " +
                         "named " + signal);
                     ++errors;
                 }
-                foreach(Sheetedgeinformation edge in edgeList) {
+                foreach (Sheetedgeinformation edge in edgeList) {
                     string pageName = Helpers.getDiagramPageName(edge.diagramPage);
-                    if(!pageNames.Contains(pageName)) {
+                    if (!pageNames.Contains(pageName)) {
                         external = true;
                         break;
                     }
@@ -395,7 +405,7 @@ namespace IBM1410SMS
                 generator.logMessage("INFO:  Signal " + signal + " originates " +
                     (external ? "outside" : "inside") + " the group.");
 
-                if(!external) {
+                if (!external) {
                     removedInputSignals.Add(signal);
                 }
             }
@@ -455,14 +465,42 @@ namespace IBM1410SMS
             generator.logMessage("Removing " + removedInputSignals.Count +
                 " input signals that originate inside the group...");
 
-            foreach(string signal in removedInputSignals) {
+            foreach (string signal in removedInputSignals) {
                 inputList.Remove(signal);
-                if(outputList.Contains(signal)) {
+                if (outputList.Contains(signal)) {
                     generator.logMessage("Signal " + signal +
                         " is output from the group, but also used as an input " +
                         "inside the group.");
                     bufferSignals.Add(signal);
                 }
+            }
+
+            //  Next, process the input list for bus signals.  If we get a match,
+            //  and it isn't already in the list of bus signals, then add it to
+            //  the list of bus signals.  In either case, remove it.  Then, at 
+            //  the end, add in the bus signals back in as inputs.
+
+            removedInputSignals.Clear();
+            foreach (string signal in inputList) {
+                Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+                if (bs != null) {
+                    if (!busInputList.Contains(bs.busName)) {
+                        busInputList.Add(bs.busName);
+                    }
+                    removedInputSignals.Add(signal);
+                    generator.logMessage("Input Signal " + signal + " replaced by Bus signal " +
+                        bs.busName);
+                }
+            }
+
+            //  Remove the relevant input signals, and add the replacement bus signals
+
+            foreach (string signal in removedInputSignals) {
+                inputList.Remove(signal);
+            }
+
+            foreach (string signal in busInputList) { 
+                inputList.Add(signal);
             }
 
             //
@@ -491,7 +529,9 @@ namespace IBM1410SMS
 
             foreach(string signal in allSignals) {
                 if(!inputList.Contains(signal) && !outputList.Contains(signal)) {
-                    internalSignals.Add(signal);
+                    if(busSignalsList.Find(x => x.signalName == signal) == null) {
+                        internalSignals.Add(signal);
+                    }
                 }
             }
 
@@ -505,7 +545,7 @@ namespace IBM1410SMS
 
             //  Generate the entity / module definition
 
-            generator.generateHDLentity(outFileName, inputList, outputList);
+            generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList);
 
             //  Generate the beginning of the actual HDL
 
@@ -561,7 +601,7 @@ namespace IBM1410SMS
                     " (" + thisPage.title + ")");
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
-                    pageInputNames, pageOutputNames, bufferSignals, needsClock);
+                    pageInputNames, pageOutputNames, busSignalsList, bufferSignals, needsClock);
 
 
             }

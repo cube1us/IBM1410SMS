@@ -88,7 +88,8 @@ namespace IBM1410SMS
         }
 
         public override void generateHDLentity(
-            string entityName, List<string> inputs, List<string> outputs) {
+            string entityName, List<string> inputs, List<string> outputs,
+            List<Bussignals> busSignalsList) {
 
             bool firstOutput = true;
 
@@ -113,8 +114,26 @@ namespace IBM1410SMS
                 stream.WriteLine("\t    Port (");
                 stream.Write("\t\t" + SystemClockName + ": in STD_LOGIC");
                 foreach (string signal in inputs) {
-                    stream.Write(";" + Environment.NewLine + "\t\t" +
-                        generateSignalName(signal) + ": in STD_LOGIC");
+                    List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
+                    if (bsList == null || bsList.Count == 0) {
+                        stream.Write(";" + Environment.NewLine + "\t\t" +
+                            generateSignalName(signal) + ": in STD_LOGIC");
+                    }
+                    else {
+                        int low = 128;
+                        int high = -1;
+                        foreach(Bussignals bs in bsList) {
+                            if(bs.busBit > high) {
+                                high = bs.busBit;
+                            }
+                            if(bs.busBit < low) {
+                                low = bs.busBit;
+                            }
+                        }
+                        stream.Write(";" + Environment.NewLine + "\t\t" +
+                            generateSignalName(signal) + ": in STD_LOGIC_VECTOR (" +
+                            high.ToString() + " downTo " + low.ToString() + ")");
+                    }
                 }
                 foreach (string signal in outputs) {
                     stream.Write(";" + Environment.NewLine + "\t\t" +
@@ -267,7 +286,8 @@ namespace IBM1410SMS
         }
 
         public override void generatePageEntity(string pageName, string pageTitle, 
-            List<string> inputs, List<string> outputs, List<string> bufferSignals,
+            List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
+            List<string> bufferSignals,
             bool needsClock) {
 
             bool firstPort = true;
@@ -288,9 +308,15 @@ namespace IBM1410SMS
                     outFile.WriteLine(",");
                 }
                 outFile.WriteLine("\t" + generateSignalName(input) + " =>");
-                outFile.Write("\t\t" + 
-                    (bufferSignals.Contains(input) ? bufferPrefix : "") +
+                outFile.Write("\t\t");
+                Bussignals bs = busSignalsList.Find(x => x.signalName == input);
+                if (bs != null) {
+                    outFile.Write(generateSignalName(bs.busName + "(" + bs.busBit.ToString() + ")"));
+                }
+                else {
+                    outFile.Write((bufferSignals.Contains(input) ? bufferPrefix : "") +
                     generateSignalName(input));
+                }
                 firstPort = false;
             }
 

@@ -63,12 +63,13 @@ namespace IBM1410SMS
         public abstract void generateHDLArchitecturePrefix(string name);
         public abstract void generateHDLArchitectureSuffix();
         public abstract void generateHDLentity(
-            string entityName, List<string> inputs, List<string> outputs);
+            string entityName, List<string> inputs, List<string> outputs,
+            List<Bussignals> busSignalsList);
         public abstract void generateHDLSignalList(
             List<string> signals, List<string> bufferSignals);
         public abstract void generatePageEntity(string pageName, string pageTitle,
-            List<string> inputs, List<string> outputs, List<string> bufferSignals,
-            bool needsClock);
+            List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
+            List<string> bufferSignals, bool needsClock);
 
         public GenerateGroupHDLLogic(bool generateTestBench) {
             this.generateTestBench = generateTestBench;
