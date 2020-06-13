@@ -16,6 +16,6 @@ namespace IBM1410SMS
 
 		[MyColumn(Key=true)] public string signalName { get; set; }
 		[MyColumn] public string busName { get; set; }
-		[MyColumn] public string busBit { get; set; }
+		[MyColumn] public int busBit { get; set; }
 	}
 }
