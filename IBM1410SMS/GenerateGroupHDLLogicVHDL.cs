@@ -285,7 +285,9 @@ namespace IBM1410SMS
         }
 
         public override void generateHDLSignalList(
-            List<string> signals, List<string> bufferSignals) {
+            List<string> signals, List<string> bufferSignals, 
+            List<Bussignals> busSignalsList, List<string> busOutputList) {
+
             outFile.WriteLine();
             foreach(string signal in signals) {
                 outFile.WriteLine("\t signal " +
@@ -313,17 +315,49 @@ namespace IBM1410SMS
             //  Now we also generate assignments for the buffer signals which are
             //  NOT part of a bus.
 
-            //  TODO
-
             foreach(string signal in bufferSignals) {
-                outFile.WriteLine("\t" + generateSignalName(signal) + " <= ");
-                outFile.WriteLine("\t\t" + bufferPrefix + generateSignalName(signal) +
-                    ";");
+                Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+                if(bs == null || !busOutputList.Contains(bs.busName)) {
+                    outFile.WriteLine("\t" + generateSignalName(signal) + " <= ");
+                    outFile.WriteLine("\t\t" + bufferPrefix + generateSignalName(signal) +
+                        ";");
+                }
             }
 
             if(bufferSignals.Count > 0) {
                 outFile.WriteLine();
             }
+
+            //  Then we generate assignments to aggregate OUTPUT busses
+
+            foreach(string busName in busOutputList) {
+                List<Bussignals> busSignals = busSignalsList.FindAll(
+                    x => x.busName == busName);
+                if(busSignals == null) {
+                    logMessage("ERROR:  Generating bus assignment - bus " +
+                        busName + " does not appear in busSignalsList");
+                    continue;
+                }
+
+                //  These need to be in REVERSE bit order
+
+                bool first = true;
+                outFile.WriteLine("\t" + generateSignalName(busName) + " <= (");
+
+                for (int i = busSignals.Count-1; i >= 0; --i) {
+                    Bussignals bs = busSignals[i];
+                    if(!first) {
+                        outFile.WriteLine(",");
+                    }
+                    first = false;
+                    outFile.Write("\t\t" + bufferPrefix + 
+                        generateSignalName(bs.signalName));
+                }
+
+                outFile.WriteLine(");");
+                outFile.WriteLine("");
+            }
+
         }
 
         public override void generateHDLArchitectureSuffix() {

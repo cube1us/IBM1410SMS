@@ -633,8 +633,8 @@ namespace IBM1410SMS
             //  Also, any output signal that is a bus will need a buffer signal to go with it,
             //  even if it is NOT only used internally to the group.
 
-            foreach(string signal in busOutputList) {
-                BusSignalMembers members = busses[signal];
+            foreach(string busName in busOutputList) {
+                BusSignalMembers members = busses[busName];
                 foreach(string s in members.signals) {
                     if(!bufferSignals.Contains(s)) {
                         bufferSignals.Add(s);
@@ -689,7 +689,8 @@ namespace IBM1410SMS
 
             //  Generate the list of (internal) signals / wires
 
-            generator.generateHDLSignalList(internalSignals, bufferSignals);
+            generator.generateHDLSignalList(internalSignals, bufferSignals, busSignalsList,
+                busOutputList);
 
             //  Generate the individual page instantiations...
 

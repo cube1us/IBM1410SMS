@@ -66,7 +66,8 @@ namespace IBM1410SMS
             string entityName, List<string> inputs, List<string> outputs,
             List<Bussignals> busSignalsList);
         public abstract void generateHDLSignalList(
-            List<string> signals, List<string> bufferSignals);
+            List<string> signals, List<string> bufferSignals, List<Bussignals> busSignalsList,
+            List<string> busOutputList);
         public abstract void generatePageEntity(string pageName, string pageTitle,
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
             List<string> bufferSignals, List<string> busInputList, List<string> busOutputList,
