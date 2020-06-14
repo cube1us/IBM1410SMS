@@ -141,8 +141,22 @@ namespace IBM1410SMS
                 }
 
                 foreach (string signal in outputs) {
-                    stream.Write(";" + Environment.NewLine + "\t\t" +
-                        generateSignalName(signal) + ": out STD_LOGIC");
+
+                    //  Same special treatment for output bus signals for for input bus signals.
+                    //  Since a given signal (and thus a given bus bit) can only ever originate on
+                    //  a single sheet, we can used named association, just like we did for inputs.
+
+                    List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
+                    string signalName = generateSignalName(signal);
+
+                    if (bsList == null || bsList.Count == 0) {
+                        stream.Write(";" + Environment.NewLine + "\t\t" + signalName + ": out STD_LOGIC");
+                    }
+                    else {
+                        STD_LOGIC_VECTOR stdLogicVector = generateStdLogicVector(bsList, signalName);
+                        stream.Write(";" + Environment.NewLine + "\t\t" +
+                            signalName + ": out " + stdLogicVector.declaration);
+                    }
                 }
 
                 stream.WriteLine(");");
@@ -186,7 +200,7 @@ namespace IBM1410SMS
                         STD_LOGIC_VECTOR stdLogicVector =
                             generateStdLogicVector(bsList, signalName);
                         testBenchFile.WriteLine("\tsignal " + signalName + ": " +
-                            stdLogicVector.declaration + ":= \"" +
+                            stdLogicVector.declaration + " := \"" +
                                 String.Concat(Enumerable.Repeat(initialValue, stdLogicVector.highIndex -
                                     stdLogicVector.lowIndex + 1)) + "\";");
                     }
@@ -199,9 +213,24 @@ namespace IBM1410SMS
                 testBenchFile.WriteLine("\t-- Outputs");
                 testBenchFile.WriteLine();
 
+                //  Once again, if this is a bussed signal, it gets special treatment, but
+                //  without the initialization.
+
                 foreach (string signal in outputs) {
-                    testBenchFile.WriteLine("\tsignal " +  generateSignalName(signal) + 
-                        ": STD_LOGIC;");
+                    string signalName = generateSignalName(signal);
+                    string initialValue = signalName.Substring(0, 1) == "M" ? "1" : "0";
+
+                    List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
+
+                    if (bsList == null || bsList.Count == 0) {
+                        testBenchFile.WriteLine("\tsignal " + signalName + ": STD_LOGIC;");
+                    }
+                    else {
+                        STD_LOGIC_VECTOR stdLogicVector =
+                            generateStdLogicVector(bsList, signalName);
+                        testBenchFile.WriteLine("\tsignal " + signalName + ": " +
+                            stdLogicVector.declaration + ";");
+                    }
                 }
 
                 //  Write out the template or saved user *declaration* lines, which must
@@ -281,13 +310,17 @@ namespace IBM1410SMS
             outFile.WriteLine("BEGIN");
             outFile.WriteLine();
 
-            //  Now we also generate assignments for the buffer signals...
+            //  Now we also generate assignments for the buffer signals which are
+            //  NOT part of a bus.
+
+            //  TODO
 
             foreach(string signal in bufferSignals) {
                 outFile.WriteLine("\t" + generateSignalName(signal) + " <= ");
                 outFile.WriteLine("\t\t" + bufferPrefix + generateSignalName(signal) +
                     ";");
             }
+
             if(bufferSignals.Count > 0) {
                 outFile.WriteLine();
             }
@@ -310,7 +343,7 @@ namespace IBM1410SMS
 
         public override void generatePageEntity(string pageName, string pageTitle, 
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals,
+            List<string> bufferSignals, List<string> busInputSignals, List<string> busOutputSignals,
             bool needsClock) {
 
             bool firstPort = true;
@@ -334,16 +367,18 @@ namespace IBM1410SMS
                 outFile.Write("\t\t");
 
                 //  Here again, bussed signals get special treatment, and are "ripped" to map
-                //  the signal in the page instantiation to the particular bit int he bussed
-                //  signal.
+                //  the signal in the page instantiation to the particular bit in the bussed
+                //  input signal -- but only if they are not buffered.
 
                 Bussignals bs = busSignalsList.Find(x => x.signalName == input);
-                if (bs != null) {
+                if(bufferSignals.Contains(input)) {
+                    outFile.Write(bufferPrefix + generateSignalName(input));
+                }
+                else if (bs != null) {
                     outFile.Write(generateSignalName(bs.busName + "(" + bs.busBit.ToString() + ")"));
                 }
                 else {
-                    outFile.Write((bufferSignals.Contains(input) ? bufferPrefix : "") +
-                    generateSignalName(input));
+                    outFile.Write(generateSignalName(input));
                 }
                 firstPort = false;
             }
@@ -353,9 +388,25 @@ namespace IBM1410SMS
                     outFile.WriteLine(",");
                 }
                 outFile.WriteLine("\t" + generateSignalName(output) + " =>");
-                outFile.Write("\t\t" +
-                    (bufferSignals.Contains(output) ? bufferPrefix : "") +
+                outFile.Write("\t\t");
+
+                /*
+                //  Once more, bussed signals get special treatment, and are mapped to the
+                //  signal in the page instantiation to the particuar bit in the bussed signal.
+
+                Bussignals bs = busSignalsList.Find(x => x.signalName == output);
+                if (bs != null && busOutputList.Contains(bs.busName)) {
+                    outFile.Write(generateSignalName(bs.busName + "(" + bs.busBit.ToString() + ")"));
+                }
+                else {
+                    outFile.Write((bufferSignals.Contains(output) ? bufferPrefix : "") +
+                        generateSignalName(output));                
+                }
+                */
+
+                outFile.Write((bufferSignals.Contains(output) ? bufferPrefix : "") +
                     generateSignalName(output));
+
                 firstPort = false;
             }
 

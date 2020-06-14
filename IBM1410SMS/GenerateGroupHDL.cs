@@ -29,6 +29,15 @@ namespace IBM1410SMS
 {
     class GenerateGroupHDL
     {
+
+        protected class BusSignalMembers
+        {
+            public int lowIndex = 9999;
+            public int highIndex = -1;
+            public List<string> signals = new List<string>();
+        }
+
+
         const string TestBenchTemplate = "TestBenchTemplate";
         const string TestBenchFPGAClock = "TestBenchFPGAClock";
         const string TestBenchFPGAClockTag = "<FPGA CLOCK>";
@@ -101,6 +110,7 @@ namespace IBM1410SMS
             List<string> inputList = new List<string>();
             List<string> busInputList = new List<string>();
             List<string> outputList = new List<string>();
+            List<string> busOutputList = new List<string>();
 
             List<string> removedInputSignals = new List<string>();
             List<string> removedOutputSignals = new List<string>();
@@ -499,7 +509,7 @@ namespace IBM1410SMS
                 inputList.Remove(signal);
             }
 
-            foreach (string signal in busInputList) { 
+            foreach (string signal in busInputList) {
                 inputList.Add(signal);
             }
 
@@ -508,7 +518,7 @@ namespace IBM1410SMS
             //  so spin all the sheets looking for lamps.
             //
 
-            foreach(Diagrampage page in diagramPageList) {
+            foreach (Diagrampage page in diagramPageList) {
 
                 int tempErrors = 0;
                 List<string> lampNames = getLampNames(page, out tempErrors);
@@ -518,8 +528,132 @@ namespace IBM1410SMS
                     outputList.Add(lamp);
                 }
                 errors += tempErrors;
-
             }
+
+            //  Now, we do the same kind of bus signal replacement for outputs as we did with inputs,
+            //  but with a wrinkle:  we only do it for cases where ALL of the signals that correspond
+            //  to a given bus are present as outputs.  This requires two passes:  one to gather the
+            //  signals, and then another to make the switch.
+
+            Dictionary<string, BusSignalMembers> busses = new Dictionary<string, BusSignalMembers>();
+
+            foreach(string signal in outputList) {
+                Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+
+                if (bs != null) {
+                    BusSignalMembers members;
+                    if(busses.ContainsKey(bs.busName)) {
+                        members = busses[bs.busName];
+                        if(members.signals.Contains(signal)) {
+                            generator.logMessage("WARNING: Duplicate appearance of signal " +
+                                signal + " associated with bus " + bs.busName);
+                        }
+                        else {
+                            members.signals.Add(signal);
+                            generator.logMessage("DEBUG: Added signal " + signal + " to bus " +
+                                bs.busName);
+                        }
+                    }
+                    else {
+                        members = new BusSignalMembers();
+                        members.signals.Add(signal);
+                        List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == bs.busName);
+                        foreach(Bussignals bs2 in bsList) {
+                            if(bs2.busBit < members.lowIndex) {
+                                members.lowIndex = bs2.busBit;
+                            }
+                            if(bs2.busBit > members.highIndex) {
+                                members.highIndex = bs2.busBit;
+                            }
+                        }
+                        busses.Add(bs.busName, members);
+                        generator.logMessage("DEBUG: Tentative bus " + bs.busName + " identified " +
+                            "based on signal " + signal);
+                    }
+                }
+            }
+
+            //  One more wrinkle.  A signal that might be a bus member might be internal.  So
+            //  we need to add those to the list of bus members appearing as well.  However,
+            //  in this case we do NOT add a whole new bus for it, because if the entire bus
+            //  is internal, then it won't show up in the group member anyway.
+
+            foreach(string signal in allSignals) {
+                if(!outputList.Contains(signal) && !inputList.Contains(signal)) {
+                    Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+                    BusSignalMembers members;
+                    if (bs != null) {
+                        if(busses.ContainsKey(bs.busName)) {
+                            members = busses[bs.busName];
+                            if (members.signals.Contains(signal)) {
+                                generator.logMessage("WARNING: Duplicate appearance of internal signal " +
+                                    signal + " associated with bus " + bs.busName);
+                            }
+                            else {
+                                members.signals.Add(signal);
+                                generator.logMessage("DEBUG: Added internal signal " + signal + " to bus " +
+                                    bs.busName);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //  So now, go through our list of busses that had at least one signal match,
+            //  and see which, if any of them, matched ALL of the signals in the bus
+
+            busOutputList = new List<string>();
+
+            foreach(string  busName in busses.Keys) {
+                BusSignalMembers bsMembers = busses[busName];
+                if(bsMembers.highIndex-bsMembers.lowIndex+1 == bsMembers.signals.Count) {
+                    busOutputList.Add(busName);
+                    generator.logMessage("INFO: Bus " + busName + " identified ");
+                }
+                else {
+                    generator.logMessage("INFO: Bus " + busName + " NOT generated.  Found " +
+                        bsMembers.signals.Count.ToString() + " members of " +
+                        (bsMembers.highIndex - bsMembers.lowIndex + 1).ToString() + " Total members ");
+                }
+            }
+
+            //  OK, so now we can spin through the outputs, and if we see a signal that
+            //  corresponds to a matched bus name, remove it. 
+
+            removedOutputSignals.Clear();
+            foreach(string signal in outputList) {
+                Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+                if(bs != null && busOutputList.Contains(bs.busName)) {
+                    removedOutputSignals.Add(signal);
+                    generator.logMessage("Output signal " + signal + " replaced by bus " +
+                        bs.busName);
+                }
+            }
+
+            //  Also, any output signal that is a bus will need a buffer signal to go with it,
+            //  even if it is NOT only used internally to the group.
+
+            foreach(string signal in busOutputList) {
+                BusSignalMembers members = busses[signal];
+                foreach(string s in members.signals) {
+                    if(!bufferSignals.Contains(s)) {
+                        bufferSignals.Add(s);
+                    }
+                }
+            }
+            
+
+            //  Now, remove any with matches from the output list, and add the matched
+            //  buses into the ouput list.
+
+            foreach(string signal in removedOutputSignals) {
+                outputList.Remove(signal);
+            }
+
+            foreach(string signal in busOutputList) {
+                outputList.Add(signal);
+            }
+
 
             //  The signals (wires for Verilog fans) will be any signal in the
             //  orignal full list that is not in what remains of either the input
@@ -529,7 +663,9 @@ namespace IBM1410SMS
 
             foreach(string signal in allSignals) {
                 if(!inputList.Contains(signal) && !outputList.Contains(signal)) {
-                    if(busSignalsList.Find(x => x.signalName == signal) == null) {
+                    Bussignals bs = busSignalsList.Find(x => x.signalName == signal);
+                    if (bs == null ||
+                        (!busInputList.Contains(bs.busName) && !busOutputList.Contains(bs.busName))) {
                         internalSignals.Add(signal);
                     }
                 }
@@ -601,11 +737,9 @@ namespace IBM1410SMS
                     " (" + thisPage.title + ")");
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
-                    pageInputNames, pageOutputNames, busSignalsList, bufferSignals, needsClock);
-
-
+                    pageInputNames, pageOutputNames, busSignalsList, bufferSignals, 
+                    busInputList, busOutputList, needsClock);
             }
-
 
             //  Generate anything needed at the end
 

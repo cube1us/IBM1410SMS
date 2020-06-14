@@ -69,7 +69,8 @@ namespace IBM1410SMS
             List<string> signals, List<string> bufferSignals);
         public abstract void generatePageEntity(string pageName, string pageTitle,
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals, bool needsClock);
+            List<string> bufferSignals, List<string> busInputList, List<string> busOutputList,
+            bool needsClock);
 
         public GenerateGroupHDLLogic(bool generateTestBench) {
             this.generateTestBench = generateTestBench;
