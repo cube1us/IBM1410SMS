@@ -56,6 +56,8 @@ namespace IBM1410SMS
         bool populatingDialog = true;
         string outputFileName = "";
 
+        const string GROUPPARMPREFIX = "GROUP-";
+
         public GenerateGroupHDLForm() {
 
 
@@ -203,6 +205,7 @@ namespace IBM1410SMS
             Parms.setParmValue("generate group page patterns", pagesTextBox.Text);
             Parms.setParmValue("generate group test bench",
                 generateTestBenchCheckBox.Checked ? "Y" : "N");
+            Parms.setParmValue(GROUPPARMPREFIX + outputFileName.ToUpper(), pagesTextBox.Text);
             // Parms.setParmValue("generate group pages test bench",
             //    generatePageTestBenchCheckBox.Checked ? "Y" : "N");
 
@@ -332,6 +335,14 @@ namespace IBM1410SMS
             else {
                 outputFileName = outputFileNameTextBox.Text;
                 checkEnableGenerateButton();
+            }
+
+            //  Recall the set of page names last used to generate this group, if any
+
+            string groupPageNames = Parms.getParmValue(GROUPPARMPREFIX +
+                outputFileName.ToUpper());
+            if(groupPageNames.Length > 0) {
+                pagesTextBox.Text = groupPageNames;
             }
         }
     }
