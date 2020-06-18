@@ -917,14 +917,18 @@ namespace IBM1410SMS
                         foreach (Connection c2 in block.inputConnections) {
                             if (inputConnectionMatches(c1, c2)) {
                                 foundMatchingConnection = true;
+                                //logMessage("DEBUG: Found matching connection on " +
+                                //    "extension pin " + c1.toPin + " with master block " +
+                                //    "pin " + c2.toPin);
                                 break;
                             }
+
                             //  If the connection does not match, the pins had better be
                             //  different.
 
                             if (c1.toPin == c2.toPin) {
                                 logMessage("Error: During extension merge, " +
-                                    "Master and Extension output connections to " +
+                                    "Master and Extension input connections to " +
                                     "same input pin (" + c1.toPin + " with different sources, at " +
                                     "coordinate " + block.getCoordinate());
                                 ++errors;
@@ -1782,7 +1786,8 @@ namespace IBM1410SMS
         //}
 
         private bool inputConnectionMatches(Connection c1, Connection c2) {
-            return (c1.from == c2.from &&
+            return (c1.toPin == c2.toPin &&
+                c1.from == c2.from &&
                 c1.fromDiagramBlock == c2.fromDiagramBlock &&
                 c1.fromPin == c2.fromPin &&
                 c1.fromDotFunction == c2.fromDotFunction &&
@@ -1791,7 +1796,8 @@ namespace IBM1410SMS
         }
 
         private bool outputConnectionMatches(Connection c1, Connection c2) {
-            return (c1.to == c2.to &&
+            return (c1.fromPin == c2.fromPin && 
+                c1.to == c2.to &&
                 c1.toDiagramBlock == c2.toDiagramBlock &&
                 c1.toPin == c2.toPin &&
                 c1.toDotFunction == c2.toDotFunction &&
