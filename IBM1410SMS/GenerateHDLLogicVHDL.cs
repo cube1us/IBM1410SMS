@@ -287,8 +287,7 @@ namespace IBM1410SMS
                             }
                             firstOutputMap = false;
                             outFile.Write("\t\t" + mapPin + " => " +
-                                outputs[outputIndex] + ",\t" + 
-                                "-- Pin " + connection.fromPin);
+                                outputs[outputIndex]);
                             if (mapPins.Contains(mapPin)) {
                                 mapPins.Remove(mapPin);
                             }
