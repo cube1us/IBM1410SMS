@@ -244,9 +244,8 @@ namespace IBM1410SMS
                 " ORDER BY sheetedgeinformation.row");
 
             if (sheetInputsList.Count < 1) {
-                logMessage("Error: no sheet inputs found for page " +
+                logMessage("WARNING: no sheet inputs found for page " +
                     page.name + " (Database ID " + page.idPage + ")");
-                ++errors;
             }
 
             sheetOutputsList = sheetEdgeInformationTable.getWhere(
@@ -255,9 +254,8 @@ namespace IBM1410SMS
                 " ORDER BY sheetedgeinformation.row");
 
             if (sheetOutputsList.Count < 1) {
-                logMessage("Error: no sheet outputs found for page " +
+                logMessage("WARNING: no sheet outputs found for page " +
                     page.name + " (Database ID " + page.idPage + ")");
-                ++errors;
             }
 
             //  Get the blocks in order by row, so that the top of an extension
@@ -413,15 +411,64 @@ namespace IBM1410SMS
             foreach (Dotfunction dot in dotFunctions) {
                 LogicBlock newBlock = new LogicBlock();
 
+                bool switchFed = true;
                 newBlock.type = "D";
                 newBlock.gate = null;
                 newBlock.dot = dot;
                 newBlock.latchOutputs = false;
-                newBlock.logicFunction = "OR";      //  DOT functions are always OR, voltage wise.
+
+                newBlock.logicFunction = "OR";
                 newBlock.inputConnections = connectionTable.getWhere(
                     "WHERE toDotFunction='" + dot.idDotFunction + "'");
                 newBlock.outputConnections = connectionTable.getWhere(
                     "WHERE fromDotFunction='" + dot.idDotFunction + "'");
+
+                //  DOT functions are always OR, voltage wise.  However, there is one
+                //  special case.  If a DOT function is fed ONLY from rotary switch(es),
+                //  and the switch(es) is active LOW (as rotaray switches usually are),
+                //  then it turns into an AND.
+
+                //  So, suppose a rotary switch has two outputs, A and B, which
+                //  are connected together (via a DOT function - that is not really
+                //  a gate dotted output).  Electrically, the output if this virtual
+                //  DOT function is 0 if A is 0 or B is 0.  Applying DeMorgan's 
+                //  theorum, the output is 1 if (NOT A is 0) AND (NOT B is 0), i.e.,
+                //  if A is 1 AND B is 1.  Got that???  ;)
+
+                foreach (Connection inputConnection in newBlock.inputConnections) {
+
+                    if (inputConnection.fromDiagramBlock == 0) {
+                        switchFed = false;
+                        break;
+                    }
+
+                    Diagramblock block = blocks.Find(x => x.idDiagramBlock ==
+                        inputConnection.fromDiagramBlock);
+
+                    if(block == null || block.idDiagramBlock == 0) {
+                        logMessage("ERROR: Cannot find matching fromDiagramBLock " +
+                            "(" + inputConnection.fromDiagramBlock.ToString() + ") for " +
+                            "connection ID (" + inputConnection.idConnection.ToString() +
+                            "for DOT function at " + dot.diagramColumnToLeft.ToString() +
+                            dot.diagramRowTop);
+                        switchFed = false;
+                        break;
+                    }
+
+                    if (block.symbol.ToUpper() != "ROT" || 
+                        block.notes.ToUpper().Contains("ACTIVE HIGH")) {
+                        switchFed = false;
+                        break;
+                    }
+                }
+
+                if(switchFed) {
+                    logMessage("NOTE: DOT Function at " + dot.diagramColumnToLeft.ToString() +
+                        dot.diagramRowTop + " is fed only by rotary switch(es). " +
+                        "Changing logic function to AND");
+                    newBlock.logicFunction = "AND";
+                }
+
                 logicBlocks.Add(newBlock);
             }
 
@@ -1130,7 +1177,7 @@ namespace IBM1410SMS
                     logMessage("Removed " + removedOutputs + " outputs from " +
                         (block.type == "G" ? "Gate" : "Dot Function") +
                         " at " + block.getCoordinate() +
-                        " to ignored block(s)");
+                        " to ignored block(s) or identical signal names");
                 }
 
             }
@@ -1407,7 +1454,7 @@ namespace IBM1410SMS
 
             generator.logicBlocks = logicBlocks;
             generator.generateHDLPrefix();
-            generator.generateHDLEntity(
+            errors += generator.generateHDLEntity(
                 needsClock,
                 sheetInputsList,
                 sheetOutputsList);
@@ -1559,7 +1606,7 @@ namespace IBM1410SMS
                 else if (block.logicFunction != "Lamp" && outputNames.Count < 1) {
                     logMessage("\tERROR:  No output names found.");
                 }
-                else if (inputNames.Count <= 0) {
+                else if (inputNames.Count <= 0 && block.logicFunction != "Switch") {
                     logMessage("\tERROR: No input names found.");
                     ++errors;
                 }
@@ -1573,9 +1620,10 @@ namespace IBM1410SMS
                 }
                 else if(uniqueOutputNames.Count > 1 &&
                     block.logicFunction != "Special" &&
-                    block.logicFunction != "Trigger") {
+                    block.logicFunction != "Trigger" &&
+                    block.logicFunction != "Switch") {
                     logMessage("\tError: More than one output name, but gate is not marked" +
-                        " as logic function Special or Trigger.");
+                        " as logic function Special, Trigger or Switch.");
                     ++errors;
                 }
                 else if (block.logicFunction == "NAND") {                   
@@ -1588,8 +1636,8 @@ namespace IBM1410SMS
                     //  These are usually DOT functions...
                     generator.generateHDLOr(inputNames, outputNames[0]);
                 }
-                else if (block.logicFunction == "EQUAL") {
-                    //  These are usually DOT functions...
+                else if (block.logicFunction == "EQUAL" ||
+                    block.logicFunction == "Resistor") {
                     generator.generateHDLEqual(inputNames, outputNames[0]);
                 }
                 else if (block.logicFunction == "Lamp" && inputNames.Count == 1) {
@@ -1599,13 +1647,17 @@ namespace IBM1410SMS
                 else if (block.logicFunction == "NOR") {
                     generator.generateHDLNor(inputNames, outputNames[0]);
                 }
+                else if(block.logicFunction == "AND") {
+                    generator.generateHDLAnd(inputNames, outputNames[0]);
+                }
                 else if (block.logicFunction == "Special" ||
                     block.logicFunction == "Trigger" ||
                     block.HDLname == "Oscillator") { 
                     errors += 
                         generator.generateHDLSpecial(block, inputNames, outputNames);
                 }
-                else if(block.HDLname.Contains("ShiftRegister")) {
+                else if(block.HDLname != null &&
+                    block.HDLname.Contains("ShiftRegister")) {
 
                     //  Special case:  If delay says "NOTE" then we treat it as
                     //  an EQUAL or a NOT (if it is InvShiftRegister))
@@ -1624,6 +1676,10 @@ namespace IBM1410SMS
                         generator.generateHDLSpecial(block, inputNames, outputNames);
                     }
 
+                }
+
+                else if(block.logicFunction == "Switch") {
+                    generator.generateHDLSwitch(block, inputNames, outputNames);
                 }
                 else {
                     logMessage("\tERROR:  GenerateHDL does not (yet) know how to generate " +
@@ -1839,6 +1895,29 @@ namespace IBM1410SMS
             else {
                 return ("??");
             }
+        }
+
+        public bool switchActiveHigh() {
+            if(logicFunction != "Switch") {
+                return (false);
+            }
+
+            switch(gate.symbol) {
+                case "MOM":
+                case "TOG":
+                    return (true);
+                case "ROT":
+                    return (gate.notes.ToUpper().Contains("ACTIVE HIGH"));
+                default:
+                    return (false);
+            }
+        }
+
+        public string getSwitchName() {
+            if(logicFunction != "Switch") {
+                return ("NOT A SWITCH!!!");
+            }
+            return ("SWITCH " + gate.symbol + " " + gate.title);
         }
     }
 

@@ -85,9 +85,12 @@ namespace IBM1410SMS
         public abstract void generateHDLOr(List<string> inputs, string output);
         public abstract void generateHDLNot(List<string> inputs, string output);
         public abstract void generateHDLEqual(List<string> inputs, string output);
+        public abstract void generateHDLAnd(List<string> inputs, string output);
         public abstract void generateHDLSignalAssignment(string blockOutput, string outputSignal);
         public abstract int generateHDLSpecial(LogicBlock block, List<string> inputs,
            List<string> outputs);
+        public abstract int generateHDLSwitch(LogicBlock block, List<string> inputs,
+            List<string> outputs);
 
         //  Method to generate the statements for a D Flip Flop used on a latch
         //  output.  Returns error count.
@@ -101,7 +104,7 @@ namespace IBM1410SMS
 
         //  Method to generate the "entity" declaration, if required.
 
-        public abstract void generateHDLEntity(
+        public abstract int generateHDLEntity(
             bool needsClock,
             List<Sheetedgeinformation> sheetInputsList,
             List<Sheetedgeinformation> sheetOutputsList);

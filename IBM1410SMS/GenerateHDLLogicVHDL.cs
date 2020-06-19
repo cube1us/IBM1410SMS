@@ -31,6 +31,10 @@ namespace IBM1410SMS
 {
     class GenerateHDLLogicVHDL : GenerateHDLLogic
     {
+
+        private static Regex ROTARYPATTERN { get; } =
+            new Regex("^PIN\\d\\d$");
+
         public GenerateHDLLogicVHDL(
             Page page, bool generateTestBench) : 
             base (page, generateTestBench) {
@@ -61,6 +65,11 @@ namespace IBM1410SMS
 
         public override void generateHDLEqual(List<string> inputs, string output) {
             outFile.WriteLine("\t" + output + " <= " + inputs[0] + ";");
+        }
+
+        public override void generateHDLAnd(List<string> inputs, string output) {
+            outFile.WriteLine("\t" + output + " <= " +
+                string.Join(" AND ", inputs) + ";");
         }
 
         public override void generateHDLSignalAssignment(string blockOutput, string outputSignal) {
@@ -326,6 +335,121 @@ namespace IBM1410SMS
             return (temp_errors);
         }
 
+        //  Switches are generated as inputs, and have some special characteristics.
+
+        public override int generateHDLSwitch(LogicBlock block, List<string> inputs, 
+            List<string> outputs) {
+            
+            int temp_errors = 0;
+            string mapPin;
+            List<string> mapPins = new List<string>();      // All of the map pins
+            string symbol = block.gate.symbol;
+
+            if(symbol != "MOM" && symbol != "TOG" && symbol != "ROT") { 
+                logMessage("ERROR: Switch for block at " +
+                    block.getCoordinate() + " has unknown symbol of " + symbol);
+                return (1);
+            }
+
+            if((symbol == "MOM" || symbol == "TOG") && outputs.Count > 2) {
+                logMessage("ERROR: " + symbol + " switch for block at " +
+                    block.getCoordinate() + " has more than two outputs ");
+                return (1);
+            }
+
+            //  Build a list of all of the pins in the port map
+            //  (Only ROT switches will have these.)
+
+            foreach (Gatepin pin in block.pins) {
+                if (pin.mapPin != null && pin.mapPin.Length > 0 &&
+                    !mapPins.Contains(pin.mapPin)) {
+                    mapPins.Add(pin.mapPin);
+                }
+            }
+
+            //  For switches, any inputs get ignored (at least for now)
+            //  as they should be generating logic one or zero.  If we
+            //  find one that toggles between one of two signals or some
+            //  such, we will have to create a new type besides MOM, TOG or 
+            //  ROT.
+
+            int outputIndex = 0;
+            foreach(Connection connection in block.outputConnections) {
+
+                if (connection.fromPin == null || connection.fromPin.Length == 0) {
+                    logMessage("ERROR: Switch for block at " +
+                        block.getCoordinate() + " output from " +
+                        outputs[outputIndex] + " has an unnamed output pin -- skipped.");
+                    ++temp_errors;
+                    ++outputIndex;
+                    continue;
+                }
+
+                Gatepin mapGatePin = block.pins.Find(x => x.pin == connection.fromPin);
+                if (mapGatePin == null || mapGatePin.idGatePin == 0) {
+                    logMessage("ERROR: Switch for block at " +
+                        block.getCoordinate() + " output pin " + connection.fromPin +
+                        " not found in gate definition -- skipped.");
+                    mapPin = "";
+                    ++temp_errors;
+                    ++outputIndex;
+                    continue;
+                }
+                else {
+                    mapPin = mapGatePin.mapPin;
+                }
+
+                //  Handle rotary switches
+
+                if(symbol == "ROT") {
+
+                    if (mapPin == null || mapPin.Length == 0) {
+                        logMessage("ERROR: " + symbol + " switch for block at " +
+                            block.getCoordinate() + " no mapPin found for output pin "
+                            + connection.fromPin + " -- skipped.");
+                        ++temp_errors;
+                        ++outputIndex;
+                        continue;
+                    }
+
+                    if (!ROTARYPATTERN.IsMatch(mapPin)) {
+                        logMessage("ERROR: " + symbol + " switch for block at " +
+                            block.getCoordinate() + " mapPin of " + mapPin + 
+                            " found for output pin " + connection.fromPin + 
+                            " is not of the form PIN##");
+                        ++temp_errors;
+                        ++outputIndex;
+                        continue;
+                    }
+
+                    int bitNumber = int.Parse(mapPin.Substring(3));
+
+                    outFile.WriteLine("\t" + outputs[outputIndex] + " <= " +
+                        (block.switchActiveHigh() ? "" : "NOT ") +
+                         generateSignalName(block.getSwitchName()) +
+                        "(" + bitNumber + ");");
+                }
+
+                if(symbol == "MOM" || symbol == "TOG") {
+                    if(connection.fromPin != "N" && connection.fromPin != "T") {
+                        logMessage("ERROR: " + symbol + " switch for block at " +
+                            block.getCoordinate() + " output pin " +
+                            connection.fromPin + " is not N or T");
+                    }
+                    outFile.Write("\t" + outputs[outputIndex] + " <= ");
+                    if((connection.fromPin == "N" && !block.switchActiveHigh()) ||
+                        (connection.fromPin == "T" && block.switchActiveHigh())) {
+                        outFile.Write(" NOT ");
+                    }
+                    outFile.WriteLine(generateSignalName(block.getSwitchName()) + ";");
+                }
+
+                ++outputIndex;
+            }
+
+            return (temp_errors);
+        }
+
         public override int generateHDLDFlipFlop(LogicBlock block) {
 
             int temp_errors = 0;
@@ -409,12 +533,13 @@ namespace IBM1410SMS
         //  Generate the HDL Entity Declaration for both the page VHDL file
         //  and the test bench vhdl file, if present.
 
-        public override void generateHDLEntity(
+        public override int generateHDLEntity(
             bool needsClock,
             List<Sheetedgeinformation> sheetInputsList,
             List<Sheetedgeinformation> sheetOutputsList) {
 
             bool firstOutput = true;
+            int temp_errors = 0;
             this.needsClock = needsClock;
 
             //  Generate the Entity declaration for both the page and the test bench
@@ -449,6 +574,32 @@ namespace IBM1410SMS
                 foreach (Sheetedgeinformation signal in sheetInputsList) {
                     stream.WriteLine("\t\t" + generateSignalName(signal.signalName) +
                         ":\t in STD_LOGIC;");
+                }
+
+                //  Switches get special handling in the entity declaration
+
+                foreach(LogicBlock lb in logicBlocks) {
+                    if(lb.logicFunction == "Switch") {
+                        string switchName = lb.getSwitchName();
+                        switch(lb.gate.symbol) {
+                            case "TOG":
+                            case "MOM":
+                                stream.WriteLine("\t\t" + generateSignalName(switchName) +
+                                    ":\t in STD_LOGIC;");
+                                break;
+                            case "ROT":
+                                stream.WriteLine("\t\t" + generateSignalName(switchName) +
+                                    ":\t in STD_LOGIC_VECTOR(" + (lb.pins.Count - 1).ToString() +
+                                    " downTo 0);");
+                                break;
+                            default:
+                                logMessage("ERROR: Unexpected switch symbol: " +
+                                    lb.gate.symbol + " at coordinate " +
+                                    lb.gate.diagramColumn.ToString() + lb.gate.diagramRow);
+                                ++temp_errors;
+                                break;
+                        }
+                    }
                 }
 
                 foreach (Sheetedgeinformation signal in sheetOutputsList) {
@@ -497,6 +648,39 @@ namespace IBM1410SMS
                         ": STD_LOGIC := '" +
                         (signalName.Substring(0, 1) == "M" ? "1" : "0") + "';");
                 }
+
+                //  Then the switch inputs
+
+                foreach (LogicBlock lb in logicBlocks) {
+                    if (lb.logicFunction == "Switch") {
+                        string switchName = "SWITCH " + lb.gate.symbol +
+                            " " + lb.gate.title;
+                        string initValue = "0";
+                        switch (lb.gate.symbol) {
+                            case "TOG":
+                            case "MOM":
+                                testBenchFile.WriteLine("\tsignal " +
+                                    generateSignalName(switchName) +
+                                    ": STD_LOGIC := '" + initValue + "';");
+                                break;
+                            case "ROT":
+                                testBenchFile.WriteLine("\tsignal " +
+                                    generateSignalName(switchName) +
+                                    ": STD_LOGIC_VECTOR(" + (lb.pins.Count - 1).ToString() +
+                                    " downTo 0) := \"" +
+                                    String.Concat(Enumerable.Repeat(initValue,lb.pins.Count)) +
+                                    "\";");
+                                break;
+                            default:
+                                logMessage("ERROR: Unexpected switch symbol: " +
+                                    lb.gate.symbol + " at coordinate " +
+                                    lb.gate.diagramColumn.ToString() + lb.gate.diagramRow);
+                                ++temp_errors;
+                                break;
+                        }
+                    }
+                }
+
                 testBenchFile.WriteLine();
 
                 //  Then the outputs
@@ -539,6 +723,17 @@ namespace IBM1410SMS
                         signalName + ",");
                 }
 
+                //  Next come the switches, if any.
+
+                foreach (LogicBlock lb in logicBlocks) {
+                    if (lb.logicFunction == "Switch") {
+                        string switchName = generateSignalName(lb.getSwitchName());
+                        testBenchFile.WriteLine("\t\t" + switchName + " => " +
+                            switchName + ",");
+                    }
+                }
+
+
                 firstOutput = true;
                 foreach (Sheetedgeinformation signal in sheetOutputsList) {
                     string signalName = generateSignalName(signal.signalName);
@@ -555,6 +750,8 @@ namespace IBM1410SMS
                 testBenchFile.WriteLine(");");
                 testBenchFile.WriteLine();
             }
+
+            return (temp_errors);
         }
 
         public override int generateHDLArchitecturePrefix() {
@@ -632,11 +829,12 @@ namespace IBM1410SMS
                             errors += temp_errors;
                         }
                     }
-
                 }
             }
 
+            outFile.WriteLine("");
             outFile.WriteLine("begin");
+            outFile.WriteLine("");
 
             return (errors);
         }
