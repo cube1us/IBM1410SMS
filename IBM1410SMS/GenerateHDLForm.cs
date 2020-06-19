@@ -261,7 +261,9 @@ namespace IBM1410SMS
 
         private void volumeComboBox_SelectedIndexChanged(object sender, EventArgs e) {
 
-            currentVolume = volumeList[volumeComboBox.SelectedIndex];
+            if(volumeComboBox.SelectedIndex >= 0) {
+                currentVolume = volumeList[volumeComboBox.SelectedIndex];
+            }
 
         }
 
