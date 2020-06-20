@@ -113,7 +113,7 @@ namespace IBM1410SMS
             List<string> busInputList = new List<string>();
             List<string> outputList = new List<string>();
             List<string> busOutputList = new List<string>();
-            List<string> switchNames = new List<string>();
+            List<SwitchInfo> switchList = new List<SwitchInfo>();
 
             List<string> removedInputSignals = new List<string>();
             List<string> removedOutputSignals = new List<string>();
@@ -520,8 +520,8 @@ namespace IBM1410SMS
             //  Lamps are output signals too - but they don't appear in the database
             //  so spin all the sheets looking for lamps.
             //
-            //  While we are at it, get the switches, too, which can only be found
-            //  on individual sheets.
+            //  While we are at it, get the switches declarations, too, 
+            //  which can only be found on individual sheets.
             //
 
             foreach (Diagrampage page in diagramPageList) {
@@ -535,10 +535,14 @@ namespace IBM1410SMS
                 }
                 errors += tempErrors;
 
-                foreach (string switchName in getSwitchNames(page, out tempErrors)) {
-                    switchNames.Add(switchName);
+                //  Switch names as declarations
+
+                foreach (SwitchInfo switchInfo in getSwitchEntries(
+                    page, true, out tempErrors)) {
+                    switchList.Add(switchInfo);
                 }
                 errors += tempErrors;
+
             }
 
             //  Now, we do the same kind of bus signal replacement for outputs as we did with inputs,
@@ -693,7 +697,7 @@ namespace IBM1410SMS
             //  Generate the entity / module definition
 
             generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList,
-                switchNames);
+                switchList);
 
             //  Generate the beginning of the actual HDL
 
@@ -744,6 +748,13 @@ namespace IBM1410SMS
                 }
                 errors += tempErrors;
 
+                //  And, yes, for switches too - but this time, not as declaratinos.
+
+                tempErrors = 0;
+                List<SwitchInfo> pageSwitchList = getSwitchEntries(
+                    page, false, out tempErrors);
+                errors += tempErrors;
+
                 //  Generate the page entity.  For now, just force needsClock to true.
 
                 generator.logMessage("Generating HDL associated with page " + thisPage.name +
@@ -751,7 +762,7 @@ namespace IBM1410SMS
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
                     pageInputNames, pageOutputNames, busSignalsList, bufferSignals, 
-                    busInputList, busOutputList, needsClock);
+                    busInputList, busOutputList, pageSwitchList, needsClock);
             }
 
             //  Generate anything needed at the end
@@ -812,16 +823,19 @@ namespace IBM1410SMS
             return (outputList);
         }
 
-        public List<string> getSwitchNames(Diagrampage page, out int errors) {
+        public List<SwitchInfo> getSwitchEntries(Diagrampage page, bool declaration,
+            out int errors) {
             errors = 0;
 
-            List<string> switchList = new List<string>();
+            List<SwitchInfo> switchList = new List<SwitchInfo>();
 
             List<Diagramblock> logicBlocks = diagramBlockTable.getWhere(
                 "WHERE diagramPage = '" + page.idDiagramPage + "' " +
                 "ORDER BY diagramRow ASC, diagramColumn DESC");
 
             foreach (Diagramblock block in logicBlocks) {
+
+                SwitchInfo switchEntry = new SwitchInfo();
 
                 //  If this isn't a switch, on to the next one
 
@@ -831,40 +845,32 @@ namespace IBM1410SMS
 
                 // This is a switch, so add it to the list, depending upon type.
 
-                string switchName = "SWITCH " + block.symbol + " " + block.title;
+                switchEntry.switchName = "SWITCH " + block.symbol + " " + block.title;
+                switchEntry.rotaryCount = 0;
 
-                switch (block.symbol) {
-                    case "MOM":
-                    case "TOG":
-                        switchList.Add(generator.generateSwitchEntry(switchName, 0));
-                        break;
-                    case "ROT":
-                        string pageCoordinate = Helpers.getDiagramPageName(page.idDiagramPage) +
-                            " coordinate " + block.diagramColumn.ToString() +
-                            block.diagramRow;
+                if(block.symbol == "ROT") {
+                    string pageCoordinate = Helpers.getDiagramPageName(page.idDiagramPage) +
+                        " coordinate " + block.diagramColumn.ToString() +
+                                block.diagramRow;
 
-                        Cardgate cardGate = cardGateTable.getByKey(block.cardGate);
-                        if (cardGate == null || cardGate.idcardGate == 0) {
-                            generator.logMessage("ERROR:  Invalid Card Gate Key (" +
-                                block.cardGate + ") for Switch DiagramBlock " +
-                                "on page " + pageCoordinate);
-                            ++errors;
-                            continue;
-                        }
+                    Cardgate cardGate = cardGateTable.getByKey(block.cardGate);
+                    if (cardGate == null || cardGate.idcardGate == 0) {
+                        generator.logMessage("ERROR:  Invalid Card Gate Key (" +
+                            block.cardGate + ") for Switch DiagramBlock " +
+                            "on page " + pageCoordinate);
+                        ++errors;
+                        continue;
+                    }
 
-                        List<Gatepin> gatePins = gatePinTable.getWhere(
-                            "WHERE cardgate = '" + cardGate.idcardGate + "'");
+                    List<Gatepin> gatePins = gatePinTable.getWhere(
+                        "WHERE cardgate = '" + cardGate.idcardGate + "'");
 
-                        switchList.Add(generator.generateSwitchEntry(switchName, 
-                            gatePins.Count));
-
-                        break;
-                    default:
-                        //  Can't happen
-                        break;
+                    switchEntry.rotaryCount = gatePins.Count;
                 }
-            }
 
+                switchList.Add(switchEntry);
+
+            }
             return (switchList);
         }
 

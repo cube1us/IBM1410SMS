@@ -34,6 +34,13 @@ using System.Text.RegularExpressions;
 
 namespace IBM1410SMS
 {
+
+    public class SwitchInfo
+    {
+        public string switchName { get; set; }  = "";
+        public int rotaryCount { get; set; } = 0;
+    }
+
     public abstract class GenerateGroupHDLLogic {
         protected Regex replacePeriods = new Regex("\\.");
         protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-|\\*");
@@ -64,16 +71,17 @@ namespace IBM1410SMS
         public abstract void generateHDLArchitectureSuffix();
         public abstract void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList, List<string> switchNames);
+            List<Bussignals> busSignalsList, List<SwitchInfo> switchList);
         public abstract void generateHDLSignalList(
             List<string> signals, List<string> bufferSignals, List<Bussignals> busSignalsList,
             List<string> busOutputList);
         public abstract void generatePageEntity(string pageName, string pageTitle,
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals, List<string> busInputList, List<string> busOutputList,
-            bool needsClock);
+            List<string> bufferSignals, List<string> busInputList, 
+            List<string> busOutputList, List<SwitchInfo> switchList, bool needsClock);
 
-        public abstract string generateSwitchEntry(string switchName, int vectorCount);
+        public abstract string generateSwitchEntry(string switchName, 
+            bool declaration, int vectorCount);
 
         public GenerateGroupHDLLogic(bool generateTestBench) {
             this.generateTestBench = generateTestBench;

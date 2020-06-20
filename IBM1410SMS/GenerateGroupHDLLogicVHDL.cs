@@ -96,7 +96,7 @@ namespace IBM1410SMS
 
         public override void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList, List<string> switchNames) {
+            List<Bussignals> busSignalsList, List<SwitchInfo> switchList) {
 
             bool firstOutput = true;
 
@@ -140,9 +140,16 @@ namespace IBM1410SMS
                     }
                 }
 
-                foreach(string switchName in switchNames) {
+                foreach(SwitchInfo switchEntry in switchList) {
                     stream.Write(";" + Environment.NewLine + "\t\t" +
-                        switchName);
+                        generateSignalName(switchEntry.switchName) + ": in ");
+                    if(switchEntry.rotaryCount == 0) {
+                        stream.Write("STD_LOGIC");
+                    }
+                    else {
+                        stream.Write("STD_LOGIC_VECTOR(" +
+                            (switchEntry.rotaryCount - 1).ToString() + " downTo 0)");
+                    }
                 }
 
                 foreach (string signal in outputs) {
@@ -211,7 +218,27 @@ namespace IBM1410SMS
                     }
                 }
 
+                //  And, here come the switches yet again...
+
+                //  Note that outside of the individual page logic, switches are
+                //  always active high.
+
+                foreach(SwitchInfo switchEntry in switchList) {
+                    testBenchFile.Write("\tsignal " +
+                        generateSignalName(switchEntry.switchName));
+                    if(switchEntry.rotaryCount == 0) {
+                        testBenchFile.WriteLine(": STD_LOGIC := '0';");
+                    }
+                    else {
+                        testBenchFile.WriteLine(": STD_LOGIC_VECTOR(" +
+                            (switchEntry.rotaryCount - 1).ToString() + " downTo 0) := \"" +
+                            String.Concat(Enumerable.Repeat("0", switchEntry.rotaryCount)) +
+                            "\";");
+                    }
+                }
+
                 testBenchFile.WriteLine();
+
 
                 //  Then the outputs
 
@@ -261,6 +288,11 @@ namespace IBM1410SMS
 
                 foreach (string signal in inputs) {
                     string signalName = generateSignalName(signal);
+                    testBenchFile.WriteLine("\t\t" + signalName + " => " + signalName + ",");
+                }
+
+                foreach(SwitchInfo switchEntry in switchList) {
+                    string signalName = generateSignalName(switchEntry.switchName);
                     testBenchFile.WriteLine("\t\t" + signalName + " => " + signalName + ",");
                 }
 
@@ -382,8 +414,8 @@ namespace IBM1410SMS
 
         public override void generatePageEntity(string pageName, string pageTitle, 
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals, List<string> busInputSignals, List<string> busOutputSignals,
-            bool needsClock) {
+            List<string> bufferSignals, List<string> busInputSignals, 
+            List<string> busOutputSignals, List<SwitchInfo> switchList, bool needsClock) {
 
             bool firstPort = true;
 
@@ -422,6 +454,16 @@ namespace IBM1410SMS
                 firstPort = false;
             }
 
+            foreach(SwitchInfo switchEntry in switchList) {
+                string switchName = generateSignalName(switchEntry.switchName);
+                if (!firstPort) {
+                    outFile.WriteLine(",");
+                }
+                outFile.WriteLine("\t" + switchName + " =>");
+                outFile.Write("\t\t" + switchName);
+                firstPort = false;
+            }
+
             foreach (string output in outputs) {
                 if (!firstPort) {
                     outFile.WriteLine(",");
@@ -456,13 +498,16 @@ namespace IBM1410SMS
 
         //  Routine to generate an appropriate VHDL declaration for a switch
 
-        public override string generateSwitchEntry(string switchName, int vectorCount) {
+        public override string generateSwitchEntry(string switchName, 
+            bool declaration, int vectorCount) {
             if (vectorCount == 0) {
-                return (generateSignalName(switchName) + ": STD_LOGIC");
+                return (generateSignalName(switchName) + 
+                    (declaration ? ": STD_LOGIC" : ""));
             }
             else {
-                return (generateSignalName(switchName) + ": STD_LOGIC_VECTOR(" +
-                    (vectorCount - 1).ToString() + " downTo 0)");
+                return (generateSignalName(switchName) + 
+                    (declaration ? ": STD_LOGIC_VECTOR(" +
+                    (vectorCount - 1).ToString() + " downTo 0)" : ""));
             }
         }
 
