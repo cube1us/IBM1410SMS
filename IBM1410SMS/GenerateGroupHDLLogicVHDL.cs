@@ -96,7 +96,7 @@ namespace IBM1410SMS
 
         public override void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList) {
+            List<Bussignals> busSignalsList, List<string> switchNames) {
 
             bool firstOutput = true;
 
@@ -138,6 +138,11 @@ namespace IBM1410SMS
                         stream.Write(";" + Environment.NewLine + "\t\t" + 
                             signalName + ": in " + stdLogicVector.declaration);
                     }
+                }
+
+                foreach(string switchName in switchNames) {
+                    stream.Write(";" + Environment.NewLine + "\t\t" +
+                        switchName);
                 }
 
                 foreach (string signal in outputs) {
@@ -447,6 +452,18 @@ namespace IBM1410SMS
             outFile.WriteLine();
             outFile.WriteLine("\t);");
             outFile.WriteLine();
+        }
+
+        //  Routine to generate an appropriate VHDL declaration for a switch
+
+        public override string generateSwitchEntry(string switchName, int vectorCount) {
+            if (vectorCount == 0) {
+                return (generateSignalName(switchName) + ": STD_LOGIC");
+            }
+            else {
+                return (generateSignalName(switchName) + ": STD_LOGIC_VECTOR(" +
+                    (vectorCount - 1).ToString() + " downTo 0)");
+            }
         }
 
         //  Routine to generate part of a STD_LOGIC_VECTOR declaration.

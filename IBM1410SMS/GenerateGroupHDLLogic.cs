@@ -64,7 +64,7 @@ namespace IBM1410SMS
         public abstract void generateHDLArchitectureSuffix();
         public abstract void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList);
+            List<Bussignals> busSignalsList, List<string> switchNames);
         public abstract void generateHDLSignalList(
             List<string> signals, List<string> bufferSignals, List<Bussignals> busSignalsList,
             List<string> busOutputList);
@@ -72,6 +72,8 @@ namespace IBM1410SMS
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
             List<string> bufferSignals, List<string> busInputList, List<string> busOutputList,
             bool needsClock);
+
+        public abstract string generateSwitchEntry(string switchName, int vectorCount);
 
         public GenerateGroupHDLLogic(bool generateTestBench) {
             this.generateTestBench = generateTestBench;

@@ -60,6 +60,7 @@ namespace IBM1410SMS
         Table<Cardgate> cardGateTable;
         Table<Logicfunction> logicFunctionTable;
         Table<Bussignals> busSignalsTable;
+        Table<Gatepin> gatePinTable;
 
         DBSetup db = DBSetup.Instance;
 
@@ -95,6 +96,7 @@ namespace IBM1410SMS
             cardGateTable = db.getCardGateTable();
             logicFunctionTable = db.getLogicFunctionTable();
             busSignalsTable = db.getBusSignalsTable();
+            gatePinTable = db.getGatePinTable();
         }
 
         public int generateGroupHDL() {
@@ -111,6 +113,7 @@ namespace IBM1410SMS
             List<string> busInputList = new List<string>();
             List<string> outputList = new List<string>();
             List<string> busOutputList = new List<string>();
+            List<string> switchInputList = new List<string>();
 
             List<string> removedInputSignals = new List<string>();
             List<string> removedOutputSignals = new List<string>();
@@ -517,6 +520,9 @@ namespace IBM1410SMS
             //  Lamps are output signals too - but they don't appear in the database
             //  so spin all the sheets looking for lamps.
             //
+            //  While we are at it, get the switches, too, which can only be found
+            //  on individual sheets.
+            //
 
             foreach (Diagrampage page in diagramPageList) {
 
@@ -528,6 +534,11 @@ namespace IBM1410SMS
                     outputList.Add(lamp);
                 }
                 errors += tempErrors;
+
+                List<string> switchNames = getSwitchNames(page, out tempErrors);
+                foreach (string switchName in switchNames) {
+
+                }
             }
 
             //  Now, we do the same kind of bus signal replacement for outputs as we did with inputs,
@@ -681,7 +692,8 @@ namespace IBM1410SMS
 
             //  Generate the entity / module definition
 
-            generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList);
+            generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList,
+                switchNames);
 
             //  Generate the beginning of the actual HDL
 
@@ -798,6 +810,62 @@ namespace IBM1410SMS
             }
 
             return (outputList);
+        }
+
+        public List<string> getSwitchNames(Diagrampage page, out int errors) {
+            errors = 0;
+
+            List<string> switchList = new List<string>();
+
+            List<Diagramblock> logicBlocks = diagramBlockTable.getWhere(
+                "WHERE diagramPage = '" + page.idDiagramPage + "' " +
+                "ORDER BY diagramRow ASC, diagramColumn DESC");
+
+            foreach (Diagramblock block in logicBlocks) {
+
+                //  If this isn't a switch, on to the next one
+
+                if(block.symbol != "TOG" && block.symbol != "MOM" && block.symbol != "ROT") {
+                    continue;
+                }
+
+                // This is a switch, so add it to the list, depending upon type.
+
+                string switchName = "SWITCH " + block.symbol + " " + block.title;
+
+                switch (block.symbol) {
+                    case "MOM":
+                    case "TOG":
+                        switchList.Add(generator.generateSwitchEntry(switchName, 0));
+                        break;
+                    case "ROT":
+                        string pageCoordinate = Helpers.getDiagramPageName(page.idDiagramPage) +
+                            " coordinate " + block.diagramColumn.ToString() +
+                            block.diagramRow;
+
+                        Cardgate cardGate = cardGateTable.getByKey(block.cardGate);
+                        if (cardGate == null || cardGate.idcardGate == 0) {
+                            generator.logMessage("ERROR:  Invalid Card Gate Key (" +
+                                block.cardGate + ") for Switch DiagramBlock " +
+                                "on page " + pageCoordinate);
+                            ++errors;
+                            continue;
+                        }
+
+                        List<Gatepin> gatePins = gatePinTable.getWhere(
+                            "WHERE cardgate = '" + cardGate.idcardGate + "'");
+
+                        switchList.Add(generator.generateSwitchEntry(switchName, 
+                            gatePins.Count));
+
+                        break;
+                    default:
+                        //  Can't happen
+                        break;
+                }
+            }
+
+            return (switchList);
         }
 
         public void closeFiles() {
