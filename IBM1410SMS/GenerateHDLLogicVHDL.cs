@@ -396,7 +396,7 @@ namespace IBM1410SMS
                     continue;
                 }
                 else {
-                    mapPin = mapGatePin.mapPin;
+                    mapPin = mapGatePin.mapPin.ToUpper();
                 }
 
                 //  Handle rotary switches
@@ -431,13 +431,24 @@ namespace IBM1410SMS
                 }
 
                 if(symbol == "MOM" || symbol == "TOG") {
-                    if(connection.fromPin != "N" && connection.fromPin != "T") {
+
+                    if(connection.fromPin != "N" && connection.fromPin != "T" &&
+                        mapPin != "OUTON" && mapPin != "OUTOFF") {
                         logMessage("ERROR: " + symbol + " switch for block at " +
                             block.getCoordinate() + " output pin " +
-                            connection.fromPin + " is not N or T");
+                            connection.fromPin + " is not N or T or mapped to " +
+                            "OUTON or OUTOFF");
                     }
+
                     outFile.Write("\t" + outputs[outputIndex] + " <= ");
-                    if((connection.fromPin == "N" && !block.switchActiveHigh()) ||
+
+                    if (mapPin == "OUTON" || mapPin == "OUTOFF") {
+                        if ((mapPin == "OUTON" && !block.switchActiveHigh()) ||
+                        (mapPin == "OUTOFF" && block.switchActiveHigh())) {
+                            outFile.Write(" NOT ");
+                        }
+                    }
+                    else if ((connection.fromPin == "N" && !block.switchActiveHigh()) ||
                         (connection.fromPin == "T" && block.switchActiveHigh())) {
                         outFile.Write(" NOT ");
                     }
