@@ -113,7 +113,7 @@ namespace IBM1410SMS
             List<string> busInputList = new List<string>();
             List<string> outputList = new List<string>();
             List<string> busOutputList = new List<string>();
-            List<string> switchInputList = new List<string>();
+            List<string> switchNames = new List<string>();
 
             List<string> removedInputSignals = new List<string>();
             List<string> removedOutputSignals = new List<string>();
@@ -535,10 +535,10 @@ namespace IBM1410SMS
                 }
                 errors += tempErrors;
 
-                List<string> switchNames = getSwitchNames(page, out tempErrors);
-                foreach (string switchName in switchNames) {
-
+                foreach (string switchName in getSwitchNames(page, out tempErrors)) {
+                    switchNames.Add(switchName);
                 }
+                errors += tempErrors;
             }
 
             //  Now, we do the same kind of bus signal replacement for outputs as we did with inputs,
