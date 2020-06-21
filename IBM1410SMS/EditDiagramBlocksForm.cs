@@ -233,7 +233,8 @@ namespace IBM1410SMS
                             //  Generalize: The following may need work for machines other than 1410
 
                             button.Text = /* Helpers.getTwoCharMachineName(cardSlotInfo.machineName)  + */
-                                currentMachine.aldMachineType +
+                                // currentMachine.aldMachineType +
+                                cardSlotInfo.ToSmallString().Substring(0,2) +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
@@ -280,7 +281,8 @@ namespace IBM1410SMS
                             }
 
                             button.Text = /* Helpers.getTwoCharMachineName(currentMachine.name) + */
-                                currentMachine.aldMachineType +
+                                // currentMachine.aldMachineType +
+                                cardSlotInfo.ToSmallString().Substring(0, 2) +
                                 cardSlotInfo.frameName + ecoTagLetter +
                                 Environment.NewLine + cardSlotInfo.panelName +
                                 cardSlotInfo.row + cardSlotInfo.column.ToString("D2") +
