@@ -885,6 +885,10 @@ namespace IBM1410SMS
             currentDiagramBlock.noHDLGeneration = noHDLGen.Checked ? 1 : 0;
             currentDiagramBlock.checkExempt = exemptCheckBox.Checked ? 1 : 0;
 
+            //  Also update the current card type
+
+            currentCardType = (Cardtype) cardTypeComboBox.SelectedItem;
+
             //  Tell the user what the update will actually do...
 
             message = doUpdate(false);
