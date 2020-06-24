@@ -201,6 +201,7 @@
     <Compile Include="GenerateHDLLogicVHDL.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IBMSMSPackaging.cs" />
+    <Compile Include="ImportBuses.cs" />
     <Compile Include="ImportCardLocationChart.cs" />
     <Compile Include="ImportCardTypes.cs" />
     <Compile Include="ImportCardLocationPages.cs" />

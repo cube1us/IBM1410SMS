@@ -252,5 +252,15 @@ namespace IBM1410SMS
                 new ReportQuerySignalsForm();
             ReportQuerySignalsForm.ShowDialog();
         }
+
+        private void importBusSignalsToolStripMenuItem_Click(object sender, EventArgs e) {
+            ImportStartupForm ImportStartupForm = new ImportStartupForm();
+            DialogResult status = ImportStartupForm.ShowDialog();
+            if (status != DialogResult.Cancel) {
+                ImportBuses junk = new ImportBuses(
+                ImportStartupForm.fileName, ImportStartupForm.disposition,
+                ImportStartupForm.testMode);
+            }
+        }
     }
 }
