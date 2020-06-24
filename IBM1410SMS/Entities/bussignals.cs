@@ -14,7 +14,9 @@ namespace IBM1410SMS
 
 		public bool modified {get; set;} = false;
 
-		[MyColumn(Key=true)] public string signalName { get; set; }
+		[MyColumn(Key=true)] public int idBusSignal { get; set; }
+		[MyColumn] public int machine { get; set; }
+		[MyColumn] public string signalName { get; set; }
 		[MyColumn] public string busName { get; set; }
 		[MyColumn] public int busBit { get; set; }
 	}
