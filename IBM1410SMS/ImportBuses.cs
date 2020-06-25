@@ -34,6 +34,7 @@ namespace IBM1410SMS
             bool skippingBits = false;
             string lastUsedBit = "";
             bool cancelTransaction = false;
+            int tildeIndex = -1;
 
             DBSetup db = DBSetup.Instance;
             machineTable = db.getMachineTable();
@@ -128,7 +129,20 @@ namespace IBM1410SMS
                     continue;
                 }
 
+                //  Check to make sure that the signal name has exactly one
+                //  tilde (~) placeholder character
+
+                if(signalName.Count(c => (c == '~' )) != 1) {
+                    logMessage("ERROR: Input Line " + lineCount + " Signal name '" +
+                        signalName + "' does not have " +
+                        "exactly one tidle (~) character.");
+                    cancelTransaction = true;
+                }
+
+                tildeIndex = signalName.IndexOf('~');
+
                 //  Decode the bits used field
+
                 //  If we see a [, then the bits that appear until the matching ]
                 //  are available on the bus bit vector, but not used, so  we don't 
                 //  genereate a busSignals entry for it.  This is so that bits
@@ -139,8 +153,6 @@ namespace IBM1410SMS
                 skippingBits = false;
 
                 for (int bitIndex = 0; bitIndex < bitsUsed.Length; ++bitIndex) {
-
-                    //  TODO:  COMPUTE SIGNAL NAME
 
                     string currentBit = bitsUsed.Substring(bitIndex, 1);
 
@@ -172,9 +184,6 @@ namespace IBM1410SMS
                             skippingBits = false;
                         }
                         else {
-                            
-                            //  TODO:  Check to confirm signal does NOT exist
-
                             usedBitNames.Add("-");      // Add a placeholder bit
                         }
                         continue;
@@ -191,8 +200,6 @@ namespace IBM1410SMS
                     }
 
                     //  Normal bit name....
-
-                    //  TODO:  Check to confirm signal exists in database
 
                     usedBitNames.Add(currentBit);   // Add a real bit
                     lastUsedBit = currentBit;
@@ -221,11 +228,77 @@ namespace IBM1410SMS
                 logMessage("Input Line " + lineCount + " Bits " +
                     bitsUsed + ", Used Bits: " + bitsUsedString);
 
-                if(testMode || cancelTransaction) {
-                    continue;
-                }
-
                 //  Generate the bus database entries here.
+
+                int bitPosition = usedBitNames.Count;
+                foreach(string s in usedBitNames) {
+                    if(s == "-") {
+                        //  Skip this bit position numberr
+                        --bitPosition;
+                        continue;
+                    }
+
+                    busSignal = new Bussignals();
+                    busSignal.signalName = signalName.Substring(0, tildeIndex) +
+                        s + signalName.Substring(tildeIndex + 1);
+                    busSignal.busName = busName;
+                    busSignal.busBit = bitPosition - 1;
+                    busSignal.machine = machineKey;
+
+                    --bitPosition;
+
+                    //logMessage("DEBUG: Line " + lineCount + " signal " +
+                    //    busSignal.signalName + " is bus " + busSignal.busName +
+                    //    " bit " + bitPosition.ToString());
+
+                    //  Check to see if there is actually a signal in the
+                    //  sheetedgeinformation table that matches - warn if not.
+
+                    List<Sheetedgeinformation> sheetEdgeInformation =
+                        sheetEdgeInformationTable.getWhere(
+                            "WHERE signalName = '" + busSignal.signalName + "'");
+
+                    if(sheetEdgeInformation == null || sheetEdgeInformation.Count < 1) {
+                        logMessage("WARNING: Line " + lineCount + " ALD signal " +
+                            busSignal.signalName + " is not in sheet edge information " +
+                            "table.");
+                    }
+
+                    //  Check to see if this signal already exists.  If so, 
+                    //  use the overwrite/merge/skip setting as appropriate.  (In
+                    //  this case, merge isn't really relevant).
+
+                    List<Bussignals> busSignalList = busSignalsTable.getWhere(
+                        "WHERE signalName = '" + busSignal.signalName + "'");
+
+                    if(busSignalList != null && busSignalList.Count == 1) {
+                        if(disposition == ImportStartupForm.Disposition.SKIP ||
+                            disposition == ImportStartupForm.Disposition.MERGE) {
+                            //  SKIP or MERGE - do not overwrite
+                            logMessage("WARNING: Line " + lineCount + " signal " +
+                                busSignal.signalName + " already exists, " +
+                                "dialog set to SKIP or MERGE -- signal ignored.");
+                            continue;
+                        }
+                        else {
+                            //  OVERWRITE
+                            logMessage("WARNING: Line " + lineCount + " signal " +
+                                busSignal.signalName + " already exists, " +
+                                "dialog set to OVERWRITE - will be overwritten");
+                            busSignal.idBusSignal = busSignalList[0].idBusSignal;
+                            if(!testMode && !cancelTransaction) {
+                                busSignalsTable.update(busSignal);
+                            }
+                        }
+                    }
+                    else {
+                        //  INSERT NEW
+                        if(!testMode && !cancelTransaction) {
+                            busSignal.idBusSignal = IdCounter.incrementCounter();
+                            busSignalsTable.insert(busSignal);
+                        }
+                    }
+                }
 
             }
 
@@ -233,8 +306,7 @@ namespace IBM1410SMS
                 db.CancelTransaction();
                 logMessage("ERROR: Transaction Cancelled due to previous errors.");
             }
-
-            if(!testMode) {
+            else if(!testMode) {
                 db.CommitTransaction();
             }
 
