@@ -1507,7 +1507,7 @@ namespace IBM1410SMS
                         if(inputConnection.toDotFunction != 0) {
                             List<Sheetedgeinformation> signals = sheetEdgeInformationTable.getWhere(
                                 "WHERE signalName = '" + edge.signalName + "' AND diagramPage <> " +
-                                edge.diagramPage.ToString());
+                                edge.diagramPage.ToString() + " AND leftSide = '1'");
                             if(signals.Count > 0) {
                                 logMessage("WARNING: Input connection from " +
                                     "edge connection named " + edge.signalName +
