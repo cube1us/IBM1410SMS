@@ -686,7 +686,7 @@ namespace IBM1410SMS
                 destinationBlockConnection.from = "P";
                 destinationBlockConnection.fromPin = triggerPin;
 
-                //  Mark the dot functiont to be removed
+                //  Mark the dot function to be removed
 
                 dotFunctionLogicBlocksToRemove.Add(logicBlock);
             }
@@ -1121,25 +1121,25 @@ namespace IBM1410SMS
 
                         }
 
-                        else if (outputPin != null) {
-
-                            //  If we get here, we already know the signal is different,
-                            //  but just to be safe, we check again.
-
-                            if (outputPin.signalName != edge.signalName) {
-                                logMessage("WARNING: During sheet edge merge, " +
-                                    "Logic block at " + block.getCoordinate() +
-                                    " pin " + outputPin.pin +
-                                    " outputs to two different signal names: " +
-                                    edge.signalName + " vs. " + outputPin.signalName);
-                            }
-                        }
-
                         else {
                             outputSignal = new EdgeOutput();
                             outputSignal.signalName = edge.signalName;
                             outputSignal.pin = connection.fromPin;
                             edges.Add(outputSignal);
+
+                            if (outputPin != null) {
+
+                                //  If we get here, we already know the signal is different,
+                                //  but just to be safe, we check again.
+
+                                if (outputPin.signalName != edge.signalName) {
+                                    logMessage("WARNING: During sheet edge merge, " +
+                                        "Logic block at " + block.getCoordinate() +
+                                        " pin " + outputPin.pin +
+                                        " outputs to two different signal names: " +
+                                        edge.signalName + " vs. " + outputPin.signalName);
+                                }
+                            }
                         }
                     }
                 }
