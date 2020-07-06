@@ -423,9 +423,11 @@ namespace IBM1410SMS
                 newBlock.outputConnections = connectionTable.getWhere(
                     "WHERE fromDotFunction='" + dot.idDotFunction + "'");
 
-                //  DOT functions are always OR, voltage wise.  However, there is one
-                //  special case.  If a DOT function is fed ONLY from rotary switch(es),
-                //  and the switch(es) is active LOW (as rotaray switches usually are),
+                //  DOT functions are always OR, voltage wise.  However, there are two
+                //  special cases.  
+
+                //  If a DOT function is fed ONLY from rotary switch(es),
+                //  and the switch(es) is active LOW (as rotary switches usually are),
                 //  then it turns into an AND.
 
                 //  So, suppose a rotary switch has two outputs, A and B, which
@@ -434,6 +436,11 @@ namespace IBM1410SMS
                 //  DOT function is 0 if A is 0 or B is 0.  Applying DeMorgan's 
                 //  theorum, the output is 1 if (NOT A is 0) AND (NOT B is 0), i.e.,
                 //  if A is 1 AND B is 1.  Got that???  ;)
+
+                //  Similary, if the DOT function is fed ONLY from resistors, 
+                //  we can assume that there are active low switches feeding them.
+                //  The output has to be low if EITHER is a negative voltage, 
+                //  same as for the rotary switche example above.
 
                 foreach (Connection inputConnection in newBlock.inputConnections) {
 
@@ -455,8 +462,8 @@ namespace IBM1410SMS
                         break;
                     }
 
-                    if (block.symbol.ToUpper() != "ROT" || 
-                        block.notes.ToUpper().Contains("ACTIVE HIGH")) {
+                    if ((block.symbol.ToUpper() != "ROT" && block.symbol.ToUpper() != "R") ||
+                        (block.notes != null && block.notes.ToUpper().Contains("ACTIVE HIGH"))) {
                         switchFed = false;
                         break;
                     }
@@ -464,8 +471,8 @@ namespace IBM1410SMS
 
                 if(switchFed) {
                     logMessage("NOTE: DOT Function at " + dot.diagramColumnToLeft.ToString() +
-                        dot.diagramRowTop + " is fed only by rotary switch(es). " +
-                        "Changing logic function to AND");
+                        dot.diagramRowTop + " is fed only by rotary switch(es) and/or " +
+                        "resistors. Changing logic function to AND");
                     newBlock.logicFunction = "AND";
                 }
 
