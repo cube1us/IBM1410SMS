@@ -214,7 +214,7 @@ namespace IBM1410SMS
             foreach (string pagePattern in pagePatterns) {
                 List<Page> pages = pageTable.getWhere(
                     "WHERE machine='" + currentMachine.idMachine + "'" +
-                    " AND volume='" + currentVolume.idVolume + "'" +
+                    // " AND volume='" + currentVolume.idVolume + "'" +
                     " AND page.name LIKE '" + pagePattern + "'" + 
                     " ORDER BY page.name");
 
