@@ -127,7 +127,7 @@ namespace IBM1410SMS
                     double freq = 0.0f;
                     double multiplier =
                          (match.Groups[2].Captures[0].Value.Substring(0, 1).ToUpper() == "M" ?
-                            1.0e3 : 1.0);                   
+                            1.0e6 : 1.0e3);                   
                     double.TryParse(match.Groups[1].Captures[0].Value, out freq);
                     if(freq < 1.0) {
                         logMessage("\tERROR" + block.HDLname + " at " +
@@ -148,6 +148,45 @@ namespace IBM1410SMS
                             clockPeriod + " ns");
                         outFile.WriteLine("\t    generic map(FREQUENCY => " + freq.ToString() + 
                             ", CLOCKPERIOD => " + clockPeriod + ")");
+                    }
+                }
+            }
+
+            if(block.HDLname == "SingleShot" && block.gate.title.Length > 0) {
+                string pattern = @"^([0-9\.]+)\s*(us|usec|ms|msec)$";
+                Match match = Regex.Match(block.gate.title, pattern, RegexOptions.IgnoreCase);
+                if (!match.Success || match.Groups.Count != 3) {
+                    logMessage(block.logicFunction + " at " +
+                        block.getCoordinate() + " unable to decode title of " +
+                        block.gate.title);
+                    ++temp_errors;
+                }
+                else {
+                    double pulseTime = 0.0f;
+                    double multiplier =
+                         (match.Groups[2].Captures[0].Value.Substring(0, 1).ToUpper() == "M" ?
+                            1.0e6 : 1.0e3);
+                    double.TryParse(match.Groups[1].Captures[0].Value, out pulseTime);
+                    if (pulseTime < 1.0) {
+                        logMessage("\tERROR" + block.HDLname + " at " +
+                            block.getCoordinate() + " unable to parse pulse time of " +
+                            match.Groups[1].Captures[0].Value + " from title of " + 
+                                block.gate.title);
+                        ++temp_errors;
+                    }
+                    else {
+                        string clockPeriod = Parms.getParmValue("fpgaclockperiod");
+                        if (clockPeriod.Length == 0) {
+                            logMessage("\tWARNING:  Parm table fpgaclockperiod not set.  Using 10 ns");
+                            clockPeriod = "10";
+                            ++temp_errors;
+                        }
+                        pulseTime = pulseTime * multiplier;
+                        logMessage("\tINFO: " + block.HDLname + " at " + 
+                            block.getCoordinate() + " pulse time: " + pulseTime.ToString() +
+                            " ns, Clock Period is " + clockPeriod + " ns");
+                        outFile.WriteLine("\t    generic map(PULSETIME => " + 
+                            pulseTime.ToString() + ", CLOCKPERIOD => " + clockPeriod + ")");
                     }
                 }
             }
@@ -200,13 +239,12 @@ namespace IBM1410SMS
                 }
             }
 
-
             outFile.WriteLine("\t    port map (");
             
             //  If this block needs it, give it a clock.
 
             if(block.logicFunction == "Trigger" || block.HDLname == "Oscillator" ||
-                block.HDLname == "ShiftRegister") {
+                block.HDLname == "ShiftRegister" || block.HDLname == "SingleShot") {
                 outFile.WriteLine("\t\tFPGA_CLK => FPGA_CLK,");
             }
 

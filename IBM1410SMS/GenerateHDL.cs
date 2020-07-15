@@ -342,7 +342,8 @@ namespace IBM1410SMS
 
                             if(newBlock.logicFunction == "Special" ||
                                 newBlock.logicFunction == "Trigger"  ||
-                                newBlock.logicFunction == "DELAY") {
+                                newBlock.logicFunction == "DELAY" ||
+                                newBlock.logicFunction == "SS") {
                                 if(gate.HDLname == null || gate.HDLname.Length == 0) {
                                     logMessage("Error: Logic function is " +
                                         newBlock.logicFunction + " but there is no " +
@@ -774,7 +775,8 @@ namespace IBM1410SMS
                 //  oscillators and shift registers (delays) which also have a clock.
 
                 if (block.gate.symbol == "T" || block.gate.symbol == "SS" ||
-                    block.HDLname == "Oscillator" || block.HDLname.Contains("ShiftRegister")) {
+                    block.HDLname == "SingleShot" || block.HDLname == "Oscillator" || 
+                    block.HDLname.Contains("ShiftRegister")) {
                     needsClock = true;
                     continue;
                 }
@@ -1659,7 +1661,9 @@ namespace IBM1410SMS
                 }
                 else if (block.logicFunction == "Special" ||
                     block.logicFunction == "Trigger" ||
-                    block.HDLname == "Oscillator") { 
+                    block.HDLname == "Oscillator" ||
+                    block.logicFunction == "SS" ||
+                    block.HDLname == "SingleShot") { 
                     errors += 
                         generator.generateHDLSpecial(block, inputNames, outputNames);
                 }
