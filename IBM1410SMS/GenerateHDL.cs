@@ -413,6 +413,7 @@ namespace IBM1410SMS
                 LogicBlock newBlock = new LogicBlock();
 
                 bool switchFed = true;
+                bool minusCFed = true;
                 newBlock.type = "D";
                 newBlock.gate = null;
                 newBlock.dot = dot;
@@ -424,8 +425,8 @@ namespace IBM1410SMS
                 newBlock.outputConnections = connectionTable.getWhere(
                     "WHERE fromDotFunction='" + dot.idDotFunction + "'");
 
-                //  DOT functions are always OR, voltage wise.  However, there are two
-                //  special cases.  
+                //  DOT functions are usually OR, voltage wise.  However, there are three
+                //  (so far) special cases.  
 
                 //  If a DOT function is fed ONLY from rotary switch(es),
                 //  and the switch(es) is active LOW (as rotary switches usually are),
@@ -443,7 +444,29 @@ namespace IBM1410SMS
                 //  The output has to be low if EITHER is a negative voltage, 
                 //  same as for the rotary switche example above.
 
+                //  Also, if a DOT function is fed ONLY by -C signals we assume that
+                //  if either one is negative voltage, the output is negative voltage.
+                //  Logically, this is an OR, but it becomes an AND with respect to 
+                //  positive voltage.  First detected on page 12.62.01.1
+
                 foreach (Connection inputConnection in newBlock.inputConnections) {
+
+                    if(minusCFed && inputConnection.fromEdgeSheet != 0) {
+                        Sheetedgeinformation edge = sheetEdgeInformationTable.getByKey(
+                            inputConnection.fromEdgeSheet);
+                        if(edge.signalName.Length < 2 || 
+                            edge.signalName.Substring(0,2).ToUpper() != "-C") {
+                            // Signal input, not -C (and not R or switch either)
+                            minusCFed = false;
+                            switchFed = false;
+                            break;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+
+                    minusCFed = false;  // Got some input other than -C for this DOT function
 
                     if (inputConnection.fromDiagramBlock == 0) {
                         switchFed = false;
@@ -470,10 +493,10 @@ namespace IBM1410SMS
                     }
                 }
 
-                if(switchFed) {
+                if(switchFed || minusCFed) {
                     logMessage("NOTE: DOT Function at " + dot.diagramColumnToLeft.ToString() +
                         dot.diagramRowTop + " is fed only by rotary switch(es) and/or " +
-                        "resistors. Changing logic function to AND");
+                        "resistors an/or -C inputs. Changing logic function to AND");
                     newBlock.logicFunction = "AND";
                 }
 
