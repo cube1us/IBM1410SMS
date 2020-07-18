@@ -1941,6 +1941,7 @@ namespace IBM1410SMS
                 case "TOG":
                     return (true);
                 case "ROT":
+                case "REL":
                     return (gate.notes.ToUpper().Contains("ACTIVE HIGH"));
                 default:
                     return (false);

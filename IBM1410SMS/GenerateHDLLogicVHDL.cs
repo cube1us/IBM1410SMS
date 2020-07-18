@@ -383,16 +383,17 @@ namespace IBM1410SMS
             List<string> mapPins = new List<string>();      // All of the map pins
             string symbol = block.gate.symbol;
 
-            if(symbol != "MOM" && symbol != "TOG" && symbol != "ROT") { 
+            if(symbol != "MOM" && symbol != "TOG" && symbol != "ROT"&& symbol != "REL") { 
                 logMessage("ERROR: Switch for block at " +
                     block.getCoordinate() + " has unknown symbol of " + symbol);
                 return (1);
             }
 
-            if((symbol == "MOM" || symbol == "TOG") && outputs.Count > 2) {
-                logMessage("ERROR: " + symbol + " switch for block at " +
-                    block.getCoordinate() + " has more than two outputs ");
-                return (1);
+            if((symbol == "MOM" || symbol == "TOG" || symbol == "REL") && 
+                    outputs.Count > 2) {
+                logMessage("WARNING: " + symbol + " switch for block at " +
+                    block.getCoordinate() + " appears to have more than two outputs ");
+                // return (1);
             }
 
             //  Build a list of all of the pins in the port map
@@ -408,10 +409,11 @@ namespace IBM1410SMS
             //  For switches, any inputs get ignored (at least for now)
             //  as they should be generating logic one or zero.  If we
             //  find one that toggles between one of two signals or some
-            //  such, we will have to create a new type besides MOM, TOG or 
-            //  ROT.
+            //  such, we will have to create a new type besides MOM, TOG, 
+            //  REL or ROT.
 
             int outputIndex = 0;
+            List<string> usedSwitchPins = new List<string>();
             foreach(Connection connection in block.outputConnections) {
 
                 if (connection.fromPin == null || connection.fromPin.Length == 0) {
@@ -435,6 +437,15 @@ namespace IBM1410SMS
                 }
                 else {
                     mapPin = mapGatePin.mapPin.ToUpper();
+                }
+
+                //  If this switch pin has already been processed, ignore it
+                //  (Currently only for TOG, MOM and REL - but could easily be
+                //  added to ROT as well).
+
+                if(usedSwitchPins.Contains(connection.fromPin)) {
+                    ++outputIndex;
+                    continue;
                 }
 
                 //  Handle rotary switches
@@ -468,7 +479,7 @@ namespace IBM1410SMS
                         "(" + bitNumber + ");");
                 }
 
-                if(symbol == "MOM" || symbol == "TOG") {
+                if(symbol == "MOM" || symbol == "TOG" || symbol == "REL") {
 
                     if(connection.fromPin != "N" && connection.fromPin != "T" &&
                         mapPin != "OUTON" && mapPin != "OUTOFF") {
@@ -491,6 +502,11 @@ namespace IBM1410SMS
                         outFile.Write(" NOT ");
                     }
                     outFile.WriteLine(generateSignalName(block.getSwitchName()) + ";");
+
+                    //  Mark this output pin as used, so we don't generate the
+                    //  switch assignment again.
+
+                    usedSwitchPins.Add(connection.fromPin);
                 }
 
                 ++outputIndex;
@@ -633,6 +649,7 @@ namespace IBM1410SMS
                         switch(lb.gate.symbol) {
                             case "TOG":
                             case "MOM":
+                            case "REL":
                                 stream.WriteLine("\t\t" + generateSignalName(switchName) +
                                     ":\t in STD_LOGIC;");
                                 break;
