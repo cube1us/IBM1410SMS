@@ -32,8 +32,9 @@ namespace IBM1410SMS
 
         protected class BusSignalMembers
         {
-            public int lowIndex = 9999;
-            public int highIndex = -1;
+            // public int lowIndex = 9999;
+            // public int highIndex = -1;
+            public int count = 0;
             public List<string> signals = new List<string>();
         }
 
@@ -573,14 +574,15 @@ namespace IBM1410SMS
                         members = new BusSignalMembers();
                         members.signals.Add(signal);
                         List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == bs.busName);
-                        foreach(Bussignals bs2 in bsList) {
-                            if(bs2.busBit < members.lowIndex) {
-                                members.lowIndex = bs2.busBit;
-                            }
-                            if(bs2.busBit > members.highIndex) {
-                                members.highIndex = bs2.busBit;
-                            }
-                        }
+                        //foreach(Bussignals bs2 in bsList) {
+                        //    if(bs2.busBit < members.lowIndex) {
+                        //        members.lowIndex = bs2.busBit;
+                        //    }
+                        //    if(bs2.busBit > members.highIndex) {
+                        //        members.highIndex = bs2.busBit;
+                        //    }
+                        //}
+                        members.count = bsList.Count();
                         busses.Add(bs.busName, members);
                         generator.logMessage("DEBUG: Tentative bus " + bs.busName + " identified " +
                             "based on signal " + signal);
@@ -621,14 +623,17 @@ namespace IBM1410SMS
 
             foreach(string  busName in busses.Keys) {
                 BusSignalMembers bsMembers = busses[busName];
-                if(bsMembers.highIndex-bsMembers.lowIndex+1 == bsMembers.signals.Count) {
+//                if(bsMembers.highIndex-bsMembers.lowIndex+1 == bsMembers.signals.Count) {
+                if(bsMembers.count == bsMembers.signals.Count) { 
                     busOutputList.Add(busName);
                     generator.logMessage("INFO: Bus " + busName + " identified ");
                 }
                 else {
                     generator.logMessage("INFO: Bus " + busName + " NOT generated.  Found " +
                         bsMembers.signals.Count.ToString() + " members of " +
-                        (bsMembers.highIndex - bsMembers.lowIndex + 1).ToString() + " Total members ");
+                        // (bsMembers.highIndex - bsMembers.lowIndex + 1).ToString() + 
+                        bsMembers.count.ToString() +
+                        " Total members ");
                 }
             }
 

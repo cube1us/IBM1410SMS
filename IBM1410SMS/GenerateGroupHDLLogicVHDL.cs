@@ -376,19 +376,28 @@ namespace IBM1410SMS
                     continue;
                 }
 
-                //  These need to be in REVERSE bit order
+                //  These need to be in REVERSE bit order.  Also, we need to fill
+                //  in any unused bit slots with 0's.
 
                 bool first = true;
                 outFile.WriteLine("\t" + generateSignalName(busName) + " <= (");
+                int lastBit = -1;
 
                 for (int i = busSignals.Count-1; i >= 0; --i) {
                     Bussignals bs = busSignals[i];
+                    int thisBit = busSignals[i].busBit;
                     if(!first) {
                         outFile.WriteLine(",");
+                        //  Fill in any unused bits with 0's
+                        while(thisBit < lastBit-1) {
+                            outFile.WriteLine("\t\t'0',");
+                            --lastBit;
+                        }
                     }
                     first = false;
                     outFile.Write("\t\t" + bufferPrefix + 
                         generateSignalName(bs.signalName));
+                    lastBit = thisBit;
                 }
 
                 outFile.WriteLine(");");
