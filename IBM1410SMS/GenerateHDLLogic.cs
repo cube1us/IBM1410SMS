@@ -224,7 +224,13 @@ namespace IBM1410SMS
             //  VHDL won't allow consecutive underscores (which can happen if 
             //  one of the above substitutions occurs).
 
-            s = s.Replace("__", "_");
+            while (true) {
+                string t = s;
+                s = s.Replace("__", "_");
+                if (t == s) {
+                    break;
+                }
+            }
 
             return (s);                
         }
