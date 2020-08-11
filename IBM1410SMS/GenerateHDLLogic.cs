@@ -92,6 +92,11 @@ namespace IBM1410SMS
         public abstract int generateHDLSwitch(LogicBlock block, List<string> inputs,
             List<string> outputs);
 
+        //  Generate language dependent logic constants...
+
+        public abstract string generateLogicZero();
+        public abstract string generateLogicOne();
+
         //  Method to generate the statements for a D Flip Flop used on a latch
         //  output.  Returns error count.
 
@@ -178,6 +183,18 @@ namespace IBM1410SMS
 
         public string generateSignalName(string signal) {
             string outString = "";
+
+            //  Since the special logic names have (hopefully) already been removed
+            //  from the sheet inputs list, etc., here we return their corresponding
+            //  (language dependent) values instead
+
+            if(signal == "LOGIC ZERO") {
+                return (generateLogicZero());
+            }
+
+            if(signal == "LOGIC ONE") {
+                return (generateLogicOne());
+            }
 
             if (signal.Substring(0, 1) == "+") {
                 outString = "P" + signal.Substring(1);

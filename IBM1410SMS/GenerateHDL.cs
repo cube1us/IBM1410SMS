@@ -66,6 +66,9 @@ namespace IBM1410SMS
         List<String> ignoredBlockSymbols = new List<string>()
             {"L", "R", /* "LAMP", */ "CAP" };
 
+        List<string> specialSignalNames = new List<string>()
+            {"LOGIC ZERO", "LOGIC ONE"};
+
         // string VHDLEntityName;
 
         bool needsClock = false;
@@ -242,6 +245,22 @@ namespace IBM1410SMS
                 "WHERE diagramPage='" + diagramList[0].idDiagramPage + "'" +
                 " AND leftSide='1'" +
                 " ORDER BY sheetedgeinformation.row");
+
+            //  Remove any special names from this list so they don't show up
+            //  as signals or entities
+
+            List<Sheetedgeinformation> signalsToDelete = new List<Sheetedgeinformation>();
+            foreach(Sheetedgeinformation signal in sheetInputsList) {
+                if(specialSignalNames.Contains(signal.signalName)) {
+                    signalsToDelete.Add(signal);
+                }
+            }
+
+            foreach(Sheetedgeinformation signal in signalsToDelete) {
+                sheetInputsList.Remove(signal);
+                logMessage("NOTE: Special signal " + signal.signalName +
+                    " removed from sheet inputs list.");
+            }
 
             if (sheetInputsList.Count < 1) {
                 logMessage("WARNING: no sheet inputs found for page " +

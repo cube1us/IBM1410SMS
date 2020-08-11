@@ -76,6 +76,14 @@ namespace IBM1410SMS
             outFile.WriteLine("\t" + outputSignal + " <= " + blockOutput + ";");
         }
 
+        public override string generateLogicZero() {
+            return ("'0'");
+        }
+
+        public override string generateLogicOne() {
+            return ("'1'");
+        }
+
         //  Handle generation of VHDL for Special blocks (Logic functions Special and
         //  Trigger, and perhaps more).
 

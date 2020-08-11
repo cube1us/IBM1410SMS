@@ -67,6 +67,9 @@ namespace IBM1410SMS
 
         GenerateGroupHDLLogic generator;
 
+        List<string> specialSignalNames = new List<string>()
+            {"LOGIC ZERO", "LOGIC ONE"};
+
         //  TODO:  For now, forcing needsclock to true - maybe change later.
 
         bool needsClock = true;
@@ -367,6 +370,14 @@ namespace IBM1410SMS
                     " signals on page " + Helpers.getDiagramPageName(page.idDiagramPage));
 
                 foreach (Sheetedgeinformation signal in signals) {
+
+                    //  Ignore special signals in group generation
+                    if(specialSignalNames.Contains(signal.signalName)) {
+                        generator.logMessage("Note: Special signal " +
+                            signal.signalName + " ignored for group generation.");
+                        continue; 
+                    }
+
                     if (signal.leftSide == 1 &&
                         !inputList.Contains(signal.signalName)) {
                         inputList.Add(signal.signalName);
@@ -729,7 +740,13 @@ namespace IBM1410SMS
                         " AND rightSide='1'" +
                         " ORDER BY sheetedgeinformation.row");
                 foreach(Sheetedgeinformation edge in pageInputs) {
-                    pageInputNames.Add(edge.signalName);
+                    if (!specialSignalNames.Contains(edge.signalName)) {
+                        pageInputNames.Add(edge.signalName);
+                    }
+                    else {
+                        generator.logMessage("Note: Special signal " + edge.signalName +
+                            " ignored for page declaration.");
+                    }
                 }
                 foreach(Sheetedgeinformation edge in pageOutputs) {
                     pageOutputNames.Add(edge.signalName);
