@@ -423,8 +423,9 @@ namespace IBM1410SMS
 
         public override void generatePageEntity(string pageName, string pageTitle, 
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals, List<string> busInputSignals, 
-            List<string> busOutputSignals, List<SwitchInfo> switchList, bool needsClock) {
+            List<string> bufferSignals, List<string> internalSignals,
+            List<string> busInputSignals, List<string> busOutputSignals, 
+            List<SwitchInfo> switchList, bool needsClock) {
 
             bool firstPort = true;
 
@@ -448,13 +449,13 @@ namespace IBM1410SMS
 
                 //  Here again, bussed signals get special treatment, and are "ripped" to map
                 //  the signal in the page instantiation to the particular bit in the bussed
-                //  input signal -- but only if they are not buffered.
+                //  input signal -- but only if they are not buffered and not internal signals
 
                 Bussignals bs = busSignalsList.Find(x => x.signalName == input);
                 if(bufferSignals.Contains(input)) {
                     outFile.Write(bufferPrefix + generateSignalName(input));
                 }
-                else if (bs != null) {
+                else if (bs != null && !internalSignals.Contains(input)) {
                     outFile.Write(generateSignalName(bs.busName + "(" + bs.busBit.ToString() + ")"));
                 }
                 else {

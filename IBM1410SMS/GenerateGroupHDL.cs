@@ -784,7 +784,8 @@ namespace IBM1410SMS
 
                 generator.generatePageEntity(thisPage.name, thisPage.title,
                     pageInputNames, pageOutputNames, busSignalsList, bufferSignals, 
-                    busInputList, busOutputList, pageSwitchList, needsClock);
+                    internalSignals, busInputList, busOutputList, pageSwitchList, 
+                    needsClock);
             }
 
             //  Generate anything needed at the end

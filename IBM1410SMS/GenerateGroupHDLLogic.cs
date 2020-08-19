@@ -77,8 +77,9 @@ namespace IBM1410SMS
             List<string> busOutputList);
         public abstract void generatePageEntity(string pageName, string pageTitle,
             List<string> inputs, List<string> outputs, List<Bussignals> busSignalsList,
-            List<string> bufferSignals, List<string> busInputList, 
-            List<string> busOutputList, List<SwitchInfo> switchList, bool needsClock);
+            List<string> bufferSignals, List<string> internalSignals,
+            List<string> busInputList, List<string> busOutputList, 
+            List<SwitchInfo> switchList, bool needsClock);
 
         public abstract string generateSwitchEntry(string switchName, 
             bool declaration, int vectorCount);

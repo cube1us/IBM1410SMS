@@ -420,6 +420,10 @@ namespace IBM1410SMS
             //  such, we will have to create a new type besides MOM, TOG, 
             //  REL or ROT.
 
+            //  If a rotary switch is active high, and contains ONE input
+            //  signal, then it will generate an output of (switch AND signal)
+            //  TODO
+
             int outputIndex = 0;
             List<string> usedSwitchPins = new List<string>();
             foreach(Connection connection in block.outputConnections) {
@@ -481,10 +485,20 @@ namespace IBM1410SMS
 
                     int bitNumber = int.Parse(mapPin.Substring(3));
 
-                    outFile.WriteLine("\t" + outputs[outputIndex] + " <= " +
-                        (block.switchActiveHigh() ? "" : "NOT ") +
-                         generateSignalName(block.getSwitchName()) +
-                        "(" + bitNumber + ");");
+                    //  Handle special one input rotary switch case
+
+                    if(block.switchActiveHigh() && inputs.Count == 1) {
+                        outFile.WriteLine("\t" + outputs[outputIndex] + " <= " +
+                            generateSignalName(block.getSwitchName()) +
+                            "(" + bitNumber + ")" + " AND " +
+                            inputs[0] + ";");
+                    }
+                    else {
+                        outFile.WriteLine("\t" + outputs[outputIndex] + " <= " +
+                            (block.switchActiveHigh() ? "" : "NOT ") +
+                             generateSignalName(block.getSwitchName()) +
+                            "(" + bitNumber + ");");
+                    }
                 }
 
                 if(symbol == "MOM" || symbol == "TOG" || symbol == "REL") {
