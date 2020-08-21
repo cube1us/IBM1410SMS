@@ -747,6 +747,7 @@ namespace IBM1410SMS
                         switch (lb.gate.symbol) {
                             case "TOG":
                             case "MOM":
+                            case "REL":
                                 testBenchFile.WriteLine("\tsignal " +
                                     generateSignalName(switchName) +
                                     ": STD_LOGIC := '" + initValue + "';");
