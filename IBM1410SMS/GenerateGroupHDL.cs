@@ -867,6 +867,17 @@ namespace IBM1410SMS
                     continue;
                 }
 
+                //  If this switch entry is an extension (from above it in the diagram), 
+                //  ignore it, or it would be a duplicate.
+
+                if(block.extendedTo != 0) {
+                    Diagramblock extension = logicBlocks.Find(
+                        x => x.idDiagramBlock == block.extendedTo);
+                    if(block.diagramRow.CompareTo(extension.diagramRow) > 0) {
+                        continue;
+                    }
+                }
+
                 // This is a switch, so add it to the list, depending upon type.
 
                 switchEntry.switchName = "SWITCH " + block.symbol + " " + block.title;

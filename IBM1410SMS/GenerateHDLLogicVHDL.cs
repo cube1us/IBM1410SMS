@@ -667,6 +667,14 @@ namespace IBM1410SMS
 
                 foreach(LogicBlock lb in logicBlocks) {
                     if(lb.logicFunction == "Switch") {
+                        
+                        //  If the switch block is an extension, ignore it
+                        //  for the entity declaration generation
+
+                        if(lb.ignore) {
+                            continue;
+                        }
+
                         string switchName = lb.getSwitchName();
                         switch(lb.gate.symbol) {
                             case "TOG":
