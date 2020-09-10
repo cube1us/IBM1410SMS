@@ -40,6 +40,7 @@
             this.diagramRowTextBox = new System.Windows.Forms.TextBox();
             this.andRadioButton = new System.Windows.Forms.RadioButton();
             this.orRadioButton = new System.Windows.Forms.RadioButton();
+            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.applyButton = new System.Windows.Forms.Button();
             this.deleteButton = new System.Windows.Forms.Button();
@@ -47,7 +48,8 @@
             this.connectionsDataGridView = new System.Windows.Forms.DataGridView();
             this.label6 = new System.Windows.Forms.Label();
             this.addInputOutputButton = new System.Windows.Forms.Button();
-            this.exemptCheckBox = new System.Windows.Forms.CheckBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.forceLogicFunction = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.connectionsDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -175,6 +177,17 @@
             this.toolTip1.SetToolTip(this.orRadioButton, "Select to indicate this is an OR dot function");
             this.orRadioButton.UseVisualStyleBackColor = true;
             // 
+            // exemptCheckBox
+            // 
+            this.exemptCheckBox.AutoSize = true;
+            this.exemptCheckBox.Location = new System.Drawing.Point(383, 165);
+            this.exemptCheckBox.Name = "exemptCheckBox";
+            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
+            this.exemptCheckBox.TabIndex = 28;
+            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
+            this.toolTip1.SetToolTip(this.exemptCheckBox, "Select to suppress error messages for this DOT Function in validation reports");
+            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            // 
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.orRadioButton);
@@ -260,22 +273,30 @@
             this.addInputOutputButton.UseVisualStyleBackColor = true;
             this.addInputOutputButton.Click += new System.EventHandler(this.addOutputButton_Click);
             // 
-            // exemptCheckBox
+            // label7
             // 
-            this.exemptCheckBox.AutoSize = true;
-            this.exemptCheckBox.Location = new System.Drawing.Point(383, 165);
-            this.exemptCheckBox.Name = "exemptCheckBox";
-            this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
-            this.exemptCheckBox.TabIndex = 28;
-            this.exemptCheckBox.Text = "Verified / Exempt from Checks";
-            this.toolTip1.SetToolTip(this.exemptCheckBox, "Select to suppress error messages for this DOT Function in validation reports");
-            this.exemptCheckBox.UseVisualStyleBackColor = true;
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(380, 112);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(113, 13);
+            this.label7.TabIndex = 29;
+            this.label7.Text = "Force Logic Function: ";
+            // 
+            // forceLogicFunction
+            // 
+            this.forceLogicFunction.Location = new System.Drawing.Point(499, 109);
+            this.forceLogicFunction.MaxLength = 8;
+            this.forceLogicFunction.Name = "forceLogicFunction";
+            this.forceLogicFunction.Size = new System.Drawing.Size(75, 20);
+            this.forceLogicFunction.TabIndex = 30;
             // 
             // EditDotFunctionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(592, 398);
+            this.Controls.Add(this.forceLogicFunction);
+            this.Controls.Add(this.label7);
             this.Controls.Add(this.exemptCheckBox);
             this.Controls.Add(this.addInputOutputButton);
             this.Controls.Add(this.label6);
@@ -327,5 +348,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button addInputOutputButton;
         private System.Windows.Forms.CheckBox exemptCheckBox;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.TextBox forceLogicFunction;
     }
 }

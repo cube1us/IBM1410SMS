@@ -17,5 +17,6 @@ namespace IBM1410SMS
 		[MyColumn(Key=true)] public int idDiagramPage { get; set; }
 		[MyColumn] public int page { get; set; }
 		[MyColumn] public int noHDLGeneration { get; set; }
+		[MyColumn] public string subsystems { get; set; }
 	}
 }
