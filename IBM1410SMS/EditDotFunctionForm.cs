@@ -104,10 +104,17 @@ namespace IBM1410SMS
                 dotFunction.diagramColumnToLeft = diagramColumn;
                 dotFunction.logicFunction = "A";
                 dotFunction.checkExempt = 0;
+                dotFunction.forcedLogicFunction = "";
                 deleteButton.Visible = false;
             }
             else {
                 deleteButton.Visible = true;                
+            }
+
+            //  Legacy database rows may not have all fields set...
+
+            if (dotFunction.forcedLogicFunction == null) {
+                dotFunction.forcedLogicFunction = "";
             }
 
             if(dotFunction.logicFunction == "A") {
@@ -118,6 +125,7 @@ namespace IBM1410SMS
             }
 
             exemptCheckBox.Checked = (dotFunction.checkExempt != 0);
+            forceLogicFunction.Text = dotFunction.forcedLogicFunction;
 
             currentDotFunction = dotFunction;
 
@@ -397,6 +405,7 @@ namespace IBM1410SMS
             currentDotFunction.logicFunction =
                 andRadioButton.Checked ? "A" : "O";
             currentDotFunction.checkExempt = exemptCheckBox.Checked ? 1 : 0;
+            currentDotFunction.forcedLogicFunction = forceLogicFunction.Text;
             if(currentDotFunction.idDotFunction == 0) {
                 action = "Added";
                 currentDotFunction.idDotFunction = IdCounter.incrementCounter();
