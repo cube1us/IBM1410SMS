@@ -384,8 +384,13 @@ namespace IBM1410SMS
         }
 
         void populateCardRowComboBox() {
-            validRows = new List<string>(
-                currentPanel.validRows.Split(new char[] { ',' }));
+            if (currentPanel.validRows == null) {
+                validRows = new List<string>();
+            }
+            else {
+                validRows = new List<string>(
+                    currentPanel.validRows.Split(new char[] { ',' }));
+            }
             if (!validRows.Contains(currentCardSlotInfo.row)) {
                 validRows.Add(currentCardSlotInfo.row);
             }

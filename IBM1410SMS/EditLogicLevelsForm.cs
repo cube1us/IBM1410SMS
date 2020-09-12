@@ -88,6 +88,9 @@ namespace IBM1410SMS
                 "One (Tenths/V)";
             logicLevelsDataGridView.Columns["circuitType"].HeaderText =
                 "Circuit Type";
+            logicLevelsDataGridView.Columns["dotFunctionLogic"].HeaderText =
+                "Logic for DOT Functions";
+
 
 
             //  Set the column widths
@@ -96,6 +99,8 @@ namespace IBM1410SMS
             logicLevelsDataGridView.Columns["logicZeroTenths"].Width = 10 * 7;
             logicLevelsDataGridView.Columns["logicOneTenths"].Width = 10 * 7;
             logicLevelsDataGridView.Columns["circuitType"].Width = 10 * 7;
+            logicLevelsDataGridView.Columns["dotFunctionLogic"].Width = 23 * 7;
+
 
             //  Finally, throw away any deleted entries...
 
@@ -143,7 +148,7 @@ namespace IBM1410SMS
                 }
             }
 
-            //  These columnts must be integers, -999 to +999
+            //  These columns must be integers, -999 to +999
             if (string.Compare(columnName, "logicZeroTenths") == 0 ||
                 string.Compare(columnName, "logicOneTenths") == 0) {
                 int v = -9999;
@@ -162,6 +167,15 @@ namespace IBM1410SMS
                         " is required, and has a max length of 16.";
                     e.Cancel = true;
                 }
+            }
+
+            if(String.Compare(columnName,"dotFunctionLogic") == 0) {
+                if (e.FormattedValue.ToString().Length > 8) {
+                    row.ErrorText = columnName +
+                        " has a max length of 8.";
+                    e.Cancel = true;
+                }
+
             }
         }
 

@@ -19,5 +19,6 @@ namespace IBM1410SMS
 		[MyColumn] public int logicZeroTenths { get; set; }
 		[MyColumn] public int logicOneTenths { get; set; }
 		[MyColumn] public string circuitType { get; set; }
+		[MyColumn] public string dotFunctionLogic { get; set; }
 	}
 }

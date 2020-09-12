@@ -53,12 +53,15 @@ namespace IBM1410SMS
         Table<Cardgate> cardGateTable;
         Table<Logicfunction> logicFunctionTable;
         Table<Gatepin> gatePinTable;
+        Table<Logiclevels> logicLevelsTable;
 
         DBSetup db = DBSetup.Instance;
 
         List<Sheetedgeinformation> sheetInputsList;
         List<Sheetedgeinformation> sheetOutputsList;
         List<LogicBlock> logicBlocks = new List<LogicBlock>();
+        List<Logiclevels> logicLevels = null;
+        
 
         Regex replacePeriods = new Regex("\\.");
         Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-");
@@ -90,6 +93,7 @@ namespace IBM1410SMS
             cardGateTable = db.getCardGateTable();
             logicFunctionTable = db.getLogicFunctionTable();
             gatePinTable = db.getGatePinTable();
+            logicLevelsTable = db.getLogicLevelsTable();
         }
 
         public int generateHDL() {
@@ -97,6 +101,8 @@ namespace IBM1410SMS
             List<Diagramblock> blocks;
             List<Dotfunction> dotFunctions;
             List<int> ignoredConnectionIDs = new List<int>();
+
+            logicLevels = logicLevelsTable.getAll();
 
             //  TODO: Eventually, the class chosen here would depend on what
             //  flavor of HDL the user chose.
@@ -415,7 +421,7 @@ namespace IBM1410SMS
                         logMessage(
                             "WARNING: Diagram block at coordinate " +
                             newBlock.getCoordinate() +
-                            "has more than one input connection to pin " +
+                            " has more than one input connection to pin " +
                             connection.toPin);
                     }
                     else {
@@ -433,6 +439,11 @@ namespace IBM1410SMS
 
                 bool switchFed = true;
                 bool minusCFed = true;
+
+                string inputLevel = "";
+                string outputLevel = "";
+                string logicLevel = "";
+
                 newBlock.type = "D";
                 newBlock.gate = null;
                 newBlock.dot = dot;
@@ -441,7 +452,10 @@ namespace IBM1410SMS
                     dot.forcedLogicFunction = "";
                 }
 
-                newBlock.logicFunction = "OR";
+                //  Set the default DOT Function logic function
+
+                newBlock.logicFunction = "OR";  
+
                 newBlock.inputConnections = connectionTable.getWhere(
                     "WHERE toDotFunction='" + dot.idDotFunction + "'");
                 newBlock.outputConnections = connectionTable.getWhere(
@@ -457,6 +471,123 @@ namespace IBM1410SMS
                         dot.forcedLogicFunction);
                     continue;  // We are done if the logic function is explicit.
                 }
+
+                //  See if we can deduce the logic function based on the
+                //  logic levls of the gates connected to it.  If the input(s) and 
+                //  output levels are all the same, or if the input level is not
+                //  specified but the output is, use the logic function from the
+                //  logic levels table.  If it is not specified there, leave the
+                //  global default in place.
+
+                //  First, run through the input connections
+
+                foreach (Connection inputConnection in newBlock.inputConnections) {
+
+                    //  If this connection comes from a diagram block, use its
+                    //  output logic level
+
+                    if(inputConnection.fromDiagramBlock != 0) {
+                        Diagramblock block = blocks.Find(x => x.idDiagramBlock ==
+                            inputConnection.fromDiagramBlock);
+                        Logiclevels level = logicLevels.Find(x => x.idLogicLevels ==
+                            block.outputMode);
+                        if(level == null || level.logicLevel == inputLevel) {
+                            continue;
+                        }
+                        if(inputLevel.Length == 0) {
+                            inputLevel = level.logicLevel;
+                        }
+                        else {
+                            inputLevel = "MIXED";
+                        }
+                    }
+
+                    if(inputConnection.fromEdgeSheet != 0) {
+                        Sheetedgeinformation edge = sheetEdgeInformationTable.getByKey(
+                            inputConnection.fromEdgeSheet);
+                        string edgeLevel = "";
+                        if (edge.signalName.Length >= 2 &&
+                            "+-".Contains(edge.signalName.Substring(0, 1))) {
+                            edgeLevel = edge.signalName.Substring(1, 1);
+                        }
+                        if(edgeLevel == inputLevel) {
+                            continue;
+                        }
+                        if (inputLevel.Length == 0) {
+                            inputLevel = edgeLevel;
+                        }
+                        else {
+                            inputLevel = "MIXED";
+                        }
+                    }
+                }
+
+                //  Then, run though the output connections
+
+                foreach (Connection outputConnection in newBlock.outputConnections) {
+
+                    //  If this connection comes from a diagram block, use its
+                    //  output logic level
+
+                    if (outputConnection.toDiagramBlock != 0) {
+                        Diagramblock block = blocks.Find(x => x.idDiagramBlock ==
+                            outputConnection.toDiagramBlock);
+                        Logiclevels level = logicLevels.Find(x => x.idLogicLevels ==
+                            block.inputMode);
+                        if (level == null || level.logicLevel == outputLevel) {
+                            continue;
+                        }
+                        if (outputLevel.Length == 0) {
+                            outputLevel = level.logicLevel;
+                        }
+                        else {
+                            outputLevel = "MIXED";
+                        }
+                    }
+
+                    if (outputConnection.toEdgeSheet != 0) {
+                        Sheetedgeinformation edge = sheetEdgeInformationTable.getByKey(
+                            outputConnection.toEdgeSheet);
+                        string edgeLevel = "";
+                        if (edge.signalName.Length >= 2 &&
+                            "+-".Contains(edge.signalName.Substring(0, 1))) {
+                            edgeLevel = edge.signalName.Substring(1, 1);
+                        }
+                        if (edgeLevel == outputLevel) {
+                            continue;
+                        }
+                        if (outputLevel.Length == 0) {
+                            outputLevel = edgeLevel;
+                        }
+                        else {
+                            inputLevel = "MIXED";
+                        }
+                    }
+                }
+
+                //  Eventually this will be replaced by data from the logic levels table
+
+                if (inputLevel.Length == 0 && outputLevel.Length > 0 && outputLevel != "MIXED") {
+                    logicLevel = outputLevel;
+                }
+                else if (outputLevel.Length == 0 && inputLevel.Length > 0 && inputLevel != "MIXED") {
+                    logicLevel = inputLevel;
+                }
+                else if (outputLevel == inputLevel && outputLevel != "MIXED") {
+                    logicLevel = outputLevel;
+                }
+
+                if(logicLevel.Length > 0) {
+                    Logiclevels l = logicLevels.Find(x => x.logicLevel == logicLevel);
+                    if(l != null && l.dotFunctionLogic != null && l.dotFunctionLogic.Length > 0) {
+                        newBlock.logicFunction = l.dotFunctionLogic;
+                    }
+                }
+
+                logMessage("Note: DOT Function at " + dot.diagramColumnToLeft +
+                    dot.diagramRowTop + " has input level(s) of " + inputLevel +
+                    ", and output level(s) of " + outputLevel + 
+                    ", Logic Function set to " + newBlock.logicFunction);
 
                 //  DOT functions are usually OR, voltage wise.  However, there are three
                 //  (so far) special cases.  

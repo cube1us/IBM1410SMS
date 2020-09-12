@@ -41,7 +41,7 @@
             this.logicLevelsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.logicLevelsDataGridView.Location = new System.Drawing.Point(12, 12);
             this.logicLevelsDataGridView.Name = "logicLevelsDataGridView";
-            this.logicLevelsDataGridView.Size = new System.Drawing.Size(311, 339);
+            this.logicLevelsDataGridView.Size = new System.Drawing.Size(493, 339);
             this.logicLevelsDataGridView.TabIndex = 0;
             this.logicLevelsDataGridView.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.logicLevelsDataGridView_CellValidating);
             this.logicLevelsDataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.logicLevelsDataGridView_CellValueChanged);
@@ -50,7 +50,7 @@
             // applyButton
             // 
             this.applyButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.applyButton.Location = new System.Drawing.Point(12, 365);
+            this.applyButton.Location = new System.Drawing.Point(50, 365);
             this.applyButton.Name = "applyButton";
             this.applyButton.Size = new System.Drawing.Size(75, 23);
             this.applyButton.TabIndex = 1;
@@ -61,7 +61,7 @@
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.cancelButton.Location = new System.Drawing.Point(248, 365);
+            this.cancelButton.Location = new System.Drawing.Point(399, 365);
             this.cancelButton.Name = "cancelButton";
             this.cancelButton.Size = new System.Drawing.Size(75, 23);
             this.cancelButton.TabIndex = 2;
@@ -73,7 +73,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 400);
+            this.ClientSize = new System.Drawing.Size(517, 400);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.applyButton);
             this.Controls.Add(this.logicLevelsDataGridView);
