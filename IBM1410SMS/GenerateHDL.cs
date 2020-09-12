@@ -437,12 +437,26 @@ namespace IBM1410SMS
                 newBlock.gate = null;
                 newBlock.dot = dot;
                 newBlock.latchOutputs = false;
+                if(dot.forcedLogicFunction == null) {
+                    dot.forcedLogicFunction = "";
+                }
 
                 newBlock.logicFunction = "OR";
                 newBlock.inputConnections = connectionTable.getWhere(
                     "WHERE toDotFunction='" + dot.idDotFunction + "'");
                 newBlock.outputConnections = connectionTable.getWhere(
                     "WHERE fromDotFunction='" + dot.idDotFunction + "'");
+
+                //  If the DOT function logic function is explicitly specified, use that
+
+                if(dot.forcedLogicFunction.Length > 0) {
+                    newBlock.logicFunction = dot.forcedLogicFunction;
+                    logicBlocks.Add(newBlock);
+                    logMessage("Note: DOT Function at " + dot.diagramColumnToLeft +
+                        dot.diagramRowTop + " has a forced logic function of " +
+                        dot.forcedLogicFunction);
+                    continue;  // We are done if the logic function is explicit.
+                }
 
                 //  DOT functions are usually OR, voltage wise.  However, there are three
                 //  (so far) special cases.  
