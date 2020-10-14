@@ -1101,6 +1101,9 @@ namespace IBM1410SMS
         //  Method to determine if a given output pin is open collector
 
         private bool isOpenCollector(Gatepin pin) {
+            if(pin == null) {
+                return true;        //  Well, I guess a nonexistent pin is O/C  ;)
+            }
             Cardgate gate = cardGateTable.getByKey(pin.cardGate);
             return (gate != null && gate.openCollector > 0);
         }
