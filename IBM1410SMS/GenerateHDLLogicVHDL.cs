@@ -391,13 +391,14 @@ namespace IBM1410SMS
             List<string> mapPins = new List<string>();      // All of the map pins
             string symbol = block.gate.symbol;
 
-            if(symbol != "MOM" && symbol != "TOG" && symbol != "ROT"&& symbol != "REL") { 
+            if(symbol != "MOM" && symbol != "TOG" && symbol != "ROT" && symbol != "REL" &&
+                 symbol != "ALT") { 
                 logMessage("ERROR: Switch for block at " +
                     block.getCoordinate() + " has unknown symbol of " + symbol);
                 return (1);
             }
 
-            if((symbol == "MOM" || symbol == "TOG" || symbol == "REL") && 
+            if((symbol == "MOM" || symbol == "TOG" || symbol == "REL" || symbol == "ALT") && 
                     outputs.Count > 2) {
                 logMessage("WARNING: " + symbol + " switch for block at " +
                     block.getCoordinate() + " appears to have more than two outputs ");
@@ -418,7 +419,7 @@ namespace IBM1410SMS
             //  as they should be generating logic one or zero.  If we
             //  find one that toggles between one of two signals or some
             //  such, we will have to create a new type besides MOM, TOG, 
-            //  REL or ROT.
+            //  REL, ALT or ROT.
 
             //  If a rotary switch is active high, and contains ONE input
             //  signal, then it will generate an output of (switch AND signal)
@@ -452,7 +453,7 @@ namespace IBM1410SMS
                 }
 
                 //  If this switch pin has already been processed, ignore it
-                //  (Currently only for TOG, MOM and REL - but could easily be
+                //  (Currently only for TOG, MOM and REL and ALT - but could easily be
                 //  added to ROT as well).
 
                 if(usedSwitchPins.Contains(connection.fromPin)) {
@@ -501,7 +502,7 @@ namespace IBM1410SMS
                     }
                 }
 
-                if(symbol == "MOM" || symbol == "TOG" || symbol == "REL") {
+                if(symbol == "MOM" || symbol == "TOG" || symbol == "REL" || symbol == "ALT") {
 
                     if(connection.fromPin != "N" && connection.fromPin != "T" &&
                         mapPin != "OUTON" && mapPin != "OUTOFF") {
@@ -680,6 +681,7 @@ namespace IBM1410SMS
                             case "TOG":
                             case "MOM":
                             case "REL":
+                            case "ALT":
                                 stream.WriteLine("\t\t" + generateSignalName(switchName) +
                                     ":\t in STD_LOGIC;");
                                 break;
@@ -756,6 +758,7 @@ namespace IBM1410SMS
                             case "TOG":
                             case "MOM":
                             case "REL":
+                            case "ALT":
                                 testBenchFile.WriteLine("\tsignal " +
                                     generateSignalName(switchName) +
                                     ": STD_LOGIC := '" + initValue + "';");

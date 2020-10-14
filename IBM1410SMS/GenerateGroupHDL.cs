@@ -863,7 +863,7 @@ namespace IBM1410SMS
                 //  If this isn't a switch, on to the next one
 
                 if(block.symbol != "TOG" && block.symbol != "MOM" && block.symbol != "ROT"
-                    && block.symbol != "REL") {
+                    && block.symbol != "REL" && block.symbol != "ALT") {
                     continue;
                 }
 

@@ -388,7 +388,7 @@ namespace IBM1410SMS
                 newBlock.outputConnections = connectionTable.getWhere(
                     "WHERE fromDiagramBlock='" + block.idDiagramBlock + "'");
 
-                //  Issue a warning if there are multiple output pins (TOG blocks
+                //  Issue a warning if there are multiple output pins (TOG and ALT blocks
                 //  get to have two without a warning).
 
                 List<string> pins = new List<string>();
@@ -399,7 +399,7 @@ namespace IBM1410SMS
                     }
                 }
 
-                if (pins.Count > (block.symbol == "TOG" ? 2 : 1)) {
+                if (pins.Count > ((block.symbol == "TOG" || block.symbol == "ALT") ? 2 : 1)) {
                     logMessage(
                         "WARNING: Diagram block at coordinate " +
                         newBlock.getCoordinate() +
@@ -2103,6 +2103,7 @@ namespace IBM1410SMS
             switch(gate.symbol) {
                 case "MOM":
                 case "TOG":
+                case "ALT":
                     return (true);
                 case "ROT":
                 case "REL":

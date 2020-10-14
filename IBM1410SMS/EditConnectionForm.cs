@@ -845,7 +845,8 @@ namespace IBM1410SMS
                     }
                 }
 
-                if (pins.Count > (currentDiagramBlock.symbol == "TOG" ? 2 : 1)) {
+                if (pins.Count > ((currentDiagramBlock.symbol == "TOG"  ||
+                        currentDiagramBlock.symbol == "ALT") ? 2 : 1)) {
                     DialogResult status = MessageBox.Show(
                         "WARNING: This diagram block would have " + pins.Count +
                         " different output pins: " +
