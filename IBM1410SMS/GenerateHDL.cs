@@ -726,7 +726,7 @@ namespace IBM1410SMS
 
                     //  Find the corresponding logic block.  Is it a Trigger?
 
-                    LogicBlock lb = logicBlocks.Find(x => x.gate.idDiagramBlock ==
+                    LogicBlock lb = logicBlocks.Find(x => x.gate != null && x.gate.idDiagramBlock ==
                         connection.fromDiagramBlock);
 
                     if (lb == null) {
