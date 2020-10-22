@@ -751,6 +751,13 @@ namespace IBM1410SMS
 
                 foreach (LogicBlock lb in logicBlocks) {
                     if (lb.logicFunction == "Switch") {
+
+                        //  Don't generate these for extensions
+
+                        if(lb.ignore) {
+                            continue;
+                        }
+
                         string switchName = "SWITCH " + lb.gate.symbol +
                             " " + lb.gate.title;
                         string initValue = "0";
@@ -827,6 +834,13 @@ namespace IBM1410SMS
 
                 foreach (LogicBlock lb in logicBlocks) {
                     if (lb.logicFunction == "Switch") {
+
+                        //  Ignore any extensions
+
+                        if(lb.ignore) {
+                            continue;
+                        }
+
                         string switchName = generateSignalName(lb.getSwitchName());
                         testBenchFile.WriteLine("\t\t" + switchName + " => " +
                             switchName + ",");
