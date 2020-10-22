@@ -252,7 +252,7 @@ namespace IBM1410SMS
             //  If this block needs it, give it a clock.
 
             if(block.logicFunction == "Trigger" || block.HDLname == "Oscillator" ||
-                block.HDLname == "ShiftRegister" || block.HDLname == "SingleShot") {
+                block.HDLname.Contains("ShiftRegister") || block.HDLname == "SingleShot") {
                 outFile.WriteLine("\t\tFPGA_CLK => FPGA_CLK,");
             }
 
