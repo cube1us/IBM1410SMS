@@ -62,6 +62,7 @@ namespace IBM1410SMS
         Table<Logicfunction> logicFunctionTable;
         Table<Bussignals> busSignalsTable;
         Table<Gatepin> gatePinTable;
+        Table<Logiclevels> logicLevelsTable;
 
         DBSetup db = DBSetup.Instance;
 
@@ -101,6 +102,7 @@ namespace IBM1410SMS
             logicFunctionTable = db.getLogicFunctionTable();
             busSignalsTable = db.getBusSignalsTable();
             gatePinTable = db.getGatePinTable();
+            logicLevelsTable = db.getLogicLevelsTable();
         }
 
         public int generateGroupHDL() {
@@ -859,6 +861,8 @@ namespace IBM1410SMS
             foreach (Diagramblock block in logicBlocks) {
 
                 SwitchInfo switchEntry = new SwitchInfo();
+                string inputLevel = "";
+                string outputLevel = "";
 
                 //  If this isn't a switch, on to the next one
 
@@ -880,7 +884,20 @@ namespace IBM1410SMS
 
                 // This is a switch, so add it to the list, depending upon type.
 
+                if (block.inputMode != 0) {
+                    inputLevel = logicLevelsTable.getByKey(block.inputMode).logicLevel;
+                }
+
+                if (block.outputMode != 0) {
+                    outputLevel = logicLevelsTable.getByKey(block.outputMode).logicLevel;
+                }
+
                 switchEntry.switchName = "SWITCH " + block.symbol + " " + block.title;
+
+                if(inputLevel.Length > 0 || outputLevel.Length > 0) {
+                    switchEntry.switchName += " " + inputLevel + outputLevel;
+                }
+
                 switchEntry.rotaryCount = 0;
 
                 if(block.symbol == "ROT") {

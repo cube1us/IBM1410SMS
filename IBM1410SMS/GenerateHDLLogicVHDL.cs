@@ -758,8 +758,7 @@ namespace IBM1410SMS
                             continue;
                         }
 
-                        string switchName = "SWITCH " + lb.gate.symbol +
-                            " " + lb.gate.title;
+                        string switchName = lb.getSwitchName();
                         string initValue = "0";
                         switch (lb.gate.symbol) {
                             case "TOG":

@@ -322,6 +322,15 @@ namespace IBM1410SMS
                 newBlock.logicFunction = "Unknown";
                 newBlock.HDLname = "";
                 newBlock.pins = new List<Gatepin>();
+                newBlock.inputLevel = "";
+                newBlock.outputLevel = "";
+                if(block.inputMode != 0) {
+                    newBlock.inputLevel = logicLevelsTable.getByKey(block.inputMode).logicLevel;
+                }
+                if (block.outputMode != 0) {
+                    newBlock.outputLevel = logicLevelsTable.getByKey(block.outputMode).logicLevel;
+                }
+
 
                 //  Skip blocks marked for no HDL generation
 
@@ -2068,6 +2077,8 @@ namespace IBM1410SMS
         public bool ignore { get; set; } = false;
         public bool latchOutputs { get; set; } = false;         // Needs latched outputs (Latch)
         public Diagramblock gate { get; set; }                  // if a gate
+        public string inputLevel { get; set; }                  // if a gate
+        public string outputLevel { get; set; }                 // if a gate
         public Dotfunction dot { get; set; }                    // if a DOT function
         public string logicFunction { get; set; }               // NOT, NAND, NOR, EQUAL, Resistor, etc.
         public string HDLname { get; set; }                     // For HDL entity/module name
@@ -2118,7 +2129,9 @@ namespace IBM1410SMS
             if(logicFunction != "Switch") {
                 return ("NOT A SWITCH!!!");
             }
-            return ("SWITCH " + gate.symbol + " " + gate.title);
+            return ("SWITCH " + gate.symbol + " " + gate.title +
+                ((inputLevel.Length > 0 || outputLevel.Length > 0) ? 
+                    " " + inputLevel + outputLevel : ""));
         }
     }
 
