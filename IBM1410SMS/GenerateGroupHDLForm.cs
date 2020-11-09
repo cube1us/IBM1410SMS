@@ -195,6 +195,8 @@ namespace IBM1410SMS
 
             List<Page> pageList = new List<Page>();
             List<string> pageNames = new List<string>();
+            List<string> skippedPages = new List<string>();
+            List<string> noMatchPages = new List<string>();
 
             //  Save the existing parameters.
 
@@ -226,16 +228,24 @@ namespace IBM1410SMS
                     if(pageList.FindIndex(x => x.idPage == page.idPage) < 0) {
                         pageList.Add(page);
                     }
-                    pageNames.Add(page.name);
 
                     List<Diagrampage> diagramPages = diagramPageTable.getWhere(
                         "WHERE diagrampage.page='" + page.idPage + "'");
                     if(diagramPages.Count != 1) {
-                        MessageBox.Show("Warning:  " +
+                        noMatchPages.Add(
                             (diagramPages.Count == 0 ? "No " : "more than 1 ") +
                             "Diagram page(s) found for page name " + page.name);
                     }
-                    diagramPageList.AddRange(diagramPages);
+
+                    // Skip the page if it is marked for no HDL generation
+
+                    if(diagramPages.Count == 1 && diagramPages[0].noHDLGeneration > 0) {
+                        skippedPages.Add(page.name);
+                    }
+                    else {
+                        pageNames.Add(page.name);
+                        diagramPageList.AddRange(diagramPages);
+                    }
                 }
             }
 
@@ -244,7 +254,22 @@ namespace IBM1410SMS
                 return;
             }
 
-            Console.WriteLine("Pages: " + pageNames);
+            if(noMatchPages.Count > 0) {
+                DialogResult result1 = MessageBox.Show(string.Join(Environment.NewLine,noMatchPages), 
+                    "Pages with 0 or more than 1 match",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (result1 == DialogResult.Cancel) {
+                    return;
+                }
+            }
+
+            // Console.WriteLine("Pages: " + pageNames);
+
+            if(skippedPages.Count > 0) {
+                MessageBox.Show("The following pages were marked as no HDL generation " +
+                    "and will be skipped:" + Environment.NewLine +
+                    string.Join(",", skippedPages), "Skipped Group Generation Pages");
+            }
 
             DialogResult result = MessageBox.Show(
                 "A Group Page will be generated to instantiate the following pages: " + 
