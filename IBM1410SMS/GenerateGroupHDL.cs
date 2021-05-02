@@ -69,7 +69,7 @@ namespace IBM1410SMS
         GenerateGroupHDLLogic generator;
 
         List<string> specialSignalNames = new List<string>()
-            {"LOGIC ZERO", "LOGIC ONE"};
+            {"LOGIC ZERO", "LOGIC ONE", "GROUND"};
 
         //  TODO:  For now, forcing needsclock to true - maybe change later.
 

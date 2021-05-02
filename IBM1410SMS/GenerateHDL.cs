@@ -70,7 +70,7 @@ namespace IBM1410SMS
             {"L", "R", /* "LAMP", */ "CAP" };
 
         List<string> specialSignalNames = new List<string>()
-            {"LOGIC ZERO", "LOGIC ONE"};
+            {"LOGIC ZERO", "LOGIC ONE", "GROUND"};
 
         // string VHDLEntityName;
 
