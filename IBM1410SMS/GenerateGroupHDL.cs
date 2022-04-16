@@ -52,6 +52,7 @@ namespace IBM1410SMS
         string logFileName;
 
         bool generateTestBench;
+        bool generateLampsAndSwitches;
         // bool generatePagesTestBench;
 
         Table<Diagrampage> diagramPageTable;
@@ -84,7 +85,8 @@ namespace IBM1410SMS
             List<string> pageNames, 
             string outFileName, 
             string directory,
-            bool generateTestBench) {
+            bool generateTestBench,
+            bool generateLampsAndSwitches) {
 
             this.machine = machine;
             this.diagramPageList = diagramPageList;
@@ -92,6 +94,7 @@ namespace IBM1410SMS
             this.directory = directory;
             this.outFileName = outFileName;
             this.generateTestBench = generateTestBench;
+            this.generateLampsAndSwitches = generateLampsAndSwitches;
             // this.generatePagesTestBench = generatePagesTestBench;
 
             diagramPageTable = db.getDiagramPageTable();
@@ -120,6 +123,7 @@ namespace IBM1410SMS
             List<string> outputList = new List<string>();
             List<string> busOutputList = new List<string>();
             List<SwitchInfo> switchList = new List<SwitchInfo>();
+            List<LampInfo> lampList = new List<LampInfo>();
 
             List<string> removedInputSignals = new List<string>();
             List<string> removedOutputSignals = new List<string>();
@@ -541,11 +545,12 @@ namespace IBM1410SMS
             foreach (Diagrampage page in diagramPageList) {
 
                 int tempErrors = 0;
-                List<string> lampNames = getLampNames(page, out tempErrors);
-                foreach (string lamp in lampNames) {
+                List<LampInfo> lamps = getLampNames(page, out tempErrors);
+                foreach (LampInfo lamp in lamps) {
                     generator.logMessage("Page " + Helpers.getDiagramPageName(page.idDiagramPage) +
-                        " generates Lamp Output " + lamp);
-                    outputList.Add(lamp);
+                        " generates Lamp Output " + lamp.lampName);
+                    outputList.Add(lamp.lampName);
+                    lampList.Add(lamp);
                 }
                 errors += tempErrors;
 
@@ -715,7 +720,7 @@ namespace IBM1410SMS
             //  Generate the entity / module definition
 
             generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList,
-                switchList);
+                switchList, this.generateLampsAndSwitches);
 
             //  Generate the beginning of the actual HDL
 
@@ -766,9 +771,9 @@ namespace IBM1410SMS
                 //  Search the page for LAMPS (yes, again...)
 
                 int tempErrors = 0;
-                List<string> lampNames = getLampNames(page, out tempErrors);
-                foreach(string lamp in lampNames) {
-                    pageOutputNames.Add(lamp);
+                List<LampInfo> lamps = getLampNames(page, out tempErrors);
+                foreach(LampInfo lamp in lamps) {
+                    pageOutputNames.Add(lamp.lampName);
                 }
                 errors += tempErrors;
 
@@ -800,9 +805,10 @@ namespace IBM1410SMS
             return (errors);
         }
 
-        public List<string> getLampNames(Diagrampage page, out int errors) {
+        public List<LampInfo> getLampNames(Diagrampage page, out int errors) {
             errors = 0;
-            List<string> outputList = new List<string>();
+            List<LampInfo> outputList = new List<LampInfo>();
+            LampInfo lampEntry;
 
             List<Diagramblock> logicBlocks = diagramBlockTable.getWhere(
                 "WHERE diagramPage = '" + page.idDiagramPage + "' " +
@@ -841,8 +847,10 @@ namespace IBM1410SMS
 
                 //  Yes.  Fudge up a signal and add it to the list.
 
-                outputList.Add("LAMP_" +
-                    Helpers.getCardSlotInfo(block.cardSlot).ToSmallString());
+                lampEntry = new LampInfo();
+                lampEntry.lampName = "LAMP_" + Helpers.getCardSlotInfo(block.cardSlot).ToSmallString();
+                lampEntry.title = block.title;
+                outputList.Add(lampEntry);
             }
 
             return (outputList);

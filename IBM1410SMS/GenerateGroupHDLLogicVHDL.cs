@@ -96,9 +96,13 @@ namespace IBM1410SMS
 
         public override void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList, List<SwitchInfo> switchList) {
+            List<Bussignals> busSignalsList, List<SwitchInfo> switchList,
+            Boolean generateLampsAndSwitches) {
 
             bool firstOutput = true;
+            // int switchVectorBits = 0;
+            // int lampVectorBits = 0;
+            List<string> lampNames = new List<string>();
 
             outFile.WriteLine("entity " + entityName + " is");
 
@@ -228,12 +232,14 @@ namespace IBM1410SMS
                         generateSignalName(switchEntry.switchName));
                     if(switchEntry.rotaryCount == 0) {
                         testBenchFile.WriteLine(": STD_LOGIC := '0';");
+                        ++switchVectorBits;
                     }
                     else {
                         testBenchFile.WriteLine(": STD_LOGIC_VECTOR(" +
                             (switchEntry.rotaryCount - 1).ToString() + " downTo 0) := \"" +
                             String.Concat(Enumerable.Repeat("0", switchEntry.rotaryCount)) +
                             "\";");
+                        switchVectorBits += switchEntry.rotaryCount;
                     }
                 }
 
@@ -251,18 +257,37 @@ namespace IBM1410SMS
                 foreach (string signal in outputs) {
                     string signalName = generateSignalName(signal);
                     string initialValue = signalName.Substring(0, 1) == "M" ? "1" : "0";
+                    Boolean isLamp = signal.Contains("LAMP_") || signal.Contains("LAMPS_");
+                
 
                     List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
 
                     if (bsList == null || bsList.Count == 0) {
                         testBenchFile.WriteLine("\tsignal " + signalName + ": STD_LOGIC;");
+                        if(isLamp) {
+                            lampNames.Add(signalName);
+                            ++lampVectorBits;
+                        }
                     }
                     else {
                         STD_LOGIC_VECTOR stdLogicVector =
                             generateStdLogicVector(bsList, signalName);
                         testBenchFile.WriteLine("\tsignal " + signalName + ": " +
                             stdLogicVector.declaration + ";");
+                        lampNames.Add(signalName);
+                        lampVectorBits += stdLogicVector.highIndex - stdLogicVector.lowIndex + 1;
                     }
+                }
+
+                //  If we are generating lamp and switch vectors, add those signal declarations
+
+                if(generateLampsAndSwitches) {
+                    testBenchFile.WriteLine();
+                    testBenchFile.WriteLine("\tsignal LAMP_VECTOR: STD_LOGIC_VECTOR (" +
+                        (lampVectorBits - 1).ToString() + "downTo 0);");
+                    testBenchFile.WriteLine("\tsignal SWITCH_VECTOR: STD_LOGIC_VECTOR (" +
+                        (switchVectorBits - 1).ToString() + "downTo 0);");
+
                 }
 
                 //  Write out the template or saved user *declaration* lines, which must
@@ -404,6 +429,17 @@ namespace IBM1410SMS
                 outFile.WriteLine("");
             }
 
+        }
+
+        public override void generateHDLSwitchAssignments(List<SwitchInfo> switchList) {
+            int currentBit = switchVectorBits;
+            // TODO
+        }
+
+        public override void generateHDLLampAssignments(List<LampInfo> lampList,
+            List<Bussignals> busSignalsList) {
+            int currentBit = lampVectorBits;
+            // TODO
         }
 
         public override void generateHDLArchitectureSuffix() {

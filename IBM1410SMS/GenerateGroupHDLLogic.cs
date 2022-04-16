@@ -41,9 +41,18 @@ namespace IBM1410SMS
         public int rotaryCount { get; set; } = 0;
     }
 
+    public class LampInfo
+    {
+        public string lampName { get; set; } = "";
+        public string title { get; set; } = "";
+    }
+
     public abstract class GenerateGroupHDLLogic {
         protected Regex replacePeriods = new Regex("\\.");
         protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-|\\*");
+
+        protected int switchVectorBits = 0;
+        protected int lampVectorBits = 0;
 
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
@@ -71,7 +80,8 @@ namespace IBM1410SMS
         public abstract void generateHDLArchitectureSuffix();
         public abstract void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
-            List<Bussignals> busSignalsList, List<SwitchInfo> switchList);
+            List<Bussignals> busSignalsList, List<SwitchInfo> switchList,
+            Boolean generateLampsAndSwitches);
         public abstract void generateHDLSignalList(
             List<string> signals, List<string> bufferSignals, List<Bussignals> busSignalsList,
             List<string> busOutputList);
@@ -80,6 +90,9 @@ namespace IBM1410SMS
             List<string> bufferSignals, List<string> internalSignals,
             List<string> busInputList, List<string> busOutputList, 
             List<SwitchInfo> switchList, bool needsClock);
+        public abstract void generateHDLSwitchAssignments(List<SwitchInfo> switchList);
+        public abstract void generateHDLLampAssignments(List<LampInfo> lampList,
+            List<Bussignals> busSignalsList);
 
         public abstract string generateSwitchEntry(string switchName, 
             bool declaration, int vectorCount);

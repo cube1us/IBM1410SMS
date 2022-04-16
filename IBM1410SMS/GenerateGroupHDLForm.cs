@@ -283,7 +283,8 @@ namespace IBM1410SMS
 
             GenerateGroupHDL gen = new GenerateGroupHDL(
                 currentMachine, diagramPageList, pageNames, outputFileNameTextBox.Text,
-                directoryTextBox.Text, generateTestBenchCheckBox.Checked);
+                directoryTextBox.Text, generateTestBenchCheckBox.Checked,
+                generateLampsSwitches.Checked);
 
             int errors = gen.generateGroupHDL();
 

@@ -41,6 +41,7 @@
             this.outputFileNameTextBox = new System.Windows.Forms.TextBox();
             this.generateButton = new System.Windows.Forms.Button();
             this.generateTestBenchCheckBox = new System.Windows.Forms.CheckBox();
+            this.generateLampsSwitches = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // selectFolderButton
@@ -189,11 +190,22 @@
             this.generateTestBenchCheckBox.Text = "Generate / Update Test Bench";
             this.generateTestBenchCheckBox.UseVisualStyleBackColor = true;
             // 
+            // generateLampsSwitches
+            // 
+            this.generateLampsSwitches.AutoSize = true;
+            this.generateLampsSwitches.Location = new System.Drawing.Point(385, 227);
+            this.generateLampsSwitches.Name = "generateLampsSwitches";
+            this.generateLampsSwitches.Size = new System.Drawing.Size(244, 17);
+            this.generateLampsSwitches.TabIndex = 150;
+            this.generateLampsSwitches.Text = "Generate Lamp/Switch Vectors in Test Bench";
+            this.generateLampsSwitches.UseVisualStyleBackColor = true;
+            // 
             // GenerateGroupHDLForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(653, 310);
+            this.Controls.Add(this.generateLampsSwitches);
             this.Controls.Add(this.generateTestBenchCheckBox);
             this.Controls.Add(this.outputFileNameTextBox);
             this.Controls.Add(this.label4);
@@ -232,5 +244,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox outputFileNameTextBox;
         private System.Windows.Forms.CheckBox generateTestBenchCheckBox;
+        private System.Windows.Forms.CheckBox generateLampsSwitches;
     }
 }
