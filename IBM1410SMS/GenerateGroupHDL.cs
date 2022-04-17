@@ -665,6 +665,22 @@ namespace IBM1410SMS
                     removedOutputSignals.Add(signal);
                     generator.logMessage("Output signal " + signal + " replaced by bus " +
                         bs.busName);
+
+                    // If this is a lamp, removed the individual lamp name from the lamp list
+                    // as well.   And, if the *bussed* name isn't already there, 
+                    // add the bus name to the list of lamps.
+
+                    LampInfo busLamp = lampList.Find(x => x.lampName == signal);
+                    if(busLamp != null) {
+                        lampList.Remove(busLamp);
+                        LampInfo lampinfo = lampList.Find(x => x.lampName == bs.busName);
+                        if(lampinfo == null) {
+                            lampinfo = new LampInfo();
+                            lampinfo.lampName = bs.busName;
+                            lampinfo.title = bs.busName;
+                            lampList.Add(lampinfo);
+                        }
+                    }
                 }
             }
 
@@ -794,6 +810,11 @@ namespace IBM1410SMS
                     internalSignals, busInputList, busOutputList, pageSwitchList, 
                     needsClock);
             }
+
+            //  Generate assignments for lamps and switches
+
+            generator.generateHDLLampAssignments(lampList, busSignalsList);
+            generator.generateHDLSwitchAssignments(switchList);
 
             //  Generate anything needed at the end
 

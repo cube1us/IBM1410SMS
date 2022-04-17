@@ -37,7 +37,9 @@ namespace IBM1410SMS
             public int lowIndex = 9999;
         }
 
-        string bufferPrefix = "XX_";
+        const string bufferPrefix = "XX_";
+        const string lampVector = "LAMP_VECTOR";
+        const string switchVector = "SWITCH_VECTOR";
 
         public GenerateGroupHDLLogicVHDL(bool generateTestBench) :
             base(generateTestBench) {
@@ -257,8 +259,10 @@ namespace IBM1410SMS
                 foreach (string signal in outputs) {
                     string signalName = generateSignalName(signal);
                     string initialValue = signalName.Substring(0, 1) == "M" ? "1" : "0";
-                    Boolean isLamp = signal.Contains("LAMP_") || signal.Contains("LAMPS_");
-                
+                    Boolean isLamp = signal.StartsWith("LAMP_") | signal.StartsWith("LAMPS_") |
+                        signal.StartsWith("LAMPS ");
+
+                    logMessage("Generating output entry for signal " + signal);
 
                     List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == signal);
 
@@ -274,19 +278,30 @@ namespace IBM1410SMS
                             generateStdLogicVector(bsList, signalName);
                         testBenchFile.WriteLine("\tsignal " + signalName + ": " +
                             stdLogicVector.declaration + ";");
-                        lampNames.Add(signalName);
-                        lampVectorBits += stdLogicVector.highIndex - stdLogicVector.lowIndex + 1;
+
+                        if (isLamp) {
+                            logMessage("Adding bussed lamps " + signalName + " " +
+                                stdLogicVector.highIndex + " down to " + stdLogicVector.lowIndex);
+                            lampNames.Add(signalName);
+                            lampVectorBits += (stdLogicVector.highIndex - stdLogicVector.lowIndex + 1);
+                        }
                     }
                 }
 
+                //  We want lampVectorBits to be evenly divisible by the number of bits sent
+                //  per character to host - currently 7
+
+                logMessage("DEBUG: LampVectorBits BEFORE rounding: " + lampVectorBits.ToString());
+                lampVectorBits = ((lampVectorBits + 6) / 7) * 7;
+
                 //  If we are generating lamp and switch vectors, add those signal declarations
 
-                if(generateLampsAndSwitches) {
+                if (generateLampsAndSwitches) {
                     testBenchFile.WriteLine();
-                    testBenchFile.WriteLine("\tsignal LAMP_VECTOR: STD_LOGIC_VECTOR (" +
-                        (lampVectorBits - 1).ToString() + "downTo 0);");
-                    testBenchFile.WriteLine("\tsignal SWITCH_VECTOR: STD_LOGIC_VECTOR (" +
-                        (switchVectorBits - 1).ToString() + "downTo 0);");
+                    testBenchFile.WriteLine("\tsignal " + lampVector + ": STD_LOGIC_VECTOR (" +
+                        (lampVectorBits - 1).ToString() + " downTo 0);");
+                    testBenchFile.WriteLine("\tsignal " + switchVector + ": STD_LOGIC_VECTOR (" +
+                        (switchVectorBits - 1).ToString() + " downTo 0);");
 
                 }
 
@@ -431,15 +446,81 @@ namespace IBM1410SMS
 
         }
 
+        //  Method to generate assignments to the individual switch signals from
+        //  the switch vector.  (To combine these with switches from the FPGA 
+        //  development board, comment out this assignment, and manually enter 
+        //  a signal assignment with an "or".
+
         public override void generateHDLSwitchAssignments(List<SwitchInfo> switchList) {
-            int currentBit = switchVectorBits;
-            // TODO
+            int currentBit = switchVectorBits - 1;
+
+            switchList.Sort((x, y) => x.switchName.CompareTo(y.switchName));
+
+            testBenchFile.WriteLine();
+            testBenchFile.WriteLine("-- Assign switches from switch vector received from PC host");
+            testBenchFile.WriteLine();
+
+            foreach (SwitchInfo switchInfo in switchList) {
+                if(switchInfo.rotaryCount <= 1) {
+                    testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " + 
+                        switchVector + "(" + currentBit.ToString() + ");");
+                     --currentBit;
+                }
+                else {
+                    testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
+                        switchVector + "(" + currentBit.ToString() +
+                        " downto " + (currentBit - switchInfo.rotaryCount).ToString() +
+                        "); ");
+                    currentBit -= switchInfo.rotaryCount;
+                }
+            }
+
+            testBenchFile.WriteLine();
+
         }
+
+        //  Method to generate assignments to the lamp vector from the individual lamps.
 
         public override void generateHDLLampAssignments(List<LampInfo> lampList,
             List<Bussignals> busSignalsList) {
-            int currentBit = lampVectorBits;
-            // TODO
+            int currentBit = lampVectorBits - 1;
+
+            lampList.Sort((x, y) => x.lampName.CompareTo(y.lampName));
+
+            testBenchFile.WriteLine();
+            testBenchFile.WriteLine("-- Assign lamp vector from lamps for transmission to PC host");
+            testBenchFile.WriteLine();
+
+            //  First, process the individual lamps
+
+            foreach (LampInfo lampInfo in lampList) {
+                List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == lampInfo.lampName);
+                if (bsList.Count <= 1) {
+                    testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
+                        ") <= " + generateSignalName(lampInfo.lampName) + ";" +
+                        "  -- " + lampInfo.title);
+                    --currentBit;
+                }
+                else {
+                    STD_LOGIC_VECTOR stdLogicVector =
+                        generateStdLogicVector(bsList, lampInfo.lampName);
+                    int bitCount = stdLogicVector.highIndex - stdLogicVector.lowIndex + 1;
+                    testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
+                       " downto " + (currentBit - bitCount + 1).ToString() +
+                       ") <= " + generateSignalName(lampInfo.lampName) + ";" +
+                       "  -- " + lampInfo.title);
+                    currentBit -= bitCount;
+                }
+            }
+
+            //  Assign 0 to any left over bits that were created so that the lamp vector
+            //  size was modulo 7.
+
+            for(; currentBit >= 0; --currentBit) {
+                testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
+                    ") <= '0';");
+            }
+
         }
 
         public override void generateHDLArchitectureSuffix() {
