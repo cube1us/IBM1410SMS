@@ -871,6 +871,7 @@ namespace IBM1410SMS
                 lampEntry = new LampInfo();
                 lampEntry.lampName = "LAMP_" + Helpers.getCardSlotInfo(block.cardSlot).ToSmallString();
                 lampEntry.title = block.title;
+                lampEntry.pageName = Helpers.getDiagramPageName(page.idDiagramPage);
                 outputList.Add(lampEntry);
             }
 
@@ -948,6 +949,8 @@ namespace IBM1410SMS
 
                     switchEntry.rotaryCount = gatePins.Count;
                 }
+
+                switchEntry.pageName = Helpers.getDiagramPageName(page.idDiagramPage);
 
                 switchList.Add(switchEntry);
 

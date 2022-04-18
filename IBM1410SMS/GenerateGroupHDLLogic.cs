@@ -39,12 +39,13 @@ namespace IBM1410SMS
     {
         public string switchName { get; set; }  = "";
         public int rotaryCount { get; set; } = 0;
+        public string pageName { get; set; } = "";
     }
 
-    public class LampInfo
-    {
+    public class LampInfo {
         public string lampName { get; set; } = "";
         public string title { get; set; } = "";
+        public string pageName { get; set; } = "";
     }
 
     public abstract class GenerateGroupHDLLogic {

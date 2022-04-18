@@ -463,14 +463,15 @@ namespace IBM1410SMS
             foreach (SwitchInfo switchInfo in switchList) {
                 if(switchInfo.rotaryCount <= 1) {
                     testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " + 
-                        switchVector + "(" + currentBit.ToString() + ");");
+                        switchVector + "(" + currentBit.ToString() + "); -- " +
+                        switchInfo.pageName);
                      --currentBit;
                 }
                 else {
                     testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
                         switchVector + "(" + currentBit.ToString() +
-                        " downto " + (currentBit - switchInfo.rotaryCount).ToString() +
-                        "); ");
+                        " downto " + (currentBit - (switchInfo.rotaryCount-1)).ToString() +
+                        "); -- " + switchInfo.pageName);
                     currentBit -= switchInfo.rotaryCount;
                 }
             }
@@ -498,7 +499,7 @@ namespace IBM1410SMS
                 if (bsList.Count <= 1) {
                     testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
                         ") <= " + generateSignalName(lampInfo.lampName) + ";" +
-                        "  -- " + lampInfo.title);
+                        "  -- " + lampInfo.title + " " + lampInfo.pageName);
                     --currentBit;
                 }
                 else {
@@ -508,7 +509,7 @@ namespace IBM1410SMS
                     testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
                        " downto " + (currentBit - bitCount + 1).ToString() +
                        ") <= " + generateSignalName(lampInfo.lampName) + ";" +
-                       "  -- " + lampInfo.title);
+                       "  -- " + lampInfo.title + " " + lampInfo.pageName);
                     currentBit -= bitCount;
                 }
             }
