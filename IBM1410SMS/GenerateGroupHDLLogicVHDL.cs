@@ -234,14 +234,18 @@ namespace IBM1410SMS
                         generateSignalName(switchEntry.switchName));
                     if(switchEntry.rotaryCount == 0) {
                         testBenchFile.WriteLine(": STD_LOGIC := '0';");
-                        ++switchVectorBits;
+                        if(switchEntry.notes == null || !switchEntry.notes.Contains("NOVECTOR")) {
+                            ++switchVectorBits;
+                        }
                     }
                     else {
                         testBenchFile.WriteLine(": STD_LOGIC_VECTOR(" +
                             (switchEntry.rotaryCount - 1).ToString() + " downTo 0) := \"" +
                             String.Concat(Enumerable.Repeat("0", switchEntry.rotaryCount)) +
                             "\";");
-                        switchVectorBits += switchEntry.rotaryCount;
+                        if(switchEntry.notes == null || !switchEntry.notes.Contains("NOVECTOR")) {
+                            switchVectorBits += switchEntry.rotaryCount;
+                        }
                     }
                 }
 
@@ -461,18 +465,20 @@ namespace IBM1410SMS
             testBenchFile.WriteLine();
 
             foreach (SwitchInfo switchInfo in switchList) {
-                if(switchInfo.rotaryCount <= 1) {
-                    testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " + 
-                        switchVector + "(" + currentBit.ToString() + "); -- " +
-                        switchInfo.pageName);
-                     --currentBit;
-                }
-                else {
-                    testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
-                        switchVector + "(" + currentBit.ToString() +
-                        " downto " + (currentBit - (switchInfo.rotaryCount-1)).ToString() +
-                        "); -- " + switchInfo.pageName);
-                    currentBit -= switchInfo.rotaryCount;
+                if(switchInfo.notes == null || !switchInfo.notes.Contains("NOVECTOR")) {
+                    if(switchInfo.rotaryCount <= 1) {
+                        testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " + 
+                            switchVector + "(" + currentBit.ToString() + "); -- " +
+                            switchInfo.pageName);
+                         --currentBit;
+                    }
+                    else {
+                        testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
+                            switchVector + "(" + currentBit.ToString() +
+                            " downto " + (currentBit - (switchInfo.rotaryCount-1)).ToString() +
+                            "); -- " + switchInfo.pageName);
+                        currentBit -= switchInfo.rotaryCount;
+                    }
                 }
             }
 

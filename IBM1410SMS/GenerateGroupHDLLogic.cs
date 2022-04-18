@@ -40,6 +40,7 @@ namespace IBM1410SMS
         public string switchName { get; set; }  = "";
         public int rotaryCount { get; set; } = 0;
         public string pageName { get; set; } = "";
+        public string notes { get; set; } = "";
     }
 
     public class LampInfo {

@@ -951,6 +951,7 @@ namespace IBM1410SMS
                 }
 
                 switchEntry.pageName = Helpers.getDiagramPageName(page.idDiagramPage);
+                switchEntry.notes = block.notes;
 
                 switchList.Add(switchEntry);
 
