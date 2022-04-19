@@ -213,6 +213,8 @@ namespace IBM1410SMS
 
             //  And then proceed.
 
+            workingLabel.Visible = true;
+
             foreach (string pagePattern in pagePatterns) {
                 List<Page> pages = pageTable.getWhere(
                     "WHERE machine='" + currentMachine.idMachine + "'" +
@@ -292,6 +294,8 @@ namespace IBM1410SMS
                 MessageBox.Show("One or more errors occured during group generation.",
                     "Errors Found", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+
+            workingLabel.Visible = false;
 
             Form ImporterLogDisplayDialog =
                 new ImporterLogDisplayForm(gen.getLogfileName());

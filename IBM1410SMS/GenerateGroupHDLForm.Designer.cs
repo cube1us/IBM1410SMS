@@ -42,6 +42,7 @@
             this.generateButton = new System.Windows.Forms.Button();
             this.generateTestBenchCheckBox = new System.Windows.Forms.CheckBox();
             this.generateLampsSwitches = new System.Windows.Forms.CheckBox();
+            this.workingLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // selectFolderButton
@@ -200,11 +201,24 @@
             this.generateLampsSwitches.Text = "Generate Lamp/Switch Vectors in Test Bench";
             this.generateLampsSwitches.UseVisualStyleBackColor = true;
             // 
+            // workingLabel
+            // 
+            this.workingLabel.AutoSize = true;
+            this.workingLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.workingLabel.ForeColor = System.Drawing.Color.Crimson;
+            this.workingLabel.Location = new System.Drawing.Point(464, 72);
+            this.workingLabel.Name = "workingLabel";
+            this.workingLabel.Size = new System.Drawing.Size(79, 16);
+            this.workingLabel.TabIndex = 151;
+            this.workingLabel.Text = "WORKING";
+            this.workingLabel.Visible = false;
+            // 
             // GenerateGroupHDLForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(653, 310);
+            this.Controls.Add(this.workingLabel);
             this.Controls.Add(this.generateLampsSwitches);
             this.Controls.Add(this.generateTestBenchCheckBox);
             this.Controls.Add(this.outputFileNameTextBox);
@@ -245,5 +259,6 @@
         private System.Windows.Forms.TextBox outputFileNameTextBox;
         private System.Windows.Forms.CheckBox generateTestBenchCheckBox;
         private System.Windows.Forms.CheckBox generateLampsSwitches;
+        private System.Windows.Forms.Label workingLabel;
     }
 }
