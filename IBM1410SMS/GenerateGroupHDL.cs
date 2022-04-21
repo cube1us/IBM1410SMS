@@ -50,9 +50,11 @@ namespace IBM1410SMS
         string directory;
         string outFileName;
         string logFileName;
+        string cSharpFileName;
 
         bool generateTestBench;
         bool generateLampsAndSwitches;
+        bool generateCSharpIndices;
         // bool generatePagesTestBench;
 
         Table<Diagrampage> diagramPageTable;
@@ -86,7 +88,8 @@ namespace IBM1410SMS
             string outFileName, 
             string directory,
             bool generateTestBench,
-            bool generateLampsAndSwitches) {
+            bool generateLampsAndSwitches,
+            bool generateCSharpIndices) {
 
             this.machine = machine;
             this.diagramPageList = diagramPageList;
@@ -95,6 +98,7 @@ namespace IBM1410SMS
             this.outFileName = outFileName;
             this.generateTestBench = generateTestBench;
             this.generateLampsAndSwitches = generateLampsAndSwitches;
+            this.generateCSharpIndices = generateCSharpIndices;
             // this.generatePagesTestBench = generatePagesTestBench;
 
             diagramPageTable = db.getDiagramPageTable();
@@ -137,6 +141,7 @@ namespace IBM1410SMS
             logFileName = Path.Combine(directory, outFileName + ".log");
             string outPathName = Path.Combine(directory, outFileName +
                     "." + generator.generateHDLExtension());
+            cSharpFileName = Path.Combine(directory, outFileName + ".cs");
 
             try {
                 generator.logFile = new StreamWriter(Path.Combine(logFileName), false);
@@ -152,6 +157,17 @@ namespace IBM1410SMS
                 generator.logMessage("Cannot open output file " + outPathName +
                     ", aborting: " + e.GetType().Name);
                 return (1);
+            }
+
+            if(generateCSharpIndices) {
+                try {
+                    generator.cSharpFile = new StreamWriter(cSharpFileName, false);
+                }
+                catch (Exception e) {
+                    generator.logMessage("Cannot open C# output file " + cSharpFileName +
+                        ", aborting: " + e.GetType().Name);
+                    return (1);
+                }
             }
 
             generator.outputStreams.Add(generator.outFile);
@@ -736,7 +752,7 @@ namespace IBM1410SMS
             //  Generate the entity / module definition
 
             generator.generateHDLentity(outFileName, inputList, outputList, busSignalsList,
-                switchList, this.generateLampsAndSwitches);
+                switchList, this.generateLampsAndSwitches, this.generateCSharpIndices);
 
             //  Generate the beginning of the actual HDL
 
@@ -811,10 +827,10 @@ namespace IBM1410SMS
                     needsClock);
             }
 
-            //  Generate assignments for lamps and switches
+            //  Generate assignments for lamps and switches and/or C# lamp and switch vector indicies
 
-            generator.generateHDLLampAssignments(lampList, busSignalsList);
-            generator.generateHDLSwitchAssignments(switchList);
+            generator.generateHDLLampAssignments(lampList, busSignalsList, generateLampsAndSwitches, generateCSharpIndices);
+            generator.generateHDLSwitchAssignments(switchList, generateLampsAndSwitches, generateCSharpIndices);
 
             //  Generate anything needed at the end
 
@@ -962,6 +978,9 @@ namespace IBM1410SMS
         public void closeFiles() {
             generator.outFile.Close();
             generator.logFile.Close();
+            if(generateCSharpIndices) {
+                generator.cSharpFile.Close();
+            }
             if (generator.templateFile != null) {
                 generator.templateFile.Close();
             }

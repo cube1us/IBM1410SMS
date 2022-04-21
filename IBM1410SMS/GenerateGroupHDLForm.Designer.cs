@@ -43,6 +43,7 @@
             this.generateTestBenchCheckBox = new System.Windows.Forms.CheckBox();
             this.generateLampsSwitches = new System.Windows.Forms.CheckBox();
             this.workingLabel = new System.Windows.Forms.Label();
+            this.generateCSharpIndicesCheckBox = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // selectFolderButton
@@ -173,7 +174,7 @@
             // 
             this.generateButton.Enabled = false;
             this.generateButton.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.generateButton.Location = new System.Drawing.Point(237, 263);
+            this.generateButton.Location = new System.Drawing.Point(237, 305);
             this.generateButton.Name = "generateButton";
             this.generateButton.Size = new System.Drawing.Size(159, 23);
             this.generateButton.TabIndex = 147;
@@ -194,7 +195,7 @@
             // generateLampsSwitches
             // 
             this.generateLampsSwitches.AutoSize = true;
-            this.generateLampsSwitches.Location = new System.Drawing.Point(385, 227);
+            this.generateLampsSwitches.Location = new System.Drawing.Point(385, 228);
             this.generateLampsSwitches.Name = "generateLampsSwitches";
             this.generateLampsSwitches.Size = new System.Drawing.Size(244, 17);
             this.generateLampsSwitches.TabIndex = 150;
@@ -213,11 +214,22 @@
             this.workingLabel.Text = "WORKING";
             this.workingLabel.Visible = false;
             // 
+            // generateCSharpIndicesCheckBox
+            // 
+            this.generateCSharpIndicesCheckBox.AutoSize = true;
+            this.generateCSharpIndicesCheckBox.Location = new System.Drawing.Point(385, 262);
+            this.generateCSharpIndicesCheckBox.Name = "generateCSharpIndicesCheckBox";
+            this.generateCSharpIndicesCheckBox.Size = new System.Drawing.Size(224, 17);
+            this.generateCSharpIndicesCheckBox.TabIndex = 152;
+            this.generateCSharpIndicesCheckBox.Text = "Generate C# Lamp/Switch Vector Indices";
+            this.generateCSharpIndicesCheckBox.UseVisualStyleBackColor = true;
+            // 
             // GenerateGroupHDLForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(653, 310);
+            this.ClientSize = new System.Drawing.Size(653, 354);
+            this.Controls.Add(this.generateCSharpIndicesCheckBox);
             this.Controls.Add(this.workingLabel);
             this.Controls.Add(this.generateLampsSwitches);
             this.Controls.Add(this.generateTestBenchCheckBox);
@@ -260,5 +272,6 @@
         private System.Windows.Forms.CheckBox generateTestBenchCheckBox;
         private System.Windows.Forms.CheckBox generateLampsSwitches;
         private System.Windows.Forms.Label workingLabel;
+        private System.Windows.Forms.CheckBox generateCSharpIndicesCheckBox;
     }
 }

@@ -99,7 +99,8 @@ namespace IBM1410SMS
         public override void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
             List<Bussignals> busSignalsList, List<SwitchInfo> switchList,
-            Boolean generateLampsAndSwitches) {
+            Boolean generateLampsAndSwitches, Boolean generateCSharpIndices
+            ) {
 
             bool firstOutput = true;
             // int switchVectorBits = 0;
@@ -309,6 +310,13 @@ namespace IBM1410SMS
 
                 }
 
+                if(generateCSharpIndices) {
+                    cSharpFile.WriteLine();
+                    cSharpFile.WriteLine("\tconst int lampVectorBits = " + lampVectorBits.ToString() + ";");
+                    cSharpFile.WriteLine("\tconst int switchVectorBits = " + switchVectorBits.ToString() + ";");
+                    cSharpFile.WriteLine();
+                }
+
                 //  Write out the template or saved user *declaration* lines, which must
                 //  preceed "begin"
 
@@ -455,7 +463,8 @@ namespace IBM1410SMS
         //  development board, comment out this assignment, and manually enter 
         //  a signal assignment with an "or".
 
-        public override void generateHDLSwitchAssignments(List<SwitchInfo> switchList) {
+        public override void generateHDLSwitchAssignments(List<SwitchInfo> switchList,
+            bool generateLampsAndSwitches, bool generateCSharpIndices) {
             int currentBit = switchVectorBits - 1;
 
             switchList.Sort((x, y) => x.switchName.CompareTo(y.switchName));
@@ -467,16 +476,33 @@ namespace IBM1410SMS
             foreach (SwitchInfo switchInfo in switchList) {
                 if(switchInfo.notes == null || !switchInfo.notes.Contains("NOVECTOR")) {
                     if(switchInfo.rotaryCount <= 1) {
-                        testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " + 
-                            switchVector + "(" + currentBit.ToString() + "); -- " +
-                            switchInfo.pageName);
-                         --currentBit;
+                        if(generateLampsAndSwitches) {
+                            testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
+                                switchVector + "(" + currentBit.ToString() + "); -- " +
+                                switchInfo.pageName);
+                        }
+                        if(generateCSharpIndices) {
+                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
+                                currentBit.ToString() + ";\t-- " + switchInfo.pageName);
+                        }
+                        --currentBit;
                     }
                     else {
-                        testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
-                            switchVector + "(" + currentBit.ToString() +
-                            " downto " + (currentBit - (switchInfo.rotaryCount-1)).ToString() +
-                            "); -- " + switchInfo.pageName);
+                        if(generateLampsAndSwitches) {
+                            testBenchFile.WriteLine("\t" + generateSignalName(switchInfo.switchName) + " <= " +
+                                switchVector + "(" + currentBit.ToString() +
+                                " downto " + (currentBit - (switchInfo.rotaryCount - 1)).ToString() +
+                                "); -- " + switchInfo.pageName);
+                        }
+                        if (generateCSharpIndices) {
+                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
+                                (currentBit - (switchInfo.rotaryCount - 1)).ToString() +
+                                "); -- " + switchInfo.pageName);
+                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_LEN = " +
+                                switchInfo.rotaryCount.ToString() + "); -- " + switchInfo.pageName);
+
+                        }
+
                         currentBit -= switchInfo.rotaryCount;
                     }
                 }
@@ -489,7 +515,9 @@ namespace IBM1410SMS
         //  Method to generate assignments to the lamp vector from the individual lamps.
 
         public override void generateHDLLampAssignments(List<LampInfo> lampList,
-            List<Bussignals> busSignalsList) {
+            List<Bussignals> busSignalsList, 
+            bool generateLampsAndSwitches,
+            bool generateCSharpIndices) {
             int currentBit = lampVectorBits - 1;
 
             lampList.Sort((x, y) => x.lampName.CompareTo(y.lampName));
@@ -501,21 +529,37 @@ namespace IBM1410SMS
             //  First, process the individual lamps
 
             foreach (LampInfo lampInfo in lampList) {
+                String lampName = lampInfo.lampName;
                 List<Bussignals> bsList = busSignalsList.FindAll(x => x.busName == lampInfo.lampName);
                 if (bsList.Count <= 1) {
-                    testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
-                        ") <= " + generateSignalName(lampInfo.lampName) + ";" +
-                        "  -- " + lampInfo.title + " " + lampInfo.pageName);
+                    if(generateLampsAndSwitches) {
+                        testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
+                            ") <= " + generateSignalName(lampName) + ";" +
+                            "  -- " + lampInfo.title + " " + lampInfo.pageName);
+                    }
+                    if(generateCSharpIndices) {
+                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_INDEX = " +
+                            currentBit.ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
+                    }
                     --currentBit;
                 }
                 else {
                     STD_LOGIC_VECTOR stdLogicVector =
                         generateStdLogicVector(bsList, lampInfo.lampName);
                     int bitCount = stdLogicVector.highIndex - stdLogicVector.lowIndex + 1;
-                    testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
-                       " downto " + (currentBit - bitCount + 1).ToString() +
-                       ") <= " + generateSignalName(lampInfo.lampName) + ";" +
-                       "  -- " + lampInfo.title + " " + lampInfo.pageName);
+                    if(generateLampsAndSwitches) {
+                        testBenchFile.WriteLine("\t" + lampVector + "(" + currentBit.ToString() +
+                           " downto " + (currentBit - bitCount + 1).ToString() +
+                           ") <= " + generateSignalName(lampName) + ";" +
+                           "  -- " + lampInfo.title + " " + lampInfo.pageName);
+                    }
+                    if(generateCSharpIndices) {
+                        cSharpFile.WriteLine("\t const int " + generateSignalName(lampName) + "_INDEX = " +
+                            (currentBit - bitCount + 1).ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
+                        cSharpFile.WriteLine("\t const int " + generateSignalName(lampName) + "_LEN = " +
+                            bitCount.ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
+
+                    }
                     currentBit -= bitCount;
                 }
             }

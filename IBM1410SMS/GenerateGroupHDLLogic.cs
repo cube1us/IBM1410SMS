@@ -59,7 +59,10 @@ namespace IBM1410SMS
         public StreamWriter outFile { get; set; }
         public StreamWriter logFile { get; set; }
         public StreamWriter testBenchFile { get; set; }
+        public StreamWriter cSharpFile { get; set; }
+
         public StreamReader templateFile { get; set; }
+
         public List<StreamWriter> outputStreams { get; set; } =
             new List<StreamWriter>();
 
@@ -83,7 +86,7 @@ namespace IBM1410SMS
         public abstract void generateHDLentity(
             string entityName, List<string> inputs, List<string> outputs,
             List<Bussignals> busSignalsList, List<SwitchInfo> switchList,
-            Boolean generateLampsAndSwitches);
+            Boolean generateLampsAndSwitches, Boolean generateCSharpIndices);
         public abstract void generateHDLSignalList(
             List<string> signals, List<string> bufferSignals, List<Bussignals> busSignalsList,
             List<string> busOutputList);
@@ -92,9 +95,10 @@ namespace IBM1410SMS
             List<string> bufferSignals, List<string> internalSignals,
             List<string> busInputList, List<string> busOutputList, 
             List<SwitchInfo> switchList, bool needsClock);
-        public abstract void generateHDLSwitchAssignments(List<SwitchInfo> switchList);
+        public abstract void generateHDLSwitchAssignments(List<SwitchInfo> switchList,
+            bool generateLampsAndSwitches, bool generateCSharpIndices);
         public abstract void generateHDLLampAssignments(List<LampInfo> lampList,
-            List<Bussignals> busSignalsList);
+            List<Bussignals> busSignalsList, bool generateLampsAndSwitches, bool generateCSharpIndices);
 
         public abstract string generateSwitchEntry(string switchName, 
             bool declaration, int vectorCount);
