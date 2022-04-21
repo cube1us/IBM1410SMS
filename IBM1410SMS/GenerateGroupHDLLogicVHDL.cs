@@ -483,7 +483,7 @@ namespace IBM1410SMS
                         }
                         if(generateCSharpIndices) {
                             cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
-                                currentBit.ToString() + ";\t-- " + switchInfo.pageName);
+                                currentBit.ToString() + ";\t// " + switchInfo.pageName);
                         }
                         --currentBit;
                     }
@@ -497,9 +497,9 @@ namespace IBM1410SMS
                         if (generateCSharpIndices) {
                             cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
                                 (currentBit - (switchInfo.rotaryCount - 1)).ToString() +
-                                "); -- " + switchInfo.pageName);
+                                ");\t// " + switchInfo.pageName);
                             cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_LEN = " +
-                                switchInfo.rotaryCount.ToString() + "); -- " + switchInfo.pageName);
+                                switchInfo.rotaryCount.ToString() + ";\t// " + switchInfo.pageName);
 
                         }
 
@@ -554,9 +554,9 @@ namespace IBM1410SMS
                            "  -- " + lampInfo.title + " " + lampInfo.pageName);
                     }
                     if(generateCSharpIndices) {
-                        cSharpFile.WriteLine("\t const int " + generateSignalName(lampName) + "_INDEX = " +
+                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_INDEX = " +
                             (currentBit - bitCount + 1).ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
-                        cSharpFile.WriteLine("\t const int " + generateSignalName(lampName) + "_LEN = " +
+                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_LEN = " +
                             bitCount.ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
 
                     }
