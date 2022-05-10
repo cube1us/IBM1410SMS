@@ -312,8 +312,8 @@ namespace IBM1410SMS
 
                 if(generateCSharpIndices) {
                     cSharpFile.WriteLine();
-                    cSharpFile.WriteLine("\tconst int lampVectorBits = " + lampVectorBits.ToString() + ";");
-                    cSharpFile.WriteLine("\tconst int switchVectorBits = " + switchVectorBits.ToString() + ";");
+                    cSharpFile.WriteLine("\tpublic const int lampVectorBits = " + lampVectorBits.ToString() + ";");
+                    cSharpFile.WriteLine("\tpublic const int switchVectorBits = " + switchVectorBits.ToString() + ";");
                     cSharpFile.WriteLine();
                 }
 
@@ -482,7 +482,7 @@ namespace IBM1410SMS
                                 switchInfo.pageName);
                         }
                         if(generateCSharpIndices) {
-                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
+                            cSharpFile.WriteLine("\tpublic const int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
                                 currentBit.ToString() + ";\t// " + switchInfo.pageName);
                         }
                         --currentBit;
@@ -495,10 +495,10 @@ namespace IBM1410SMS
                                 "); -- " + switchInfo.pageName);
                         }
                         if (generateCSharpIndices) {
-                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
+                            cSharpFile.WriteLine("\tpublic const int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
                                 (currentBit - (switchInfo.rotaryCount - 1)).ToString() +
                                 ");\t// " + switchInfo.pageName);
-                            cSharpFile.WriteLine("\tconst int " + generateSignalName(switchInfo.switchName) + "_LEN = " +
+                            cSharpFile.WriteLine("\tpublic const int " + generateSignalName(switchInfo.switchName) + "_LEN = " +
                                 switchInfo.rotaryCount.ToString() + ";\t// " + switchInfo.pageName);
 
                         }
@@ -538,7 +538,7 @@ namespace IBM1410SMS
                             "  -- " + lampInfo.title + " " + lampInfo.pageName);
                     }
                     if(generateCSharpIndices) {
-                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_INDEX = " +
+                        cSharpFile.WriteLine("\tpublic const int " + generateSignalName(lampName) + "_INDEX = " +
                             currentBit.ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
                     }
                     --currentBit;
@@ -554,9 +554,9 @@ namespace IBM1410SMS
                            "  -- " + lampInfo.title + " " + lampInfo.pageName);
                     }
                     if(generateCSharpIndices) {
-                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_INDEX = " +
+                        cSharpFile.WriteLine("\tpublic const int " + generateSignalName(lampName) + "_INDEX = " +
                             (currentBit - bitCount + 1).ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
-                        cSharpFile.WriteLine("\tconst int " + generateSignalName(lampName) + "_LEN = " +
+                        cSharpFile.WriteLine("\tpublic const int " + generateSignalName(lampName) + "_LEN = " +
                             bitCount.ToString() + ";\t// " + lampInfo.title + " " + lampInfo.pageName);
 
                     }
