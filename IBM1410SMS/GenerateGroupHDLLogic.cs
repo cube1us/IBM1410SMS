@@ -54,6 +54,7 @@ namespace IBM1410SMS
         protected Regex replaceTitle = new Regex(" |-|\\.|\\+|\\-|\\*");
 
         protected int switchVectorBits = 0;
+        protected int switchVectorBitsRounded = 0;
         protected int lampVectorBits = 0;
 
         public StreamWriter outFile { get; set; }

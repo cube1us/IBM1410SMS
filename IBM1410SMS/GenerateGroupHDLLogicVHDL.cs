@@ -293,11 +293,12 @@ namespace IBM1410SMS
                     }
                 }
 
-                //  We want lampVectorBits to be evenly divisible by the number of bits sent
+                //  We want lampVectorBits and switchVectorBits to be evenly divisible by the number of bits sent
                 //  per character to host - currently 7
 
                 logMessage("DEBUG: LampVectorBits BEFORE rounding: " + lampVectorBits.ToString());
                 lampVectorBits = ((lampVectorBits + 6) / 7) * 7;
+                switchVectorBitsRounded = ((switchVectorBits + 6) / 7) * 7;
 
                 //  If we are generating lamp and switch vectors, add those signal declarations
 
@@ -306,14 +307,14 @@ namespace IBM1410SMS
                     testBenchFile.WriteLine("\tsignal " + lampVector + ": STD_LOGIC_VECTOR (" +
                         (lampVectorBits - 1).ToString() + " downTo 0);");
                     testBenchFile.WriteLine("\tsignal " + switchVector + ": STD_LOGIC_VECTOR (" +
-                        (switchVectorBits - 1).ToString() + " downTo 0);");
+                        (switchVectorBitsRounded - 1).ToString() + " downTo 0);");
 
                 }
 
                 if(generateCSharpIndices) {
                     cSharpFile.WriteLine();
                     cSharpFile.WriteLine("\tpublic const int lampVectorBits = " + lampVectorBits.ToString() + ";");
-                    cSharpFile.WriteLine("\tpublic const int switchVectorBits = " + switchVectorBits.ToString() + ";");
+                    cSharpFile.WriteLine("\tpublic const int switchVectorBits = " + switchVectorBitsRounded.ToString() + ";");
                     cSharpFile.WriteLine();
                 }
 
@@ -465,6 +466,7 @@ namespace IBM1410SMS
 
         public override void generateHDLSwitchAssignments(List<SwitchInfo> switchList,
             bool generateLampsAndSwitches, bool generateCSharpIndices) {
+
             int currentBit = switchVectorBits - 1;
 
             switchList.Sort((x, y) => x.switchName.CompareTo(y.switchName));
@@ -497,7 +499,7 @@ namespace IBM1410SMS
                         if (generateCSharpIndices) {
                             cSharpFile.WriteLine("\tpublic const int " + generateSignalName(switchInfo.switchName) + "_INDEX = " +
                                 (currentBit - (switchInfo.rotaryCount - 1)).ToString() +
-                                ");\t// " + switchInfo.pageName);
+                                ";\t// " + switchInfo.pageName);
                             cSharpFile.WriteLine("\tpublic const int " + generateSignalName(switchInfo.switchName) + "_LEN = " +
                                 switchInfo.rotaryCount.ToString() + ";\t// " + switchInfo.pageName);
 
