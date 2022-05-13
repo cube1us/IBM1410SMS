@@ -1012,6 +1012,15 @@ namespace IBM1410SMS
                         continue;
                     }
 
+                    if (block.gate.notes != null && block.gate.notes.Contains("DFLIPFLOP")) {
+                        logMessage("Notes indicated to force a  D FF at output of gate at " +
+                            block.getCoordinate());
+                        block.latchOutputs = true;
+                        needsClock = true;
+                        generator.needsDFlipFlop = true;
+                        continue;
+                    }
+
                     //logMessage("\tDEBUG:  Latch processing " +
                     //    (currentBlock.isGate() ? "Gate" : "DOT Function") + " block at " + 
                     //    currentBlock.getCoordinate());
