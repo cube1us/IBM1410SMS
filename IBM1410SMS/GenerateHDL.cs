@@ -1077,14 +1077,21 @@ namespace IBM1410SMS
 
 
                         //  If we find a connection back to where we started, we have found
-                        //  a combinatorial loop.
+                        //  a combinatorial loop, UNLESS, there is an EXPLICIT note to NOT
+                        //  place one here (example, Page 15.41.10.1 Block 3F)
 
                         if (connection.toDiagramBlock == block.gate.idDiagramBlock) {
-                            block.latchOutputs = true;
-                            needsClock = true;
-                            generator.needsDFlipFlop = true;
-                            logMessage("Found combinatorial loop (need D FF) at output of gate at " +
-                                block.getCoordinate());
+                            if(block.gate.notes.Contains("NOFLIPFLOP")) {
+                                logMessage("Found combinatorial loop at output of gate at " +
+                                    block.getCoordinate() + " but suppressed by NOFLIPFLOP comment.");
+                            }
+                            else {
+                                generator.needsDFlipFlop = true;
+                                block.latchOutputs = true;
+                                needsClock = true;
+                                logMessage("Found combinatorial loop (need D FF) at output of gate at " +
+                                    block.getCoordinate());
+                            }
                             //  Job done!
                             break;
                         }
