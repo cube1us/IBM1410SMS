@@ -181,6 +181,12 @@
     <Compile Include="Entities\logiccheckrules.cs" />
     <Compile Include="Entities\parameters.cs" />
     <Compile Include="Entities\sheetedgeinformation.cs" />
+    <Compile Include="ReportFeaturesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ReportFeaturesForm.Designer.cs">
+      <DependentUpon>ReportFeaturesForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="GenerateGroupHDLForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -521,6 +527,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ReportEdgeConnectionsForm.resx">
       <DependentUpon>ReportEdgeConnectionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportFeaturesForm.resx">
+      <DependentUpon>ReportFeaturesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ReportQuerySignalsForm.resx">
       <DependentUpon>ReportQuerySignalsForm.cs</DependentUpon>

@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("IBM1410 SMS")]
-[assembly: AssemblyCopyright("Copyright ©  2018, 2019, 2020 Jay R. Jaeger")]
+[assembly: AssemblyCopyright("Copyright ©  2018, 2019, 2020, 2021, 2022 Jay R. Jaeger")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

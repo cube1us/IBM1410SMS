@@ -55,6 +55,7 @@
             this.importLocationPagesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importCardLocationChartMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importTieDownsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importBusSignalsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateHDLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.generateGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -67,7 +68,7 @@
             this.signalReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.connectionChecksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            this.importBusSignalsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.featureReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -250,21 +251,21 @@
             // editSMSCardTypesToolStripMenuItem
             // 
             this.editSMSCardTypesToolStripMenuItem.Name = "editSMSCardTypesToolStripMenuItem";
-            this.editSMSCardTypesToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.editSMSCardTypesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editSMSCardTypesToolStripMenuItem.Text = "Edit SMS Card Types";
             this.editSMSCardTypesToolStripMenuItem.Click += new System.EventHandler(this.editSMSCardTypesToolStripMenuItem_Click);
             // 
             // editSMSCardGatesToolStripMenuItem
             // 
             this.editSMSCardGatesToolStripMenuItem.Name = "editSMSCardGatesToolStripMenuItem";
-            this.editSMSCardGatesToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.editSMSCardGatesToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editSMSCardGatesToolStripMenuItem.Text = "Edit SMS Card Gates";
             this.editSMSCardGatesToolStripMenuItem.Click += new System.EventHandler(this.editSMSCardGatesToolStripMenuItem_Click);
             // 
             // editSMSCardPinsToolStripMenuItem
             // 
             this.editSMSCardPinsToolStripMenuItem.Name = "editSMSCardPinsToolStripMenuItem";
-            this.editSMSCardPinsToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.editSMSCardPinsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.editSMSCardPinsToolStripMenuItem.Text = "Edit SMS Card Pins";
             this.editSMSCardPinsToolStripMenuItem.Click += new System.EventHandler(this.editSMSCardPinsToolStripMenuItem_Click);
             // 
@@ -316,6 +317,13 @@
             this.importTieDownsMenuItem.Text = "Import Tie Downs";
             this.importTieDownsMenuItem.Click += new System.EventHandler(this.importTieDownsMenuItem_Click);
             // 
+            // importBusSignalsToolStripMenuItem
+            // 
+            this.importBusSignalsToolStripMenuItem.Name = "importBusSignalsToolStripMenuItem";
+            this.importBusSignalsToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.importBusSignalsToolStripMenuItem.Text = "Import Bus Signals";
+            this.importBusSignalsToolStripMenuItem.Click += new System.EventHandler(this.importBusSignalsToolStripMenuItem_Click);
+            // 
             // generateHDLToolStripMenuItem
             // 
             this.generateHDLToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -353,6 +361,7 @@
             this.cardTypeReportToolStripMenuItem,
             this.CONNectorCheckToolStripMenuItem,
             this.edgeConnectionCheckToolStripMenuItem,
+            this.featureReportToolStripMenuItem,
             this.signalQueryToolStripMenuItem,
             this.signalReportToolStripMenuItem,
             this.connectionChecksToolStripMenuItem});
@@ -410,12 +419,12 @@
             this.openFileDialog1.InitialDirectory = "D:\\Users\\Jay\\Schematics\\IBM1410";
             this.openFileDialog1.Title = "Specify File To Import";
             // 
-            // importBusSignalsToolStripMenuItem
+            // featureReportToolStripMenuItem
             // 
-            this.importBusSignalsToolStripMenuItem.Name = "importBusSignalsToolStripMenuItem";
-            this.importBusSignalsToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
-            this.importBusSignalsToolStripMenuItem.Text = "Import Bus Signals";
-            this.importBusSignalsToolStripMenuItem.Click += new System.EventHandler(this.importBusSignalsToolStripMenuItem_Click);
+            this.featureReportToolStripMenuItem.Name = "featureReportToolStripMenuItem";
+            this.featureReportToolStripMenuItem.Size = new System.Drawing.Size(201, 22);
+            this.featureReportToolStripMenuItem.Text = "Feature Report";
+            this.featureReportToolStripMenuItem.Click += new System.EventHandler(this.featureReportToolStripMenuItem_Click);
             // 
             // IBM1410SMSForm
             // 
@@ -478,6 +487,7 @@
         private System.Windows.Forms.ToolStripMenuItem connectionChecksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem signalQueryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importBusSignalsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem featureReportToolStripMenuItem;
     }
 }
 

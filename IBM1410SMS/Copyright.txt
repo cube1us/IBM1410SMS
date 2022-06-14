@@ -1,5 +1,5 @@
 /* 
- *  COPYRIGHT 2018, 2019, 2020 Jay R. Jaeger
+ *  COPYRIGHT 2018, 2019, 2020, 2021, 2022 Jay R. Jaeger
  *  
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

@@ -262,5 +262,10 @@ namespace IBM1410SMS
                 ImportStartupForm.testMode);
             }
         }
+
+        private void featureReportToolStripMenuItem_Click(object sender, EventArgs e) {
+            ReportFeaturesForm ReportFeaturesForm = new ReportFeaturesForm();
+            ReportFeaturesForm.ShowDialog();
+        }
     }
 }
