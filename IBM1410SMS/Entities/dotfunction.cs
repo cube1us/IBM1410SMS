@@ -21,5 +21,6 @@ namespace IBM1410SMS
 		[MyColumn] public string logicFunction { get; set; }
 		[MyColumn] public int checkExempt { get; set; }
 		[MyColumn] public string forcedLogicFunction { get; set; }
+		[MyColumn] public int noHDLGeneration { get; set; }
 	}
 }

@@ -102,6 +102,8 @@ namespace IBM1410SMS
             List<Diagramblock> blocks;
             List<Dotfunction> dotFunctions;
             List<int> ignoredConnectionIDs = new List<int>();
+            List<LogicBlock> dotFunctionLogicBlocksToRemove = new List<LogicBlock>();
+
 
             logicLevels = logicLevelsTable.getAll();
 
@@ -447,6 +449,7 @@ namespace IBM1410SMS
             //  And then the same for DOT Functions
 
             foreach (Dotfunction dot in dotFunctions) {
+
                 LogicBlock newBlock = new LogicBlock();
 
                 bool switchFed = true;
@@ -482,6 +485,15 @@ namespace IBM1410SMS
                         dot.diagramRowTop + " has a forced logic function of " +
                         dot.forcedLogicFunction);
                     continue;  // We are done if the logic function is explicit.
+                }
+
+                //  See if this DOT function is to be suppressed
+
+                if(dot.noHDLGeneration > 0) {
+                    logMessage("Note: DOT Function at " + dot.diagramColumnToLeft +
+                        dot.diagramRowTop + " marked for no HDL generation.");
+                    noGenLogicBlocks.Add(newBlock);
+                    dotFunctionLogicBlocksToRemove.Add(newBlock);
                 }
 
                 //  See if we can deduce the logic function based on the
@@ -704,7 +716,6 @@ namespace IBM1410SMS
             //      4.  Add this input to the trigger as pin T_DOT from gate N pin P.
             //  Mark the DOT function Logic BLock for removal after the loop is complete.
 
-            List<LogicBlock> dotFunctionLogicBlocksToRemove = new List<LogicBlock>();
             foreach (LogicBlock logicBlock in logicBlocks) {
 
                 //  If it isn't a DOT function, or does not have 2 inputs, or exactly 
@@ -741,15 +752,32 @@ namespace IBM1410SMS
                     LogicBlock lb = logicBlocks.Find(x => x.gate != null && x.gate.idDiagramBlock ==
                         connection.fromDiagramBlock);
 
+                    LogicBlock noGenBlock = noGenLogicBlocks.Find(x => x.gate != null && x.gate.idDiagramBlock ==
+                        connection.fromDiagramBlock);
+
                     if (lb == null) {
-                        logMessage("ERROR Processing DOT Function at " + 
-                            logicBlock.getCoordinate() +
-                            " Connection id " + connection.idConnection.ToString() +
-                            " Reference to Diagram Block " + connection.fromDiagramBlock +
-                            " Could not be found in logicBlocks list.");
-                        ++errors;
-                        triggerCount = 0;
-                        break;
+
+                        //  See if this was a removed logic block - if so, ignore it.
+
+                        if(noGenBlock != null) {
+                            logMessage("NOTE: Processing DOT Function at " +
+                                logicBlock.getCoordinate() +
+                                " Connection id " + connection.idConnection.ToString() +
+                                " Reference to Diagram Block " + connection.fromDiagramBlock +
+                                " is a block marked to no HDL generation");
+                            continue;
+                        }
+                        else {
+                            logMessage("ERROR Processing DOT Function at " +
+                                logicBlock.getCoordinate() +
+                                " Connection id " + connection.idConnection.ToString() +
+                                " Reference to Diagram Block " + connection.fromDiagramBlock +
+                                " Could not be found in logicBlocks list.");
+                            ++errors;
+                            triggerCount = 0;
+                            break;
+                        }
+
                     }
 
                     if (lb.logicFunction == "Trigger") {
@@ -1691,7 +1719,8 @@ namespace IBM1410SMS
 
             foreach (LogicBlock block in logicBlocks) {
 
-                if (block.ignore) {
+                if (block.ignore || (block.gate != null && block.gate.noHDLGeneration > 0) ||
+                    (block.dot!= null && block.dot.noHDLGeneration > 0)) {
                     continue;
                 }
 

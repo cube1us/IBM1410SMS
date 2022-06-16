@@ -50,6 +50,7 @@
             this.addInputOutputButton = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.forceLogicFunction = new System.Windows.Forms.TextBox();
+            this.noHDLGenCheckBox = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.connectionsDataGridView)).BeginInit();
             this.SuspendLayout();
@@ -180,7 +181,7 @@
             // exemptCheckBox
             // 
             this.exemptCheckBox.AutoSize = true;
-            this.exemptCheckBox.Location = new System.Drawing.Point(383, 165);
+            this.exemptCheckBox.Location = new System.Drawing.Point(383, 146);
             this.exemptCheckBox.Name = "exemptCheckBox";
             this.exemptCheckBox.Size = new System.Drawing.Size(169, 17);
             this.exemptCheckBox.TabIndex = 28;
@@ -290,11 +291,23 @@
             this.forceLogicFunction.Size = new System.Drawing.Size(75, 20);
             this.forceLogicFunction.TabIndex = 30;
             // 
+            // noHDLGenCheckBox
+            // 
+            this.noHDLGenCheckBox.AutoSize = true;
+            this.noHDLGenCheckBox.Location = new System.Drawing.Point(383, 182);
+            this.noHDLGenCheckBox.Name = "noHDLGenCheckBox";
+            this.noHDLGenCheckBox.Size = new System.Drawing.Size(120, 17);
+            this.noHDLGenCheckBox.TabIndex = 31;
+            this.noHDLGenCheckBox.Text = "No HDL Generation";
+            this.toolTip1.SetToolTip(this.noHDLGenCheckBox, "Select to suppress HDL generation for this DOT function");
+            this.noHDLGenCheckBox.UseVisualStyleBackColor = true;
+            // 
             // EditDotFunctionForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(592, 398);
+            this.Controls.Add(this.noHDLGenCheckBox);
             this.Controls.Add(this.forceLogicFunction);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.exemptCheckBox);
@@ -350,5 +363,6 @@
         private System.Windows.Forms.CheckBox exemptCheckBox;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox forceLogicFunction;
+        private System.Windows.Forms.CheckBox noHDLGenCheckBox;
     }
 }

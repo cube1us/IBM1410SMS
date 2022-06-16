@@ -105,6 +105,7 @@ namespace IBM1410SMS
                 dotFunction.logicFunction = "A";
                 dotFunction.checkExempt = 0;
                 dotFunction.forcedLogicFunction = "";
+                dotFunction.noHDLGeneration = 0;
                 deleteButton.Visible = false;
             }
             else {
@@ -125,6 +126,7 @@ namespace IBM1410SMS
             }
 
             exemptCheckBox.Checked = (dotFunction.checkExempt != 0);
+            noHDLGenCheckBox.Checked = (dotFunction.noHDLGeneration != 0);
             forceLogicFunction.Text = dotFunction.forcedLogicFunction;
 
             currentDotFunction = dotFunction;
@@ -405,6 +407,7 @@ namespace IBM1410SMS
             currentDotFunction.logicFunction =
                 andRadioButton.Checked ? "A" : "O";
             currentDotFunction.checkExempt = exemptCheckBox.Checked ? 1 : 0;
+            currentDotFunction.noHDLGeneration = noHDLGenCheckBox.Checked ? 1 : 0;
             currentDotFunction.forcedLogicFunction = forceLogicFunction.Text;
             if(currentDotFunction.idDotFunction == 0) {
                 action = "Added";
