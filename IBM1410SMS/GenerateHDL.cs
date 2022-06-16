@@ -60,6 +60,7 @@ namespace IBM1410SMS
         List<Sheetedgeinformation> sheetInputsList;
         List<Sheetedgeinformation> sheetOutputsList;
         List<LogicBlock> logicBlocks = new List<LogicBlock>();
+        List<LogicBlock> noGenLogicBlocks = new List<LogicBlock>();
         List<Logiclevels> logicLevels = null;
         
 
@@ -337,6 +338,8 @@ namespace IBM1410SMS
                 if (block.noHDLGeneration == 1) {
                     logMessage("Block at coordinate " + newBlock.getCoordinate() +
                         " is marked for No HDL Generation -- skipped.");
+                    //  Remember this block, so we can suppress errors related to it later.
+                    noGenLogicBlocks.Add(newBlock);
                     continue;
                 }
 
@@ -899,6 +902,7 @@ namespace IBM1410SMS
 
             foreach (LogicBlock lb in dotFunctionLogicBlocksToRemove) {
                 logicBlocks.Remove(lb);
+                noGenLogicBlocks.Add(lb);
             }
 
             //  Find the Gate type logic blocks that we want to ignore, and capture the
@@ -1754,13 +1758,27 @@ namespace IBM1410SMS
                         LogicBlock outputBlock = logicBlocks.Find(x =>
                             (x.isDotFunction() && x.dot.idDotFunction == inputConnection.fromDotFunction) ||
                             (x.isGate() && x.gate.idDiagramBlock == inputConnection.fromDiagramBlock));
+
+                        if(outputBlock == null) {
+                            LogicBlock noGenBlock = noGenLogicBlocks.Find(x =>
+                                (x.isDotFunction() && x.dot.idDotFunction == inputConnection.fromDotFunction) ||
+                                (x.isGate() && x.gate.idDiagramBlock == inputConnection.fromDiagramBlock));
+                            if(noGenBlock != null) {
+                                logMessage("Note: During generation an input to the block at " +
+                                    block.getCoordinate() +
+                                    ", connection database ID " + inputConnection.idConnection +
+                                    " was found to come from a block marked for no HDL generation");
+                                continue;
+                            }
+                        }
+
                         if (outputBlock == null ||
                             !(outputBlock.isDotFunction() || outputBlock.isGate())) {
-                            logMessage("ERROR:  During generation, input is not from edge, and " +
-                                "cannot find matching DOT function or Gate, Diagram Block " +
-                                block.getCoordinate() +
-                                ", connection database ID " + inputConnection.idConnection);
-                            ++errors;
+                                logMessage("ERROR:  During generation, input is not from edge, and " +
+                                    "cannot find matching DOT function or Gate, Diagram Block " +
+                                    block.getCoordinate() +
+                                    ", connection database ID " + inputConnection.idConnection);
+                                ++errors;
                             continue;
                         }
                         inputNames.Add(
